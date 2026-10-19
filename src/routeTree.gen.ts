@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardGuildIdRouteImport } from './routes/dashboard.$guildId'
 import { Route as ApiPublicAuthCallbackRouteImport } from './routes/api/public/auth/callback'
 import { Route as ApiPublicAuthLoginRouteImport } from './routes/api/public/auth/login'
 import { Route as ApiPublicAuthLogoutRouteImport } from './routes/api/public/auth/logout'
@@ -18,6 +20,16 @@ import { Route as ApiPublicBotConfigRouteImport } from './routes/api/public/bot/
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardGuildIdRoute = DashboardGuildIdRouteImport.update({
+  id: '/dashboard/$guildId',
+  path: '/dashboard/$guildId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAuthCallbackRoute = ApiPublicAuthCallbackRouteImport.update({
@@ -43,6 +55,8 @@ const ApiPublicBotConfigRoute = ApiPublicBotConfigRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard/$guildId': typeof DashboardGuildIdRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/auth/callback': typeof ApiPublicAuthCallbackRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
@@ -50,6 +64,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard/$guildId': typeof DashboardGuildIdRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/api/public/auth/callback': typeof ApiPublicAuthCallbackRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
@@ -58,6 +74,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard/$guildId': typeof DashboardGuildIdRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/public/auth/callback': typeof ApiPublicAuthCallbackRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
@@ -67,6 +85,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dashboard/$guildId'
+    | '/dashboard/'
     | '/api/public/auth/callback'
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
@@ -74,6 +94,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dashboard/$guildId'
+    | '/dashboard'
     | '/api/public/auth/callback'
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
@@ -81,6 +103,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/dashboard/$guildId'
+    | '/dashboard/'
     | '/api/public/auth/callback'
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
@@ -89,6 +113,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardGuildIdRoute: typeof DashboardGuildIdRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
   ApiPublicAuthCallbackRoute: typeof ApiPublicAuthCallbackRoute
   ApiPublicAuthLoginRoute: typeof ApiPublicAuthLoginRoute
   ApiPublicAuthLogoutRoute: typeof ApiPublicAuthLogoutRoute
@@ -102,6 +128,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/$guildId': {
+      id: '/dashboard/$guildId'
+      path: '/dashboard/$guildId'
+      fullPath: '/dashboard/$guildId'
+      preLoaderRoute: typeof DashboardGuildIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/auth/callback': {
@@ -137,6 +177,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardGuildIdRoute: DashboardGuildIdRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
   ApiPublicAuthCallbackRoute: ApiPublicAuthCallbackRoute,
   ApiPublicAuthLoginRoute: ApiPublicAuthLoginRoute,
   ApiPublicAuthLogoutRoute: ApiPublicAuthLogoutRoute,
