@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard/$guildId")({
       <SiteHeader user={null} />
       <div className="mx-auto max-w-xl px-5 py-16 text-center">
         <h1 className="font-display text-4xl">Nie można otworzyć</h1>
-        <p className="mt-2 text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-muted-foreground">{error instanceof Error ? error.message : "Błąd"}</p>
         <Link to="/dashboard" className="mt-6 inline-block font-semibold text-accent">← Wróć do serwerów</Link>
       </div>
     </main>
