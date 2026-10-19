@@ -28,7 +28,7 @@ export async function userGuilds(token: string): Promise<DGuild[]> {
 export const canManage = (g: DGuild) => g.owner || (BigInt(g.permissions) & 0x28n) !== 0n;
 
 export const bot = (path: string) =>
-  fetch(`${API}${path}`, { headers: { authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` } });
+  fetch(`${API}${path}`, { headers: { authorization: `Bot ${process.env["DISCORD_BOT_TOKEN"]}` } });
 
 export async function requireGuild(guildId: string) {
   const s = await getSession();

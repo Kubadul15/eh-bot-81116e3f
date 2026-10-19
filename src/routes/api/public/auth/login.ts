@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/public/auth/login")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const clientId = process.env.DISCORD_CLIENT_ID;
+        const clientId = process.env["DISCORD_CLIENT_ID"];
         if (!clientId) return new Response("Brak DISCORD_CLIENT_ID", { status: 500 });
         const origin = new URL(request.url).origin;
         const state = crypto.randomUUID();

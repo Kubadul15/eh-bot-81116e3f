@@ -5,7 +5,7 @@ export const getMe = createServerFn({ method: "GET" }).handler(async () => {
   const { getSession } = await import("./discord.server");
   const s = await getSession();
   return {
-    clientId: process.env.DISCORD_CLIENT_ID ?? null,
+    clientId: process.env["DISCORD_CLIENT_ID"] ?? null,
     user: s ? { id: s.discord_user_id, username: s.username, avatar: s.avatar } : null,
   };
 });

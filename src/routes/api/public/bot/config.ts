@@ -5,7 +5,7 @@ export const Route = createFileRoute("/api/public/bot/config")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const key = process.env.BOT_API_KEY;
+        const key = process.env["BOT_API_KEY"];
         const auth = request.headers.get("authorization") ?? "";
         if (!key || auth !== `Bearer ${key}`) return new Response("Unauthorized", { status: 401 });
         const guild = new URL(request.url).searchParams.get("guild") ?? "";
