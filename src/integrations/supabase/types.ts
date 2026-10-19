@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dash_sessions: {
+        Row: {
+          access_token: string
+          avatar: string | null
+          created_at: string
+          discord_user_id: string
+          expires_at: string
+          id: string
+          username: string
+        }
+        Insert: {
+          access_token: string
+          avatar?: string | null
+          created_at?: string
+          discord_user_id: string
+          expires_at: string
+          id?: string
+          username: string
+        }
+        Update: {
+          access_token?: string
+          avatar?: string | null
+          created_at?: string
+          discord_user_id?: string
+          expires_at?: string
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      guild_configs: {
+        Row: {
+          channels: Json
+          guild_id: string
+          roles: Json
+          settings: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          channels?: Json
+          guild_id: string
+          roles?: Json
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          channels?: Json
+          guild_id?: string
+          roles?: Json
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
