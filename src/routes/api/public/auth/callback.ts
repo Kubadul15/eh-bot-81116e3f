@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/public/auth/callback")({
           .single();
         if (error) return new Response("Błąd serwera.", { status: 500 });
         setCookie("ehb_session", data.id, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 7 * 86400 });
-        return Response.redirect(`${url.origin}/dashboard`, 302);
+        return new Response(null, { status: 302, headers: { location: `${url.origin}/dashboard` } });
       },
     },
   },
