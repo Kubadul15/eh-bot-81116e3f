@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/public/auth/logout")({
           await supabaseAdmin.from("dash_sessions").delete().eq("id", id);
         }
         deleteCookie("ehb_session", { path: "/" });
-        return Response.redirect(new URL("/", request.url).toString(), 302);
+        return new Response(null, { status: 302, headers: { location: new URL("/", request.url).toString() } });
       },
     },
   },
