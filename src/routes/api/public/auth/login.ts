@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/auth/login")({
         u.searchParams.set("scope", "identify guilds");
         u.searchParams.set("redirect_uri", `${origin}/api/public/auth/callback`);
         u.searchParams.set("state", state);
-        return Response.redirect(u.toString(), 302);
+        return new Response(null, { status: 302, headers: { location: u.toString() } });
       },
     },
   },
