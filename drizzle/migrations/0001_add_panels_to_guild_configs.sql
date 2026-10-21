@@ -1,0 +1,1 @@
+ALTER TABLE public.guild_configs ADD COLUMN IF NOT EXISTS panels jsonb NOT NULL DEFAULT '{}'::jsonb;
