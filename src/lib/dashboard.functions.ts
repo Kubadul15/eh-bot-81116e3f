@@ -96,3 +96,23 @@ export const saveGuild = createServerFn({ method: "POST" })
     if (error) throw new Error("Nie udało się zapisać");
     return { ok: true };
   });
+
+// Ustawia flagę w panels — bot odczyta ją przy następnym pobraniu ustawień (do ~30 s) i wyśle panel.
+export const sendPanel = createServerFn({ method: "POST" })
+  .inputValidator((d: { guildId: string; panel: string }) => {
+    if (!isSnowflake(d?.guildId)) throw new Error("Złe ID serwera");
+    if (!PANEL_KEYS.includes(d?.panel as (typeof PANEL_KEYS)[number])) throw new Error("Nieznany panel");
+    return d;
+  })
+  .handler(async ({ data }) => {
+    const { requireGuild } = await import("./discord.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await requireGuild(data.guildId);
+    const { data: cfg } = await supabaseAdmin.from("guild_configs").select("channels, panels").eq("guild_id", data.guildId).maybeSingle();
+    const slot = (await import("./bot-slots")).PANEL_SLOTS.find((p) => p.key === data.panel)!.slot;
+    if (!isSnowflake((cfg?.channels as Record<string, string> | null)?.[slot])) throw new Error("Najpierw ustaw i zapisz kanał dla tego panelu");
+    const panels = { ...((cfg?.panels as Record<string, string> | null) ?? {}), [data.panel]: new Date().toISOString() };
+    const { error } = await supabaseAdmin.from("guild_configs").upsert({ guild_id: data.guildId, panels });
+    if (error) throw new Error("Nie udało się zlecić wysyłki");
+    return { ok: true };
+  });
