@@ -8,6 +8,13 @@
       "when": 1792444587213,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792615274745,
+      "tag": "0001_add_panels_to_guild_configs",
+      "breakpoints": true
     }
   ]
 }

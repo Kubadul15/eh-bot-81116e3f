@@ -30,6 +30,16 @@ export const CHANNEL_SECTIONS: { name: string; slots: [string, string, string, s
 ];
 export const CHANNEL_KEYS = CHANNEL_SECTIONS.flatMap((s) => s.slots.map((x) => x[0]));
 
+// Panele, które można wysłać ze strony. slot = klucz kanału z CHANNEL_SECTIONS, key musi pasować do bota (modules/panels.js).
+export const PANEL_SLOTS = [
+  { key: "urzad", emoji: "🏛️", label: "Urząd (mObywatel)", slot: "panel" },
+  { key: "opinie", emoji: "💬", label: "Pochwały i skargi", slot: "opiniepanel" },
+  { key: "staff", emoji: "🛡️", label: "Panel administracji", slot: "staffpanel" },
+  { key: "tickety", emoji: "🎫", label: "Tickety", slot: "ticketpanel" },
+  { key: "rekrutacja", emoji: "📝", label: "Rekrutacja", slot: "rekrutpanel" },
+] as const;
+export const PANEL_KEYS = PANEL_SLOTS.map((p) => p.key);
+
 export const ROLE_FIELDS = [
   { key: "staff", label: "Administracja", desc: "Cała ekipa – panel administracji", multi: true },
   { key: "ban", label: "Mogą banować", desc: "Dostęp do /ban", multi: true },

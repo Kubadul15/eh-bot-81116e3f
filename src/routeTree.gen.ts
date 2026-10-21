@@ -16,6 +16,7 @@ import { Route as ApiPublicAuthCallbackRouteImport } from './routes/api/public/a
 import { Route as ApiPublicAuthLoginRouteImport } from './routes/api/public/auth/login'
 import { Route as ApiPublicAuthLogoutRouteImport } from './routes/api/public/auth/logout'
 import { Route as ApiPublicBotConfigRouteImport } from './routes/api/public/bot/config'
+import { Route as ApiPublicBotPanelsRouteImport } from './routes/api/public/bot/panels'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const ApiPublicBotConfigRoute = ApiPublicBotConfigRouteImport.update({
   path: '/api/public/bot/config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBotPanelsRoute = ApiPublicBotPanelsRouteImport.update({
+  id: '/api/public/bot/panels',
+  path: '/api/public/bot/panels',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
+  '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
+  '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
+  '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
     | '/api/public/bot/config'
+    | '/api/public/bot/panels'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
     | '/api/public/bot/config'
+    | '/api/public/bot/panels'
   id:
     | '__root__'
     | '/'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
     | '/api/public/bot/config'
+    | '/api/public/bot/panels'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   ApiPublicAuthLoginRoute: typeof ApiPublicAuthLoginRoute
   ApiPublicAuthLogoutRoute: typeof ApiPublicAuthLogoutRoute
   ApiPublicBotConfigRoute: typeof ApiPublicBotConfigRoute
+  ApiPublicBotPanelsRoute: typeof ApiPublicBotPanelsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBotConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bot/panels': {
+      id: '/api/public/bot/panels'
+      path: '/api/public/bot/panels'
+      fullPath: '/api/public/bot/panels'
+      preLoaderRoute: typeof ApiPublicBotPanelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAuthLoginRoute: ApiPublicAuthLoginRoute,
   ApiPublicAuthLogoutRoute: ApiPublicAuthLogoutRoute,
   ApiPublicBotConfigRoute: ApiPublicBotConfigRoute,
+  ApiPublicBotPanelsRoute: ApiPublicBotPanelsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
