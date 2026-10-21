@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { CHANNEL_KEYS, ROLE_FIELDS, NUM_FIELDS, isSnowflake } from "./bot-slots";
+import { CHANNEL_KEYS, ROLE_FIELDS, NUM_FIELDS, PANEL_KEYS, isSnowflake } from "./bot-slots";
 
 export const getMe = createServerFn({ method: "GET" }).handler(async () => {
   const { getSession } = await import("./discord.server");

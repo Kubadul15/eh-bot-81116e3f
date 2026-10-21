@@ -13,10 +13,10 @@ export const Route = createFileRoute("/api/public/bot/config")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data } = await supabaseAdmin
           .from("guild_configs")
-          .select("channels, roles, settings")
+          .select("channels, roles, settings, panels")
           .eq("guild_id", guild)
           .maybeSingle();
-        return Response.json(data ?? { channels: {}, roles: {}, settings: {} });
+        return Response.json(data ?? { channels: {}, roles: {}, settings: {}, panels: {} });
       },
     },
   },
