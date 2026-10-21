@@ -97,7 +97,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   return (
     <main className="min-h-screen pb-28">
       <SiteHeader user={me.user} />
-      <section className="mx-auto max-w-5xl px-5 py-6">
+      <section className="hero-glow-soft mx-auto max-w-5xl animate-fade-up px-5 py-6">
         <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">← Serwery</Link>
         <h1 className="mt-2 font-display text-5xl">{data.guild.name}</h1>
         <p className="text-muted-foreground">Zmiany działają w bocie do 30 sekund po zapisaniu.</p>
@@ -105,7 +105,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
         <h2 className="mt-10 font-display text-3xl">Kanały</h2>
         <div className="mt-4 space-y-6">
           {CHANNEL_SECTIONS.map((sec) => (
-            <div key={sec.name} className="rounded-lg border bg-card p-5">
+            <div key={sec.name} className="card-lift animate-fade-up rounded-xl border bg-card/80 p-5 backdrop-blur">
               <h3 className="font-bold">{sec.name}</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {sec.slots.map(([key, emoji, label, desc]) => {
@@ -117,7 +117,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                       <select
                         value={channels[key] ?? ""}
                         onChange={(e) => setChannels((c) => ({ ...c, [key]: e.target.value }))}
-                        className="mt-1 w-full rounded-md border bg-input/30 px-3 py-2 text-sm"
+                        className="mt-1 w-full rounded-md border bg-input/30 px-3 py-2 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-ring/40"
                       >
                         <option value="">— nie ustawiono —</option>
                         {list.map((c) => (
@@ -138,7 +138,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             const val = roles[f.key];
             const sel = f.multi ? (Array.isArray(val) ? val : []) : typeof val === "string" && val ? [val] : [];
             return (
-              <div key={f.key} className="rounded-lg border bg-card p-5">
+              <div key={f.key} className="card-lift animate-fade-up rounded-xl border bg-card/80 p-5 backdrop-blur">
                 <h3 className="font-bold">{f.label}</h3>
                 <p className="text-xs text-muted-foreground">{f.desc}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
         </div>
 
         <h2 className="mt-10 font-display text-3xl">Limity</h2>
-        <div className="mt-4 grid gap-4 rounded-lg border bg-card p-5 sm:grid-cols-2">
+        <div className="card-lift animate-fade-up mt-4 grid gap-4 rounded-xl border bg-card/80 p-5 sm:grid-cols-2">
           {NUM_FIELDS.map((f) => (
             <label key={f.key} className="block">
               <span className="text-sm font-semibold">{f.label}</span>
@@ -173,7 +173,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 max={365}
                 value={settings[f.key] ?? f.def}
                 onChange={(e) => setSettings((s) => ({ ...s, [f.key]: Number(e.target.value) }))}
-                className="mt-1 w-full rounded-md border bg-input/30 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border bg-input/30 px-3 py-2 text-sm outline-none transition focus:border-accent focus:ring-2 focus:ring-ring/40"
               />
             </label>
           ))}
@@ -183,12 +183,12 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
       <div className="fixed inset-x-0 bottom-0 border-t bg-card/95 px-5 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
           <span className="text-sm text-muted-foreground">
-            {status === "saved" ? "✅ Zapisano" : status === "error" ? "❌ Błąd zapisu" : "Pamiętaj o zapisaniu"}
+            {status === "saved" ? <span className="animate-fade-up inline-block">✅ Zapisano</span> : status === "error" ? "❌ Błąd zapisu" : "Pamiętaj o zapisaniu"}
           </span>
           <button
             onClick={save}
             disabled={status === "saving"}
-            className="rounded-md bg-primary px-6 py-2.5 font-semibold text-primary-foreground transition hover:brightness-110 disabled:opacity-60"
+            className="rounded-md bg-primary px-6 py-2.5 font-semibold text-primary-foreground shadow-[0_0_24px_-6px_var(--primary)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-95 disabled:opacity-60"
           >
             {status === "saving" ? "Zapisywanie…" : "Zapisz"}
           </button>

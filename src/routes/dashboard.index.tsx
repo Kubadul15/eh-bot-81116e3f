@@ -42,7 +42,7 @@ function Dashboard() {
             {guilds.length === 0 && <p className="mt-8 text-muted-foreground">Brak serwerów.</p>}
             <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {guilds.map((g) => (
-                <div key={g.id} className="flex items-center gap-3 rounded-lg border bg-card p-4">
+                <div key={g.id} className="card-lift animate-fade-up flex items-center gap-3 rounded-xl border bg-card/80 p-4">
                   {g.icon ? (
                     <img src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=96`} alt="" className="h-12 w-12 rounded-full" />
                   ) : (

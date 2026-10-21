@@ -82,3 +82,21 @@
 @keyframes siren {
   50% { filter: brightness(0.4); }
 }
+
+.cursor-dot, .cursor-ring { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 9999; border-radius: 9999px; display: none; }
+.has-dot .cursor-dot, .has-dot .cursor-ring { display: block; }
+.has-dot, .has-dot * { cursor: none !important; }
+.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
+.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid color-mix(in oklch, var(--accent) 70%, transparent); transition: width .2s, height .2s, margin .2s, background .2s; }
+.cursor-ring.is-hover { width: 52px; height: 52px; margin: -26px 0 0 -26px; background: color-mix(in oklch, var(--accent) 15%, transparent); }
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@utility animate-fade-up { animation: fade-up .6s cubic-bezier(.2,.7,.2,1) both; }
+@utility card-lift {
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+  &:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 40px -18px var(--accent); }
+}
+@utility hero-glow-soft {
+  background: radial-gradient(50% 30% at 50% 0%, color-mix(in oklch, var(--siren-blue) 18%, transparent), transparent 70%);
+}
+@media (prefers-reduced-motion: reduce) { .animate-fade-up { animation: none; } }
