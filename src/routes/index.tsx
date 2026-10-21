@@ -32,7 +32,7 @@ const FEATURES = [
 const STEPS = [
   { n: "01", t: "Dodaj bota", d: "Kliknij „Dodaj na serwer” i wybierz swój serwer." },
   { n: "02", t: "Otwórz Dashboard", d: "Zaloguj się przez Discord i wybierz kanały oraz rangi z listy na stronie." },
-  { n: "03", t: "Gotowe", d: "Zapisz zmiany — bot od razu używa nowych ustawień. Panele wyślesz komendą /panele." },
+  { n: "03", t: "Gotowe", d: "Zapisz zmiany i wyślij panele jednym kliknięciem — wszystko bez komend na Discordzie." },
 ];
 
 function Index() {

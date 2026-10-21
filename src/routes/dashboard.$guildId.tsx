@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { getGuild, getMe, saveGuild } from "@/lib/dashboard.functions";
-import { CHANNEL_SECTIONS, ROLE_FIELDS, NUM_FIELDS } from "@/lib/bot-slots";
+import { CHANNEL_SECTIONS, ROLE_FIELDS, NUM_FIELDS, PANEL_SLOTS } from "@/lib/bot-slots";
+import { sendPanel } from "@/lib/dashboard.functions";
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
