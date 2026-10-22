@@ -173,6 +173,31 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
           })}
         </div>
 
+        <h2 className="mt-10 font-display text-3xl">Panele</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Wyślij panel na kanał ustawiony powyżej. Bot wyśle go w ciągu ~30 sekund.</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PANEL_SLOTS.map((p) => {
+            const st = panelStatus[p.key];
+            const hasChannel = !!channels[p.slot];
+            return (
+              <div key={p.key} className="card-lift animate-fade-up rounded-xl border bg-card/80 p-5 backdrop-blur">
+                <h3 className="font-bold">{p.emoji} {p.label}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {hasChannel ? `Kanał: #${textChannels.find((c) => c.id === channels[p.slot])?.name ?? "ustawiony"}` : "Najpierw ustaw i zapisz kanał"}
+                </p>
+                <button
+                  type="button"
+                  disabled={!hasChannel || st === "sending"}
+                  onClick={() => sendOne(p.key)}
+                  className="mt-3 w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:-translate-y-0.5 hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {st === "sending" ? "Wysyłanie…" : st === "sent" ? "✅ Zlecono" : st === "error" ? "❌ Błąd — spróbuj lagi" : "Wyślij panel"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
         <h2 className="mt-10 font-display text-3xl">Limity</h2>
         <div className="card-lift animate-fade-up mt-4 grid gap-4 rounded-xl border bg-card/80 p-5 sm:grid-cols-2">
           {NUM_FIELDS.map((f) => (
