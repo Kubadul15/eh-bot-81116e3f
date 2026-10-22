@@ -15,13 +15,15 @@ export const Route = createFileRoute("/api/public/bot/panels")({
         } catch {
           return new Response("Bad body", { status: 400 });
         }
-        if (!isSnowflake(body.guild) || !PANEL_KEYS.includes(body.panel as (typeof PANEL_KEYS)[number]))
+        const guild = body.guild;
+        const panelKey = body.panel;
+        if (!isSnowflake(guild) || !panelKey || !PANEL_KEYS.includes(panelKey as (typeof PANEL_KEYS)[number]))
           return new Response("Bad request", { status: 400 });
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: cfg } = await supabaseAdmin.from("guild_configs").select("panels").eq("guild_id", body.guild).maybeSingle();
+        const { data: cfg } = await supabaseAdmin.from("guild_configs").select("panels").eq("guild_id", guild).maybeSingle();
         const panels = { ...((cfg?.panels as Record<string, string> | null) ?? {}) };
-        delete panels[body.panel];
-        await supabaseAdmin.from("guild_configs").update({ panels }).eq("guild_id", body.guild);
+        delete panels[panelKey];
+        await supabaseAdmin.from("guild_configs").update({ panels }).eq("guild_id", guild);
         return Response.json({ ok: true });
       },
     },
