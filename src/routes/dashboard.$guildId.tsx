@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { getGuild, getMe, saveGuild } from "@/lib/dashboard.functions";
+import { getGuild, getMe, saveGuild, sendPanel } from "@/lib/dashboard.functions";
 import { CHANNEL_SECTIONS, ROLE_FIELDS, NUM_FIELDS, PANEL_SLOTS } from "@/lib/bot-slots";
-import { sendPanel } from "@/lib/dashboard.functions";
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
@@ -57,6 +56,17 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const [roles, setRoles] = useState<Record<string, string[] | string>>(data.botIn ? data.config.roles : {});
   const [settings, setSettings] = useState<Record<string, number>>(data.botIn ? data.config.settings : {});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [panelStatus, setPanelStatus] = useState<Record<string, "sending" | "sent" | "error">>({});
+
+  async function sendOne(key: string) {
+    setPanelStatus((p) => ({ ...p, [key]: "sending" }));
+    try {
+      await sendPanel({ data: { guildId, panel: key } });
+      setPanelStatus((p) => ({ ...p, [key]: "sent" }));
+    } catch {
+      setPanelStatus((p) => ({ ...p, [key]: "error" }));
+    }
+  }
 
   if (!data.botIn) {
     return (
@@ -158,6 +168,31 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                     );
                   })}
                 </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <h2 className="mt-10 font-display text-3xl">Panele</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Wyślij panel na kanał ustawiony powyżej. Bot wyśle go w ciągu ~30 sekund.</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {PANEL_SLOTS.map((p) => {
+            const st = panelStatus[p.key];
+            const hasChannel = !!channels[p.slot];
+            return (
+              <div key={p.key} className="card-lift animate-fade-up rounded-xl border bg-card/80 p-5 backdrop-blur">
+                <h3 className="font-bold">{p.emoji} {p.label}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {hasChannel ? `Kanał: #${textChannels.find((c) => c.id === channels[p.slot])?.name ?? "ustawiony"}` : "Najpierw ustaw i zapisz kanał"}
+                </p>
+                <button
+                  type="button"
+                  disabled={!hasChannel || st === "sending"}
+                  onClick={() => sendOne(p.key)}
+                  className="mt-3 w-full rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition hover:-translate-y-0.5 hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {st === "sending" ? "Wysyłanie…" : st === "sent" ? "✅ Zlecono" : st === "error" ? "❌ Błąd — spróbuj lagi" : "Wyślij panel"}
+                </button>
               </div>
             );
           })}
