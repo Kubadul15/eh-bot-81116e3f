@@ -35,28 +35,28 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.17 0.03 215);
-  --foreground: oklch(0.96 0.01 220);
-  --card: oklch(0.22 0.04 220);
-  --card-foreground: oklch(0.96 0.01 220);
-  --popover: oklch(0.22 0.04 220);
-  --popover-foreground: oklch(0.96 0.01 220);
-  --primary: oklch(0.63 0.22 22);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.28 0.05 220);
-  --secondary-foreground: oklch(0.96 0.01 220);
-  --muted: oklch(0.26 0.04 220);
-  --muted-foreground: oklch(0.74 0.03 220);
-  --accent: oklch(0.72 0.14 205);
-  --accent-foreground: oklch(0.16 0.03 215);
-  --destructive: oklch(0.6 0.24 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.14 205);
-  --siren-red: oklch(0.63 0.22 22);
-  --siren-blue: oklch(0.68 0.15 215);
+  --radius: 0.75rem;
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.16 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0 0);
+  --primary: oklch(0.18 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.93 0 0);
+  --accent-foreground: oklch(0.18 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 14%);
+  --ring: oklch(0.35 0 0);
+  --siren-red: oklch(0.25 0 0);
+  --siren-blue: oklch(0.55 0 0);
 }
 
 @layer base {
@@ -70,33 +70,33 @@
 
 @utility hero-glow {
   background:
-    radial-gradient(60% 50% at 15% 0%, color-mix(in oklch, var(--siren-red) 40%, transparent), transparent 70%),
-    radial-gradient(60% 50% at 85% 0%, color-mix(in oklch, var(--siren-blue) 40%, transparent), transparent 70%);
+    radial-gradient(60% 50% at 15% 0%, oklch(0 0 0 / 4%), transparent 70%),
+    radial-gradient(60% 50% at 85% 0%, oklch(0 0 0 / 3%), transparent 70%);
 }
 
 @utility siren-bar {
-  background: linear-gradient(90deg, var(--siren-red) 0 50%, var(--siren-blue) 50% 100%);
+  background: linear-gradient(90deg, oklch(0.18 0 0) 0 50%, oklch(0.55 0 0) 50% 100%);
   animation: siren 1.2s steps(2) infinite;
 }
 
 @keyframes siren {
-  50% { filter: brightness(0.4); }
+  50% { filter: brightness(1.6); }
 }
 
 .cursor-dot, .cursor-ring { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 9999; border-radius: 9999px; display: none; }
 .has-dot .cursor-dot, .has-dot .cursor-ring { display: block; }
 .has-dot, .has-dot * { cursor: none !important; }
-.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #fff; box-shadow: 0 0 12px rgb(255 255 255 / 0.6); }
-.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid rgb(255 255 255 / 0.55); transition: width .2s, height .2s, margin .2s, background .2s; }
-.cursor-ring.is-hover { width: 52px; height: 52px; margin: -26px 0 0 -26px; background: rgb(255 255 255 / 0.12); }
+.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #111; box-shadow: 0 0 10px rgb(0 0 0 / 0.25); }
+.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid rgb(0 0 0 / 0.4); transition: width .2s, height .2s, margin .2s, background .2s; }
+.cursor-ring.is-hover { width: 52px; height: 52px; margin: -26px 0 0 -26px; background: rgb(0 0 0 / 0.06); }
 
 @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @utility animate-fade-up { animation: fade-up .6s cubic-bezier(.2,.7,.2,1) both; }
 @utility card-lift {
   transition: transform .25s, border-color .25s, box-shadow .25s;
-  &:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 40px -18px var(--accent); }
+  &:hover { transform: translateY(-3px); border-color: oklch(0 0 0 / 30%); box-shadow: 0 14px 40px -18px oklch(0 0 0 / 25%); }
 }
 @utility hero-glow-soft {
-  background: radial-gradient(50% 30% at 50% 0%, color-mix(in oklch, var(--siren-blue) 18%, transparent), transparent 70%);
+  background: radial-gradient(50% 30% at 50% 0%, oklch(0 0 0 / 3%), transparent 70%);
 }
 @media (prefers-reduced-motion: reduce) { .animate-fade-up { animation: none; } }
