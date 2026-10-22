@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { getGuild, getMe, saveGuild } from "@/lib/dashboard.functions";
+import { getGuild, getMe, saveGuild, sendPanel } from "@/lib/dashboard.functions";
 import { CHANNEL_SECTIONS, ROLE_FIELDS, NUM_FIELDS, PANEL_SLOTS } from "@/lib/bot-slots";
-import { sendPanel } from "@/lib/dashboard.functions";
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
@@ -57,6 +56,17 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const [roles, setRoles] = useState<Record<string, string[] | string>>(data.botIn ? data.config.roles : {});
   const [settings, setSettings] = useState<Record<string, number>>(data.botIn ? data.config.settings : {});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [panelStatus, setPanelStatus] = useState<Record<string, "sending" | "sent" | "error">>({});
+
+  async function sendOne(key: string) {
+    setPanelStatus((p) => ({ ...p, [key]: "sending" }));
+    try {
+      await sendPanel({ data: { guildId, panel: key } });
+      setPanelStatus((p) => ({ ...p, [key]: "sent" }));
+    } catch {
+      setPanelStatus((p) => ({ ...p, [key]: "error" }));
+    }
+  }
 
   if (!data.botIn) {
     return (
