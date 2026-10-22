@@ -86,9 +86,9 @@
 .cursor-dot, .cursor-ring { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 9999; border-radius: 9999px; display: none; }
 .has-dot .cursor-dot, .has-dot .cursor-ring { display: block; }
 .has-dot, .has-dot * { cursor: none !important; }
-.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--primary); box-shadow: 0 0 12px var(--primary); }
-.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid color-mix(in oklch, var(--accent) 70%, transparent); transition: width .2s, height .2s, margin .2s, background .2s; }
-.cursor-ring.is-hover { width: 52px; height: 52px; margin: -26px 0 0 -26px; background: color-mix(in oklch, var(--accent) 15%, transparent); }
+.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: #fff; box-shadow: 0 0 12px rgb(255 255 255 / 0.6); }
+.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid rgb(255 255 255 / 0.55); transition: width .2s, height .2s, margin .2s, background .2s; }
+.cursor-ring.is-hover { width: 52px; height: 52px; margin: -26px 0 0 -26px; background: rgb(255 255 255 / 0.12); }
 
 @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @utility animate-fade-up { animation: fade-up .6s cubic-bezier(.2,.7,.2,1) both; }
