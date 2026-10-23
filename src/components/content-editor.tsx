@@ -6,14 +6,17 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
 import { EMBED_TYPES, emptyEmbed, type ContentConfig, type EmbedConfig } from "@/lib/content-config";
-import { uploadImage } from "@/lib/content.functions";
+import { uploadImage, sendAnnouncement } from "@/lib/content.functions";
 
-type Props = { guildId: string; value: ContentConfig; onChange: (v: ContentConfig) => void; roles: { id: string; name: string }[]; view: "recruitment" | "embeds" };
-export function ContentEditor({ guildId, value, onChange, roles, view }: Props) {
+type Props = { guildId: string; value: ContentConfig; onChange: (v: ContentConfig) => void; roles: { id: string; name: string }[]; channels: { id: string; name: string; type: number }[]; view: "recruitment" | "embeds" };
+export function ContentEditor({ guildId, value, onChange, roles, channels, view }: Props) {
   const [selected, setSelected] = useState("rekrutacja");
   const [uploading, setUploading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const upload = useServerFn(uploadImage);
+  const send = useServerFn(sendAnnouncement);
+  const [channelId, setChannelId] = useState("");
+  const [sendState, setSendState] = useState("idle");
   const r = value.recruitment;
   const changeRecruit = (patch: Partial<typeof r>) => onChange({ ...value, recruitment: { ...r, ...patch } });
   const key = view === "recruitment" ? "rekrutacja" : selected;
@@ -63,6 +66,7 @@ export function ContentEditor({ guildId, value, onChange, roles, view }: Props) 
           <div className="grid gap-4 sm:grid-cols-[1fr_90px]"><Field label="Stopka"><Input maxLength={200} value={embed.footer} placeholder="Emergency Hamburg" onChange={e => changeEmbed({ footer: e.target.value })} /></Field><Field label="Kolor"><Input aria-label="Kolor embeda" type="color" value={embed.color} onChange={e => changeEmbed({ color: e.target.value })} /></Field></div>
           {(["image", "thumbnail"] as const).map(field => <div key={field} className="space-y-2"><Field label={field === "image" ? "Zdjęcie embeda" : "Miniatura"}><Input type="url" value={embed[field]} placeholder="https://…" onChange={e => changeEmbed({ [field]: e.target.value })} /></Field><div className="flex items-center gap-2"><Button asChild variant="outline" disabled={!!uploading}><label><ImagePlus />{uploading === field ? "Dodawanie…" : "Dodaj zdjęcie"}<input className="sr-only" aria-label={field === "image" ? "Wgraj zdjęcie embeda" : "Wgraj miniaturę"} type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={!!uploading} onChange={e => { void addImage(e.target.files?.[0], field); e.target.value = ""; }} /></label></Button>{embed[field] && <Button variant="ghost" size="icon" aria-label={`Usuń ${field}`} title="Usuń zdjęcie" onClick={() => changeEmbed({ [field]: "" })}><X /></Button>}</div></div>)}
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          {view === "embeds" && selected === "embed" && <div className="space-y-3 border-t pt-4"><Field label="Kanał ogłoszenia"><select className="editor-select" value={channelId} onChange={e => setChannelId(e.target.value)}><option value="">Wybierz kanał</option>{channels.filter(c => c.type !== 4).map(c => <option key={c.id} value={c.id}># {c.name}</option>)}</select></Field><Button disabled={!channelId || sendState === "sending"} onClick={async () => { setSendState("sending"); setError(""); try { await send({ data: { guildId, channelId, embed } }); setSendState("sent"); } catch (e) { setError(e instanceof Error ? e.message : "Błąd wysyłania"); setSendState("idle"); } }}>{sendState === "sending" ? "Wysyłanie…" : sendState === "sent" ? "Wysłano" : "Wyślij ogłoszenie"}</Button></div>}
         </section>
       </div>
       <aside className="min-w-0 xl:sticky xl:top-6"><div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground"><Eye className="size-4" />Podgląd</div><div className="rounded-lg border bg-card p-5"><div className="mb-4 flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">EH</span><div className="text-sm font-semibold">Emergency Hamburg <span className="ml-1 rounded bg-secondary px-1 text-xs text-muted-foreground">BOT</span></div></div><div className="embed-preview min-w-0 border-l-4 bg-secondary/60 p-4" ref={el => { if (el) el.style.borderLeftColor = embed.color; }}>

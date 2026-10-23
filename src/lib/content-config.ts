@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MESSAGE_EMBEDS } from "./embed-catalog";
 
 export const EMBED_TYPES = [
   ["urzad", "Urząd — panel"], ["opinie", "Pochwały i skargi — panel"],
@@ -6,6 +7,7 @@ export const EMBED_TYPES = [
   ["rekrutacja", "Rekrutacja — panel"], ["recruit", "Rekrutacja — aplikacje i decyzje"],
   ["ban", "Bany"], ["tickets", "Tickety — wiadomości"], ["mobywatel", "Dokumenty i mObywatel"],
   ["staff_messages", "Administracja — wiadomości"], ["embed", "Własne ogłoszenie"],
+  ...MESSAGE_EMBEDS,
 ] as const;
 const image = z.string().max(2048).refine(v => !v || /^https:\/\//.test(v), "Zdjęcie musi mieć adres HTTPS");
 export const embedSchema = z.object({ title: z.string().max(256).default(""), description: z.string().max(2000).default(""), footer: z.string().max(200).default(""), image, thumbnail: image, color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#202020") });

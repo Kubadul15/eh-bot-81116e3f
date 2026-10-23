@@ -132,7 +132,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
         <nav className="my-8 flex flex-wrap gap-2 border-b pb-4" aria-label="Sekcje konfiguracji">
           {([{ id: "recruitment", label: "Rekrutacja", icon: Users }, { id: "embeds", label: "Emb edy".replace(" ", ""), icon: FileText }, { id: "panels", label: "Wysyłanie paneli", icon: Send }, { id: "settings", label: "Ustawienia", icon: Settings2 }] as const).map(item => <Button key={item.id} variant={view === item.id ? "default" : "ghost"} onClick={() => setView(item.id)}><item.icon />{item.label}</Button>)}
         </nav>
-        {(view === "recruitment" || view === "embeds") && <ContentEditor guildId={guildId} value={content} onChange={v => { setContent(v); setStatus("idle"); }} roles={data.roles} view={view} />}
+        {(view === "recruitment" || view === "embeds") && <ContentEditor guildId={guildId} value={content} onChange={v => { setContent(v); setStatus("idle"); }} roles={data.roles} channels={data.channels} view={view} />}
         <div hidden={view !== "settings"}>
 
         <h2 className="mt-10 font-display text-3xl">Kanały</h2>
