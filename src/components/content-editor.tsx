@@ -26,7 +26,7 @@ export function ContentEditor({ guildId, value, onChange, roles, view }: Props) 
     catch (e) { setError(e instanceof Error ? e.message : "Nie udało się dodać zdjęcia"); }
     finally { setUploading(null); }
   }
-  const moveQuestion = (index: number, direction: number) => { const next = [...r.questions]; const target = index + direction; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; changeRecruit({ questions: next }); };
+  const moveQuestion = (index: number, direction: number) => { const next = [...r.questions]; const target = index + direction; const current = next[index], other = next[target]; if (!current || !other) return; next[index] = other; next[target] = current; changeRecruit({ questions: next }); };
   return <div className="animate-fade-up">
     <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b pb-6">
       <div><p className="text-xs font-semibold uppercase text-muted-foreground">Emergency Hamburg / {view === "recruitment" ? "Nabór" : "Wiadomości"}</p><h2 className="mt-1 font-display text-4xl">{view === "recruitment" ? "Rekrutacja" : "Edytor embedów"}</h2></div>
