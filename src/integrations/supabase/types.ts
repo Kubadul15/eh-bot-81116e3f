@@ -47,6 +47,7 @@ export type Database = {
       guild_configs: {
         Row: {
           channels: Json
+          content: Json
           guild_id: string
           panels: Json
           roles: Json
@@ -56,6 +57,7 @@ export type Database = {
         }
         Insert: {
           channels?: Json
+          content?: Json
           guild_id: string
           panels?: Json
           roles?: Json
@@ -65,6 +67,7 @@ export type Database = {
         }
         Update: {
           channels?: Json
+          content?: Json
           guild_id?: string
           panels?: Json
           roles?: Json
