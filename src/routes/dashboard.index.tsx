@@ -13,6 +13,8 @@ export const Route = createFileRoute("/dashboard/")({
       { name: "description", content: "Wybierz serwer i skonfiguruj bota Emergency Hamburg." },
       { property: "og:title", content: "Panel — Emergency Hamburg Bot" },
       { property: "og:description", content: "Konfiguracja bota przez stronę." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   loader: async ({ context }) => {

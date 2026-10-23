@@ -16,6 +16,7 @@ import { Route as ApiPublicAuthCallbackRouteImport } from './routes/api/public/a
 import { Route as ApiPublicAuthLoginRouteImport } from './routes/api/public/auth/login'
 import { Route as ApiPublicAuthLogoutRouteImport } from './routes/api/public/auth/logout'
 import { Route as ApiPublicBotConfigRouteImport } from './routes/api/public/bot/config'
+import { Route as ApiPublicBotImageRouteImport } from './routes/api/public/bot/image'
 import { Route as ApiPublicBotPanelsRouteImport } from './routes/api/public/bot/panels'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const ApiPublicBotConfigRoute = ApiPublicBotConfigRouteImport.update({
   path: '/api/public/bot/config',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBotImageRoute = ApiPublicBotImageRouteImport.update({
+  id: '/api/public/bot/image',
+  path: '/api/public/bot/image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBotPanelsRoute = ApiPublicBotPanelsRouteImport.update({
   id: '/api/public/bot/panels',
   path: '/api/public/bot/panels',
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
+  '/api/public/bot/image': typeof ApiPublicBotImageRoute
   '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
+  '/api/public/bot/image': typeof ApiPublicBotImageRoute
   '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
+  '/api/public/bot/image': typeof ApiPublicBotImageRoute
   '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
     | '/api/public/bot/config'
+    | '/api/public/bot/image'
     | '/api/public/bot/panels'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
     | '/api/public/bot/config'
+    | '/api/public/bot/image'
     | '/api/public/bot/panels'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
     | '/api/public/bot/config'
+    | '/api/public/bot/image'
     | '/api/public/bot/panels'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   ApiPublicAuthLoginRoute: typeof ApiPublicAuthLoginRoute
   ApiPublicAuthLogoutRoute: typeof ApiPublicAuthLogoutRoute
   ApiPublicBotConfigRoute: typeof ApiPublicBotConfigRoute
+  ApiPublicBotImageRoute: typeof ApiPublicBotImageRoute
   ApiPublicBotPanelsRoute: typeof ApiPublicBotPanelsRoute
 }
 
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBotConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bot/image': {
+      id: '/api/public/bot/image'
+      path: '/api/public/bot/image'
+      fullPath: '/api/public/bot/image'
+      preLoaderRoute: typeof ApiPublicBotImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bot/panels': {
       id: '/api/public/bot/panels'
       path: '/api/public/bot/panels'
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAuthLoginRoute: ApiPublicAuthLoginRoute,
   ApiPublicAuthLogoutRoute: ApiPublicAuthLogoutRoute,
   ApiPublicBotConfigRoute: ApiPublicBotConfigRoute,
+  ApiPublicBotImageRoute: ApiPublicBotImageRoute,
   ApiPublicBotPanelsRoute: ApiPublicBotPanelsRoute,
 }
 export const routeTree = rootRouteImport
