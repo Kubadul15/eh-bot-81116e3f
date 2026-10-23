@@ -1,0 +1,1 @@
+ALTER TABLE public.guild_configs ADD COLUMN IF NOT EXISTS content jsonb NOT NULL DEFAULT '{}'::jsonb; COMMENT ON COLUMN public.guild_configs.content IS 'Dashboard-managed recruitment and embed templates, isolated per Discord guild';

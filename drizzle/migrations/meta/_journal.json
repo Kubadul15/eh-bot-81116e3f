@@ -15,6 +15,13 @@
       "when": 1792615274745,
       "tag": "0001_add_panels_to_guild_configs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792776501780,
+      "tag": "0002_guild_content_editor",
+      "breakpoints": true
     }
   ]
 }

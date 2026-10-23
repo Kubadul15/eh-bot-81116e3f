@@ -100,3 +100,6 @@
   background: radial-gradient(50% 30% at 50% 0%, oklch(0 0 0 / 3%), transparent 70%);
 }
 @media (prefers-reduced-motion: reduce) { .animate-fade-up { animation: none; } }
+
+.editor-select { width: 100%; min-height: 36px; border: 1px solid var(--input); border-radius: 6px; padding: 6px 10px; background: var(--card); color: var(--foreground); font-size: 14px; }
+.embed-preview { border-radius: 4px; overflow: hidden; }

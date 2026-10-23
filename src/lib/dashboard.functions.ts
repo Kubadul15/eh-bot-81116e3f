@@ -52,6 +52,7 @@ export const getGuild = createServerFn({ method: "GET" })
         channels: (cfg?.channels ?? {}) as Record<string, string>,
         roles: (cfg?.roles ?? {}) as Record<string, string[] | string>,
         settings: (cfg?.settings ?? {}) as Record<string, number>,
+         content: cfg?.content ?? {},
       },
     };
   });
@@ -109,7 +110,9 @@ export const sendPanel = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireGuild(data.guildId);
     const { data: cfg } = await supabaseAdmin.from("guild_configs").select("channels, panels").eq("guild_id", data.guildId).maybeSingle();
-    const slot = (await import("./bot-slots")).PANEL_SLOTS.find((p) => p.key === data.panel)!.slot;
+    const selected = (await import("./bot-slots")).PANEL_SLOTS.find((p) => p.key === data.panel);
+    if (!selected) throw new Error("Nieznany panel");
+    const slot = selected.slot;
     if (!isSnowflake((cfg?.channels as Record<string, string> | null)?.[slot])) throw new Error("Najpierw ustaw i zapisz kanał dla tego panelu");
     const panels = { ...((cfg?.panels as Record<string, string> | null) ?? {}), [data.panel]: new Date().toISOString() };
     const { error } = await supabaseAdmin.from("guild_configs").upsert({ guild_id: data.guildId, panels });
