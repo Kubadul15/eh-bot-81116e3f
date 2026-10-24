@@ -52,8 +52,8 @@ export const ROLE_FIELDS = [
   { key: "moby_admin", label: "Administracja mObywatela", desc: "Dostęp do panelu admina w Urzędzie", multi: true },
   { key: "management", label: "Zarząd", desc: "Plusy, minusy, awanse, skargi, urlopy", multi: true },
   { key: "ranks", label: "Drabinka rang", desc: "Kliknij od NAJNIŻSZEJ do NAJWYŻSZEJ", multi: true },
-  { key: "verified", label: "Ranga po weryfikacji", desc: "Nadawana po wpisaniu poprawnego kodu captcha", multi: false },
-  { key: "unverified", label: "Ranga przed weryfikacją", desc: "Zdejmowana po weryfikacji (opcjonalnie)", multi: false },
+  { key: "verified", label: "Rangi po weryfikacji", desc: "Nadawane po poprawnym kodzie captcha – możesz wybrać kilka", multi: true },
+  { key: "unverified", label: "Rangi przed weryfikacją", desc: "Zdejmowane po weryfikacji (opcjonalnie, też kilka)", multi: true },
   { key: "leave", label: "Ranga urlopowa", desc: "Nadawana na czas urlopu", multi: false },
 ] as const;
 
