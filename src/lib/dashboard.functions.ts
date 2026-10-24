@@ -16,8 +16,14 @@ export const listGuilds = createServerFn({ method: "GET" }).handler(async () => 
   if (!s) return null;
   const mine = (await userGuilds(s.access_token)).filter(canManage);
   const r = await bot("/users/@me/guilds?limit=200");
-  const botIds = new Set<string>(r.ok ? ((await r.json()) as { id: string }[]).map((g) => g.id) : []);
-  return mine.map((g) => ({ id: g.id, name: g.name, icon: g.icon, botIn: botIds.has(g.id) }));
+  let botIds: Set<string> | null = null;
+  if (r.ok) botIds = new Set(((await r.json()) as { id: string }[]).map((g) => g.id));
+  else console.error("bot guilds list failed", r.status);
+  // Fallback: sprawdź każdy serwer osobno, gdy lista bota nie działa.
+  const checks = await Promise.all(
+    mine.map(async (g) => (botIds ? botIds.has(g.id) : (await bot(`/guilds/${g.id}`)).ok)),
+  );
+  return mine.map((g, i) => ({ id: g.id, name: g.name, icon: g.icon, botIn: checks[i] }));
 });
 
 type Ch = { id: string; name: string; type: number; position: number };
