@@ -31,6 +31,7 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
     ["odwolania", "📨", "Odwołania", "Odwołania od minusów i degradów"],
   ] },
   { id: "ekonomia", name: "💰 Ekonomia", slots: [
+    ["ekokanal", "🔒", "Kanał komend ekonomii", "Komendy (/saldo, !bal…) i przyciski ekonomii działają tylko tu i w jego wątkach. Puste = na każdym kanale"],
     ["ekopanel", "💰", "Panel ekonomii", "Przyciski: portfel, praca, codzienna nagroda, sklep, ranking"],
     ["ekolog", "📜", "Logi ekonomii", "Operacje administracji na pieniądzach (opcjonalnie)"],
   ] },
