@@ -27,6 +27,9 @@ export const CHANNEL_SECTIONS: { name: string; slots: [string, string, string, s
     ["rekrutpanel", "📝", "Panel rekrutacji", "Publiczny panel naboru"],
     ["rekrutacja", "📋", "Aplikacje rekrutacyjne", "Dla ekipy"],
   ] },
+  { name: "🔐 Weryfikacja", slots: [
+    ["weryfpanel", "🔐", "Panel weryfikacji", "Przycisk z kodem captcha dla nowych osób"],
+  ] },
   { name: "🔨 Pozostałe", slots: [["ban", "🔨", "Bany", "Kanał z wystawionymi banami"]] },
 ];
 export const CHANNEL_KEYS = CHANNEL_SECTIONS.flatMap((s) => s.slots.map((x) => x[0]));
@@ -38,6 +41,7 @@ export const PANEL_SLOTS = [
   { key: "staff", emoji: "🛡️", label: "Panel administracji", slot: "staffpanel" },
   { key: "tickety", emoji: "🎫", label: "Tickety", slot: "ticketpanel" },
   { key: "rekrutacja", emoji: "📝", label: "Rekrutacja", slot: "rekrutpanel" },
+  { key: "weryfikacja", emoji: "🔐", label: "Weryfikacja (captcha)", slot: "weryfpanel" },
 ] as const;
 export const PANEL_KEYS = PANEL_SLOTS.map((p) => p.key);
 
@@ -48,6 +52,8 @@ export const ROLE_FIELDS = [
   { key: "moby_admin", label: "Administracja mObywatela", desc: "Dostęp do panelu admina w Urzędzie", multi: true },
   { key: "management", label: "Zarząd", desc: "Plusy, minusy, awanse, skargi, urlopy", multi: true },
   { key: "ranks", label: "Drabinka rang", desc: "Kliknij od NAJNIŻSZEJ do NAJWYŻSZEJ", multi: true },
+  { key: "verified", label: "Ranga po weryfikacji", desc: "Nadawana po wpisaniu poprawnego kodu captcha", multi: false },
+  { key: "unverified", label: "Ranga przed weryfikacją", desc: "Zdejmowana po weryfikacji (opcjonalnie)", multi: false },
   { key: "leave", label: "Ranga urlopowa", desc: "Nadawana na czas urlopu", multi: false },
 ] as const;
 
