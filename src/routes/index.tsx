@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-// Wpisz tu CLIENT_ID swojego bota z Discord Developer Portal
-const CLIENT_ID = "TWOJ_CLIENT_ID";
-const INVITE = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&permissions=8&scope=bot+applications.commands`;
+// CLIENT_ID bota z Discord Developer Portal
+const CLIENT_ID = "1562063009470357566";
+const INVITE = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&permissions=268561430&scope=bot+applications.commands`;
 
 export const Route = createFileRoute("/")({
   head: () => ({
