@@ -7,6 +7,7 @@ export const CHANNEL_SECTIONS: { name: string; slots: [string, string, string, s
     ["prawa", "🚗", "Prawa jazdy", "Wydane i odnowione prawa jazdy"],
     ["bron", "🔫", "Licencje na broń", "Wydane licencje na broń"],
     ["mobyapp", "📥", "Wnioski urzędowe", "Wnioski o prawo jazdy i broń"],
+    ["mobylog", "📜", "Logi mObywatela", "Akcje panelu administracji mObywatela"],
   ] },
   { name: "🛡️ Administracja", slots: [
     ["opiniepanel", "💬", "Panel pochwał i skarg", "Publiczny panel dla graczy"],
@@ -44,6 +45,7 @@ export const ROLE_FIELDS = [
   { key: "staff", label: "Administracja", desc: "Cała ekipa – panel administracji", multi: true },
   { key: "ban", label: "Mogą banować", desc: "Dostęp do /ban", multi: true },
   { key: "police", label: "Policja / służby", desc: "Dostęp do /kontrola", multi: true },
+  { key: "moby_admin", label: "Administracja mObywatela", desc: "Dostęp do panelu admina w Urzędzie", multi: true },
   { key: "management", label: "Zarząd", desc: "Plusy, minusy, awanse, skargi, urlopy", multi: true },
   { key: "ranks", label: "Drabinka rang", desc: "Kliknij od NAJNIŻSZEJ do NAJWYŻSZEJ", multi: true },
   { key: "leave", label: "Ranga urlopowa", desc: "Nadawana na czas urlopu", multi: false },
