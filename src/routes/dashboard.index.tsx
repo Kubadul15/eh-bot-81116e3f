@@ -4,7 +4,8 @@ import { getMe, listGuilds } from "@/lib/dashboard.functions";
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
-const guildsQ = queryOptions({ queryKey: ["guilds"], queryFn: () => listGuilds() });
+// Odświeżaj po powrocie z karty zaproszenia, żeby od razu było widać dodanego bota.
+const guildsQ = queryOptions({ queryKey: ["guilds"], queryFn: () => listGuilds(), staleTime: 0, refetchOnWindowFocus: "always" });
 
 export const Route = createFileRoute("/dashboard/")({
   head: () => ({
