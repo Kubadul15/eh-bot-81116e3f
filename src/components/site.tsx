@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 
+// Uprawnienia bota: rangi, kanały, wiadomości, wyrzucanie/banowanie, wyciszanie (Moderate Members), webhooki, reakcje, zewnętrzne emoji.
+export const BOT_PERMISSIONS = "1100317322326";
 export const inviteUrl = (clientId: string, guildId?: string) =>
-  `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=268561430&scope=bot+applications.commands${guildId ? `&guild_id=${guildId}&disable_guild_select=true` : ""}`;
+  `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=${BOT_PERMISSIONS}&scope=bot+applications.commands${guildId ? `&guild_id=${guildId}&disable_guild_select=true` : ""}`;
 
 // Opens in a new tab: Discord's login page refuses to load inside the editor preview frame.
 export function LoginButton() {

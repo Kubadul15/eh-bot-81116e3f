@@ -192,10 +192,14 @@ export function ChannelField({
 export function NumField({
   label,
   value,
+  min = 1,
+  max = 365,
   onChange,
 }: {
   label: string;
   value: number;
+  min?: number;
+  max?: number;
   onChange: (n: number) => void;
 }) {
   return (
@@ -203,8 +207,8 @@ export function NumField({
       <span className="text-sm font-semibold">{label}</span>
       <input
         type="number"
-        min={1}
-        max={365}
+        min={min}
+        max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30"

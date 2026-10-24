@@ -84,7 +84,7 @@ export const saveGuild = createServerFn({ method: "POST" })
     const settings: Record<string, number> = {};
     for (const f of NUM_FIELDS) {
       const n = Math.round(Number(d.settings?.[f.key]));
-      settings[f.key] = Number.isFinite(n) && n >= 1 && n <= 365 ? n : f.def;
+      settings[f.key] = Number.isFinite(n) && n >= (f.min ?? 1) && n <= (f.max ?? 365) ? n : f.def;
     }
     return { guildId: d.guildId, channels, roles, settings };
   })

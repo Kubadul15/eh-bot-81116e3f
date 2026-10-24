@@ -263,7 +263,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                   <Block icon="⚙️" title="Limity">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {NUM_FIELDS.filter((f) => cat.nums.includes(f.key)).map((f) => (
-                        <NumField key={f.key} label={f.label} value={settings[f.key] ?? f.def} onChange={(n) => { touch(); setSettings((s) => ({ ...s, [f.key]: n })); }} />
+                        <NumField key={f.key} label={f.label} min={f.min ?? 1} max={f.max ?? 365} value={settings[f.key] ?? f.def} onChange={(n) => { touch(); setSettings((s) => ({ ...s, [f.key]: n })); }} />
                       ))}
                     </div>
                   </Block>

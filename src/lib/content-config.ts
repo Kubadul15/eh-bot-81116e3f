@@ -7,6 +7,9 @@ export const EMBED_TYPES = [
   ["rekrutacja", "Rekrutacja — panel"], ["recruit", "Rekrutacja — aplikacje i decyzje"],
   ["ban", "Bany"], ["tickets", "Tickety — wiadomości"], ["mobywatel", "Dokumenty i mObywatel"],
   ["staff_messages", "Administracja — wiadomości"], ["embed", "Własne ogłoszenie"],
+  ["powitanie", "Powitanie nowych osób (znaczniki: {user} {server} {count})"],
+  ["ekonomia", "Ekonomia — panel"], ["sad", "Sąd — panel"], ["adwokaci", "Adwokaci — panel"],
+  ["prawnicy", "Prawnicy — panel"], ["kuratorzy", "Kuratorzy — panel"], ["weryfikacja", "Weryfikacja — panel"],
   ...MESSAGE_EMBEDS,
 ] as const;
 const image = z.string().max(2048).refine(v => !v || /^https:\/\//.test(v), "Zdjęcie musi mieć adres HTTPS");
