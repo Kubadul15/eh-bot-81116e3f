@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { contentSchema } from "./content-config";
+import { contentSchema, readContent } from "./content-config";
 import { isSnowflake } from "./bot-slots";
+import { limitsFor, metaOf, premiumActive } from "./premium";
 
 export const saveContent = createServerFn({ method: "POST" })
   .inputValidator((value: { guildId: string; content: unknown }) => {
@@ -9,8 +10,18 @@ export const saveContent = createServerFn({ method: "POST" })
   }).handler(async ({ data }) => {
     const { requireGuild } = await import("./discord.server");
     const { s } = await requireGuild(data.guildId);
+    const { assertNotMaintenance } = await import("./admin.server");
+    await assertNotMaintenance();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("guild_configs").upsert({ guild_id: data.guildId, content: data.content, updated_by: s.discord_user_id, updated_at: new Date().toISOString() });
+    // limity planu: Free ma mniej stanowisk i pytań rekrutacji, a własny wygląd wiadomości (embedy) jest funkcją Premium
+    const { data: cur } = await supabaseAdmin.from("guild_configs").select("settings, content").eq("guild_id", data.guildId).maybeSingle();
+    const meta = metaOf(cur?.settings);
+    if (meta.blocked) throw new Error(`Ten serwer został zablokowany przez właściciela bota: ${meta.blocked.reason}`);
+    const lim = limitsFor(meta), r = data.content.recruitment;
+    if (r.positions.length > lim.recruitPositions) throw new Error(`Limit planu: ${lim.recruitPositions} stanowisk w rekrutacji (masz ${r.positions.length}). Usuń nadmiar albo kup Premium (zakładka Cennik).`);
+    if (r.questions.length > lim.recruitQuestions) throw new Error(`Limit planu: ${lim.recruitQuestions} pytań w formularzu (masz ${r.questions.length}). Usuń nadmiar albo kup Premium (zakładka Cennik).`);
+    const content = premiumActive(meta) ? data.content : { ...data.content, embeds: readContent(cur?.content).embeds };
+    const { error } = await supabaseAdmin.from("guild_configs").upsert({ guild_id: data.guildId, content, updated_by: s.discord_user_id, updated_at: new Date().toISOString() });
     if (error) throw new Error("Nie udało się zapisać treści");
     return { ok: true };
   });

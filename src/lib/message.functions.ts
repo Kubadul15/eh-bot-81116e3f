@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { composerSchema, type ComposerEmbed } from "./message-config";
 import { isSnowflake } from "./bot-slots";
+import { metaOf, premiumActive } from "./premium";
 
 // Wysyła wiadomość od razu (bez udziału procesu bota): jako bot albo przez webhook z własną nazwą i avatarem.
 const toEmbed = (e: ComposerEmbed) => ({
@@ -29,6 +30,16 @@ export const sendMessage = createServerFn({ method: "POST" })
     const { requireGuild, bot, API } = await import("./discord.server");
     const { guildId, message: m } = data;
     await requireGuild(guildId);
+    const { assertNotMaintenance } = await import("./admin.server");
+    await assertNotMaintenance();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cfg } = await supabaseAdmin.from("guild_configs").select("settings").eq("guild_id", guildId).maybeSingle();
+    const meta = metaOf(cfg?.settings);
+    if (meta.blocked) throw new Error(`Ten serwer został zablokowany przez właściciela bota: ${meta.blocked.reason}`);
+    // Free: jeden embed i wysyłka jako bot; webhook (własna nazwa i avatar) oraz do 3 embedów to Premium
+    if (!premiumActive(meta) && (m.mode === "webhook" || m.embeds.length > 1)) {
+      throw new Error("Webhook i wiele embedów w jednej wiadomości to funkcje planu Premium (jednorazowo 20 zł, na zawsze).");
+    }
 
     const ch = await bot(`/channels/${m.channelId}`);
     if (!ch.ok) throw new Error("Kanał jest niedostępny dla bota");

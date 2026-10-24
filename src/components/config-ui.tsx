@@ -223,12 +223,16 @@ export function PanelSender({
   channelName,
   status,
   onSend,
+  locked = false,
+  error,
 }: {
   emoji: string;
   label: string;
   channelName: string | null;
   status: "sending" | "sent" | "error" | undefined;
   onSend: () => void;
+  locked?: boolean;
+  error?: string | undefined;
 }) {
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -242,11 +246,11 @@ export function PanelSender({
       </p>
       <Button
         type="button"
-        disabled={!channelName || status === "sending"}
+        disabled={locked || !channelName || status === "sending"}
         onClick={onSend}
         className="mt-3 w-full"
       >
-        {status === "sending"
+        {locked ? "💎 Wymaga Premium" : status === "sending"
           ? "Wysyłanie…"
           : status === "sent"
             ? "✅ Zlecono – panel pojawi się za chwilę"
@@ -254,6 +258,7 @@ export function PanelSender({
               ? "❌ Błąd – spróbuj ponownie"
               : "Wyślij panel"}
       </Button>
+      {status === "error" && error && <p className="mt-2 text-xs font-semibold text-destructive">{error}</p>}
     </div>
   );
 }

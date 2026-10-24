@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { getMe, listGuilds } from "@/lib/dashboard.functions";
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
+import { PremiumBadge } from "@/components/premium-ui";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
 // Odświeżaj po powrocie z karty zaproszenia, żeby od razu było widać dodanego bota.
@@ -30,7 +31,7 @@ function Dashboard() {
 
   return (
     <main className="min-h-screen">
-      <SiteHeader user={me.user} />
+      <SiteHeader user={me.user} isOwner={me.isOwner} />
       <section className="mx-auto max-w-5xl px-5 py-10">
         {!me.user || !guilds ? (
           <div className="rounded-lg border bg-card p-8 text-center">
@@ -52,7 +53,7 @@ function Dashboard() {
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary font-bold">{g.name[0]}</div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">{g.name}</div>
+                    <div className="flex items-center gap-2 truncate font-semibold"><span className="truncate">{g.name}</span>{g.premium && <PremiumBadge />}</div>
                     {g.botIn ? (
                       <Link to="/dashboard/$guildId" params={{ guildId: g.id }} className="text-sm font-semibold text-accent hover:underline">
                         Konfiguruj →

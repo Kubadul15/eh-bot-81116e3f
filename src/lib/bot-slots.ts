@@ -113,17 +113,18 @@ export const NUM_FIELDS: NumField[] = [
 export type Category = {
   id: string; emoji: string; label: string; desc: string;
   sections: string[]; roles: string[]; nums: string[]; panels: string[]; recruitment?: boolean;
+  premiumOnly?: boolean; premiumNote?: string; // cała kategoria w Premium / uwaga o ograniczeniach planu Free
 };
 export const CATEGORIES: Category[] = [
-  { id: "urzad", emoji: "🏛️", label: "Urząd", desc: "mObywatel: dowody, prawa jazdy, licencje, pojazdy i panel administracji", sections: ["urzad"], roles: ["moby_admin", "police"], nums: [], panels: ["urzad"] },
-  { id: "sad", emoji: "⚖️", label: "Wymiar sprawiedliwości", desc: "Sąd, adwokaci, prawnicy i kuratorzy: sprawy, rozprawy, wyroki, dozór, rachunki", sections: ["sad"], roles: ["judge", "prosecutor", "lawyer", "legal", "probation"], nums: [], panels: ["sad", "adwokaci", "prawnicy", "kuratorzy"] },
+  { id: "urzad", emoji: "🏛️", label: "Urząd", desc: "mObywatel: dowody, prawa jazdy, licencje, pojazdy i panel administracji", sections: ["urzad"], roles: ["moby_admin", "police"], nums: [], panels: ["urzad"], premiumNote: "Panel administracji mObywatela (kartoteka, zawieszenia, mandaty) wymaga Premium. Limity Free: 150 obywateli, 3 pojazdy na osobę." },
+  { id: "sad", emoji: "⚖️", label: "Wymiar sprawiedliwości", desc: "Sąd, adwokaci, prawnicy i kuratorzy: sprawy, rozprawy, wyroki, dozór, rachunki", sections: ["sad"], roles: ["judge", "prosecutor", "lawyer", "legal", "probation"], nums: [], panels: ["sad", "adwokaci", "prawnicy", "kuratorzy"], premiumOnly: true },
   { id: "admin", emoji: "🛡️", label: "Administracja", desc: "Ekipa: urlopy, awanse, plusy/minusy, pochwały i skargi", sections: ["admin"], roles: ["staff", "management", "ranks", "leave"], nums: ["minus_limit", "plus_promo", "appeal_days", "max_leave_days"], panels: ["opinie", "staff"] },
-  { id: "ekonomia", emoji: "💰", label: "Ekonomia", desc: "Pieniądze w grze: praca, nagrody, bank, sklep, pensje dla rang, gry i ranking", sections: ["ekonomia"], roles: [], nums: ["eco_start", "eco_daily", "eco_work_min", "eco_work_max"], panels: ["ekonomia"] },
+  { id: "ekonomia", emoji: "💰", label: "Ekonomia", desc: "Pieniądze w grze: praca, nagrody, bank, sklep, pensje dla rang, gry i ranking", sections: ["ekonomia"], roles: [], nums: ["eco_start", "eco_daily", "eco_work_min", "eco_work_max"], panels: ["ekonomia"], premiumNote: "Kasyno (sloty, ruletka, blackjack, orzeł) i sklep powyżej 5 przedmiotów wymagają Premium." },
   { id: "moderacja", emoji: "🔨", label: "Moderacja", desc: "Bany, ostrzeżenia, wyciszenia, kicki, czyszczenie i blokady kanałów", sections: ["moderacja"], roles: ["mod", "ban"], nums: ["warn_limit"], panels: [] },
-  { id: "spolecznosc", emoji: "🎉", label: "Społeczność", desc: "Powitania, autorole, sugestie, poziomy XP, ankiety i konkursy", sections: ["spolecznosc"], roles: ["autorole"], nums: [], panels: [] },
+  { id: "spolecznosc", emoji: "🎉", label: "Społeczność", desc: "Powitania, autorole, sugestie, poziomy XP, ankiety i konkursy", sections: ["spolecznosc"], roles: ["autorole"], nums: [], panels: [], premiumNote: "Własna treść powitania to funkcja Premium. W Free działa jeden konkurs naraz." },
   { id: "tickety", emoji: "🎫", label: "Tickety", desc: "Zgłoszenia graczy w prywatnych kanałach", sections: ["tickety"], roles: [], nums: [], panels: ["tickety"] },
-  { id: "rekrutacja", emoji: "📝", label: "Rekrutacja", desc: "Nabór: stanowiska, formularz i aplikacje", sections: ["rekrutacja"], roles: [], nums: [], panels: ["rekrutacja"], recruitment: true },
-  { id: "weryfikacja", emoji: "🔐", label: "Weryfikacja", desc: "Captcha dla nowych osób i nadawanie rang", sections: ["weryfikacja"], roles: ["verified", "unverified"], nums: [], panels: ["weryfikacja"] },
+  { id: "rekrutacja", emoji: "📝", label: "Rekrutacja", desc: "Nabór: stanowiska, formularz i aplikacje", sections: ["rekrutacja"], roles: [], nums: [], panels: ["rekrutacja"], recruitment: true, premiumNote: "Plan Free: do 3 stanowisk i 5 pytań w formularzu. Premium: 25 stanowisk i 15 pytań." },
+  { id: "weryfikacja", emoji: "🔐", label: "Weryfikacja", desc: "Captcha dla nowych osób i nadawanie rang", sections: ["weryfikacja"], roles: ["verified", "unverified"], nums: [], panels: ["weryfikacja"], premiumOnly: true },
 ];
 
 export const isSnowflake = (v: unknown): v is string => typeof v === "string" && /^\d{17,20}$/.test(v);

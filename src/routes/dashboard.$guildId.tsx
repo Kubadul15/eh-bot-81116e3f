@@ -11,7 +11,10 @@ import { readContent } from "@/lib/content-config";
 import { saveContent } from "@/lib/content.functions";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
-import { Save, FileText, LayoutDashboard, ChevronRight, Megaphone } from "lucide-react";
+import { Save, FileText, LayoutDashboard, ChevronRight, Megaphone, Gem } from "lucide-react";
+import { LockBanner, PremiumBadge } from "@/components/premium-ui";
+import { PREMIUM_PANELS } from "@/lib/premium";
+import { PremiumPanel } from "@/components/premium-panel";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
 const guildQ = (guildId: string) => queryOptions({ queryKey: ["guild", guildId], queryFn: () => getGuild({ data: { guildId } }) });
@@ -57,7 +60,7 @@ function GuildPage() {
   return <Editor me={me} />;
 }
 
-type View = "home" | "embeds" | "composer" | (typeof CATEGORIES)[number]["id"];
+type View = "home" | "embeds" | "composer" | "premium" | (typeof CATEGORIES)[number]["id"];
 
 function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const { guildId } = Route.useParams();
@@ -75,6 +78,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const saveGuildFn = useServerFn(saveGuild);
   const sendPanelFn = useServerFn(sendPanel);
   const [panelStatus, setPanelStatus] = useState<Record<string, "sending" | "sent" | "error">>({});
+  const [panelError, setPanelError] = useState<Record<string, string>>({});
 
   async function sendOne(key: string) {
     setPanelStatus((p) => ({ ...p, [key]: "sending" }));
@@ -83,7 +87,8 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
       await saveContentFn({ data: { guildId, content } });
       await sendPanelFn({ data: { guildId, panel: key } });
       setPanelStatus((p) => ({ ...p, [key]: "sent" }));
-    } catch {
+    } catch (e) {
+      setPanelError((p) => ({ ...p, [key]: e instanceof Error ? e.message : "Nie udało się wysłać panelu" }));
       setPanelStatus((p) => ({ ...p, [key]: "error" }));
     }
   }
@@ -91,7 +96,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   if (!data.botIn) {
     return (
       <main className="min-h-screen">
-        <SiteHeader user={me.user} />
+        <SiteHeader user={me.user} isOwner={me.isOwner} />
         <div className="mx-auto max-w-xl px-5 py-16 text-center">
           <h1 className="font-display text-4xl">Bota nie ma na {data.guild.name}</h1>
           {me.clientId && (
@@ -104,6 +109,8 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
     );
   }
 
+  const premium = data.premium;
+  const locked = !premium.active; // plan Free
   const textChannels = data.channels.filter((c) => c.type !== 4);
   const categoryChannels = data.channels.filter((c) => c.type === 4);
 
@@ -162,19 +169,22 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
 
   return (
     <main className="min-h-screen pb-28">
-      <SiteHeader user={me.user} />
+      <SiteHeader user={me.user} isOwner={me.isOwner} />
       <section className="mx-auto max-w-6xl animate-fade-up px-5 py-8">
         <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">← Serwery</Link>
-        <h1 className="mt-2 font-display text-5xl">{data.guild.name}</h1>
+        <h1 className="mt-2 flex flex-wrap items-center gap-3 font-display text-5xl">{data.guild.name}{premium.active && <PremiumBadge className="px-3 py-1 text-sm" />}</h1>
+        {premium.blocked && <div className="mt-4 rounded-xl border border-red-500/50 bg-red-50 p-4 text-sm font-semibold text-red-800">⛔ Ten serwer został zablokowany przez właściciela bota: {premium.blocked.reason}. Zapisywanie zmian jest wyłączone.</div>}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[250px_1fr]">
           <nav className="flex gap-2 overflow-x-auto pb-2 lg:sticky lg:top-4 lg:flex-col lg:self-start lg:overflow-visible lg:pb-0" aria-label="Sekcje konfiguracji">
             {navItem("home", <LayoutDashboard className="size-4" />, "Przegląd")}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">Funkcje bota</p>
-            {CATEGORIES.map((c) => navItem(c.id, c.emoji, c.label, badge(c)))}
+            {CATEGORIES.map((c) => navItem(c.id, c.emoji, c.label, c.premiumOnly && locked ? <span className="text-xs">💎</span> : badge(c)))}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">Wygląd</p>
             {navItem("composer", <Megaphone className="size-4" />, "Wysyłanie wiadomości")}
             {navItem("embeds", <FileText className="size-4" />, "Wiadomości bota (embedy)")}
+            <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">Plan</p>
+            {navItem("premium", <Gem className="size-4" />, "Premium", premium.active ? <PremiumBadge /> : <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-black">Kup</span>)}
           </nav>
 
           <div className="min-w-0">
@@ -191,7 +201,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                     return (
                       <button key={c.id} type="button" onClick={() => setView(c.id)} className="card-lift group rounded-xl border bg-card p-5 text-left">
                         <div className="flex items-center justify-between">
-                          <span className="text-3xl">{c.emoji}</span>
+                          <span className="flex items-center gap-2 text-3xl">{c.emoji}{c.premiumOnly && locked && <PremiumBadge />}</span>
                           <ChevronRight className="size-5 text-muted-foreground transition group-hover:translate-x-1" />
                         </div>
                         <h3 className="mt-2 font-display text-2xl">{c.label}</h3>
@@ -212,8 +222,11 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
               </div>
             )}
 
-            {view === "composer" && <MessageComposer guildId={guildId} channels={data.channels} roles={data.roles} />}
+            {view === "composer" && <MessageComposer guildId={guildId} channels={data.channels} roles={data.roles} premium={premium.active} />}
 
+            {view === "premium" && <PremiumPanel premium={premium} guildId={guildId} guildName={data.guild.name} usage={{ recruitPositions: content.recruitment.positions.length, recruitQuestions: content.recruitment.questions.length }} />}
+
+            {view === "embeds" && locked && <div className="mb-4"><LockBanner title="Własny wygląd wiadomości bota to funkcja Premium" guildId={guildId} guildName={data.guild.name}>Możesz tu projektować szablony, ale na planie Free nie zostaną zapisane ani zastosowane przez bota.</LockBanner></div>}
             {view === "embeds" && <ContentEditor guildId={guildId} value={content} onChange={(v) => { setContent(v); setStatus("idle"); }} roles={data.roles} channels={data.channels} view="embeds" />}
 
             {cat && (
@@ -227,6 +240,9 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                     <div className="w-44"><Progress {...progressOf(cat)} /></div>
                   </div>
                 </div>
+
+                {cat.premiumOnly && locked && <div className="mt-4"><LockBanner title={`${cat.label}: funkcja planu Premium`} guildId={guildId} guildName={data.guild.name}>Możesz już ustawić kanały i rangi, ale panele się nie wyślą, a funkcje na serwerze pozostaną zablokowane do czasu włączenia Premium.</LockBanner></div>}
+                {cat.premiumNote && locked && !cat.premiumOnly && <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-50 px-4 py-2 text-sm text-amber-900">💎 {cat.premiumNote}</p>}
 
                 {cat.sections.map((sid) => {
                   const sec = CHANNEL_SECTIONS.find((s) => s.id === sid);
@@ -279,6 +295,8 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                           label={p.label}
                           channelName={channels[p.slot] ? (textChannels.find((c) => c.id === channels[p.slot])?.name ?? "ustawiony kanał") : null}
                           status={panelStatus[p.key]}
+                          error={panelError[p.key]}
+                          locked={locked && (PREMIUM_PANELS as readonly string[]).includes(p.key)}
                           onSend={() => sendOne(p.key)}
                         />
                       ))}
@@ -287,7 +305,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 )}
 
                 {cat.recruitment && (
-                  <Block icon="🧾" title="Formularz i stanowiska">
+                  <Block icon="🧾" title="Formularz i stanowiska" hint={`Stanowiska: ${content.recruitment.positions.length}/${premium.limits.recruitPositions} • Pytania: ${content.recruitment.questions.length}/${premium.limits.recruitQuestions}${content.recruitment.positions.length > premium.limits.recruitPositions || content.recruitment.questions.length > premium.limits.recruitQuestions ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)" : ""}`}>
                     <ContentEditor guildId={guildId} value={content} onChange={(v) => { setContent(v); setStatus("idle"); }} roles={data.roles} channels={data.channels} view="recruitment" />
                   </Block>
                 )}

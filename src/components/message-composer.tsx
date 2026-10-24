@@ -209,10 +209,12 @@ export function MessageComposer({
   guildId,
   channels,
   roles,
+  premium,
 }: {
   guildId: string;
   channels: DChannel[];
   roles: DRole[];
+  premium: boolean;
 }) {
   const send = useServerFn(sendMessage);
   const storeKey = `eh-composer:${guildId}`;
@@ -255,7 +257,7 @@ export function MessageComposer({
   const chars = embedChars(m.embeds);
 
   async function submit() {
-    const parsed = composerSchema.safeParse(m);
+    const parsed = composerSchema.safeParse(premium ? m : { ...m, mode: "bot", embeds: m.embeds.slice(0, 1) }); // Free: tylko jako bot i jeden embed
     if (!parsed.success)
       return setState({
         kind: "error",
@@ -307,13 +309,15 @@ export function MessageComposer({
                   key={id}
                   type="button"
                   aria-pressed={m.mode === id}
+                  disabled={id === "webhook" && !premium}
+                  title={id === "webhook" && !premium ? "Webhook to funkcja Premium" : undefined}
                   onClick={() => set({ mode: id })}
                   className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${m.mode === id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
                 >
                   <Icon className="size-5" />
                   <span>
                     <span className="block text-sm font-bold">{name}</span>
-                    <span className="block text-xs opacity-80">{hint}</span>
+                    <span className="block text-xs opacity-80">{id === "webhook" && !premium ? "💎 Funkcja Premium" : hint}</span>
                   </span>
                 </button>
               ))}
@@ -579,7 +583,8 @@ export function MessageComposer({
             <Button
               type="button"
               variant="outline"
-              disabled={m.embeds.length >= 3}
+              disabled={m.embeds.length >= (premium ? 3 : 1)}
+              title={premium ? undefined : "Więcej niż jeden embed to funkcja Premium"}
               onClick={() => set({ embeds: [...m.embeds, emptyComposerEmbed()] })}
             >
               <Plus className="size-4" />

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { CHANNEL_KEYS, ROLE_FIELDS, NUM_FIELDS, PANEL_KEYS, isSnowflake } from "./bot-slots";
+import { OWNER_ID, PREMIUM_PANELS, keepAdmin, metaOf, premiumActive, publicPremium } from "./premium";
 
 export const getMe = createServerFn({ method: "GET" }).handler(async () => {
   const { getSession } = await import("./discord.server");
@@ -7,6 +8,7 @@ export const getMe = createServerFn({ method: "GET" }).handler(async () => {
   return {
     clientId: process.env["DISCORD_CLIENT_ID"] ?? null,
     user: s ? { id: s.discord_user_id, username: s.username, avatar: s.avatar } : null,
+    isOwner: !!s && s.discord_user_id === OWNER_ID, // tylko do pokazania odnośnika „Admin”; dostęp i tak egzekwuje serwer
   };
 });
 
@@ -23,7 +25,11 @@ export const listGuilds = createServerFn({ method: "GET" }).handler(async () => 
   const checks = await Promise.all(
     mine.map(async (g) => (botIds ? botIds.has(g.id) : (await bot(`/guilds/${g.id}`)).ok)),
   );
-  return mine.map((g, i) => ({ id: g.id, name: g.name, icon: g.icon, botIn: checks[i] }));
+  // plan Premium widoczny na kafelkach serwerów
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: cfgs } = await supabaseAdmin.from("guild_configs").select("guild_id, settings").in("guild_id", mine.map((g) => g.id));
+  const plan = new Map((cfgs ?? []).map((c) => [c.guild_id, premiumActive(metaOf(c.settings))]));
+  return mine.map((g, i) => ({ id: g.id, name: g.name, icon: g.icon, botIn: checks[i], premium: plan.get(g.id) ?? false }));
 });
 
 type Ch = { id: string; name: string; type: number; position: number };
@@ -49,19 +55,33 @@ export const getGuild = createServerFn({ method: "GET" })
       .sort((a, b) => b.position - a.position)
       .map((r) => ({ id: r.id, name: r.name, color: r.color }));
     const { data: cfg } = await supabaseAdmin.from("guild_configs").select("*").eq("guild_id", g.id).maybeSingle();
+    // klient widzi tylko liczby ustawień (bez zastrzeżonego bloku _admin: notatki, płatności) i status planu
+    const settings = Object.fromEntries(Object.entries((cfg?.settings ?? {}) as Record<string, unknown>).filter(([k, v]) => !k.startsWith("_") && typeof v === "number")) as Record<string, number>;
     return {
       guild: { id: g.id, name: g.name, icon: g.icon },
       botIn: true as const,
       channels,
       roles,
+      premium: publicPremium(metaOf(cfg?.settings)),
       config: {
         channels: (cfg?.channels ?? {}) as Record<string, string>,
         roles: (cfg?.roles ?? {}) as Record<string, string[] | string>,
-        settings: (cfg?.settings ?? {}) as Record<string, number>,
+        settings,
          content: cfg?.content ?? {},
       },
     };
   });
+
+// Wspólne zabezpieczenie zapisów klienta: tryb serwisowy i blokada serwera przez właściciela bota.
+async function assertWritable(guildId: string) {
+  const { assertNotMaintenance } = await import("./admin.server");
+  await assertNotMaintenance();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("guild_configs").select("settings").eq("guild_id", guildId).maybeSingle();
+  const meta = metaOf(data?.settings);
+  if (meta.blocked) throw new Error(`Ten serwer został zablokowany przez właściciela bota: ${meta.blocked.reason}`);
+  return { settings: data?.settings ?? {}, meta };
+}
 
 type SaveInput = {
   guildId: string;
@@ -92,11 +112,12 @@ export const saveGuild = createServerFn({ method: "POST" })
     const { requireGuild } = await import("./discord.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { s } = await requireGuild(data.guildId);
+    const { settings: existing } = await assertWritable(data.guildId);
     const { error } = await supabaseAdmin.from("guild_configs").upsert({
       guild_id: data.guildId,
       channels: data.channels,
       roles: data.roles,
-      settings: data.settings,
+      settings: keepAdmin(existing, data.settings) as never, // zapis klienta nie może zgubić bloku _admin (plan, blokada)
       updated_by: s.discord_user_id,
       updated_at: new Date().toISOString(),
     });
@@ -115,6 +136,10 @@ export const sendPanel = createServerFn({ method: "POST" })
     const { requireGuild } = await import("./discord.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await requireGuild(data.guildId);
+    const { meta } = await assertWritable(data.guildId);
+    if ((PREMIUM_PANELS as readonly string[]).includes(data.panel) && !premiumActive(meta)) {
+      throw new Error("Ten panel jest dostępny w planie Premium (jednorazowo 20 zł, na zawsze). Szczegóły w zakładce Cennik.");
+    }
     const { data: cfg } = await supabaseAdmin.from("guild_configs").select("channels, panels").eq("guild_id", data.guildId).maybeSingle();
     const selected = (await import("./bot-slots")).PANEL_SLOTS.find((p) => p.key === data.panel);
     if (!selected) throw new Error("Nieznany panel");
