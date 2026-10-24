@@ -245,7 +245,7 @@ export function PanelSender({
         {status === "sending"
           ? "Wysyłanie…"
           : status === "sent"
-            ? "✅ Zlecono – bot wyśle w ciągu ~30 s"
+            ? "✅ Zlecono – panel pojawi się za chwilę"
             : status === "error"
               ? "❌ Błąd – spróbuj ponownie"
               : "Wyślij panel"}

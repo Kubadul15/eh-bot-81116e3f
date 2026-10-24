@@ -18,6 +18,7 @@ import { Route as ApiPublicAuthLogoutRouteImport } from './routes/api/public/aut
 import { Route as ApiPublicBotConfigRouteImport } from './routes/api/public/bot/config'
 import { Route as ApiPublicBotImageRouteImport } from './routes/api/public/bot/image'
 import { Route as ApiPublicBotPanelsRouteImport } from './routes/api/public/bot/panels'
+import { Route as ApiPublicBotPendingRouteImport } from './routes/api/public/bot/pending'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const ApiPublicBotPanelsRoute = ApiPublicBotPanelsRouteImport.update({
   path: '/api/public/bot/panels',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBotPendingRoute = ApiPublicBotPendingRouteImport.update({
+  id: '/api/public/bot/pending',
+  path: '/api/public/bot/pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
   '/api/public/bot/image': typeof ApiPublicBotImageRoute
   '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
+  '/api/public/bot/pending': typeof ApiPublicBotPendingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
   '/api/public/bot/image': typeof ApiPublicBotImageRoute
   '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
+  '/api/public/bot/pending': typeof ApiPublicBotPendingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/api/public/bot/config': typeof ApiPublicBotConfigRoute
   '/api/public/bot/image': typeof ApiPublicBotImageRoute
   '/api/public/bot/panels': typeof ApiPublicBotPanelsRoute
+  '/api/public/bot/pending': typeof ApiPublicBotPendingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/api/public/bot/config'
     | '/api/public/bot/image'
     | '/api/public/bot/panels'
+    | '/api/public/bot/pending'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/api/public/bot/config'
     | '/api/public/bot/image'
     | '/api/public/bot/panels'
+    | '/api/public/bot/pending'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/api/public/bot/config'
     | '/api/public/bot/image'
     | '/api/public/bot/panels'
+    | '/api/public/bot/pending'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   ApiPublicBotConfigRoute: typeof ApiPublicBotConfigRoute
   ApiPublicBotImageRoute: typeof ApiPublicBotImageRoute
   ApiPublicBotPanelsRoute: typeof ApiPublicBotPanelsRoute
+  ApiPublicBotPendingRoute: typeof ApiPublicBotPendingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBotPanelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bot/pending': {
+      id: '/api/public/bot/pending'
+      path: '/api/public/bot/pending'
+      fullPath: '/api/public/bot/pending'
+      preLoaderRoute: typeof ApiPublicBotPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBotConfigRoute: ApiPublicBotConfigRoute,
   ApiPublicBotImageRoute: ApiPublicBotImageRoute,
   ApiPublicBotPanelsRoute: ApiPublicBotPanelsRoute,
+  ApiPublicBotPendingRoute: ApiPublicBotPendingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

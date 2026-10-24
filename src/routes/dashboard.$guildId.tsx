@@ -6,11 +6,12 @@ import { CATEGORIES, CHANNEL_SECTIONS, ROLE_FIELDS, NUM_FIELDS, PANEL_SLOTS, typ
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
 import { ContentEditor } from "@/components/content-editor";
 import { Block, ChannelField, NumField, PanelSender, Progress, RolePicker } from "@/components/config-ui";
+import { MessageComposer } from "@/components/message-composer";
 import { readContent } from "@/lib/content-config";
 import { saveContent } from "@/lib/content.functions";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
-import { Save, FileText, LayoutDashboard, ChevronRight } from "lucide-react";
+import { Save, FileText, LayoutDashboard, ChevronRight, Megaphone } from "lucide-react";
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
 const guildQ = (guildId: string) => queryOptions({ queryKey: ["guild", guildId], queryFn: () => getGuild({ data: { guildId } }) });
@@ -56,7 +57,7 @@ function GuildPage() {
   return <Editor me={me} />;
 }
 
-type View = "home" | "embeds" | (typeof CATEGORIES)[number]["id"];
+type View = "home" | "embeds" | "composer" | (typeof CATEGORIES)[number]["id"];
 
 function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const { guildId } = Route.useParams();
@@ -172,7 +173,8 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">Funkcje bota</p>
             {CATEGORIES.map((c) => navItem(c.id, c.emoji, c.label, badge(c)))}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">Wygląd</p>
-            {navItem("embeds", <FileText className="size-4" />, "Wiadomości (embedy)")}
+            {navItem("composer", <Megaphone className="size-4" />, "Wysyłanie wiadomości")}
+            {navItem("embeds", <FileText className="size-4" />, "Wiadomości bota (embedy)")}
           </nav>
 
           <div className="min-w-0">
@@ -203,12 +205,14 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                       <FileText className="size-8" />
                       <ChevronRight className="size-5 text-muted-foreground transition group-hover:translate-x-1" />
                     </div>
-                    <h3 className="mt-2 font-display text-2xl">Wiadomości (embedy)</h3>
+                    <h3 className="mt-2 font-display text-2xl">Wiadomości bota (embedy)</h3>
                     <p className="mt-0.5 text-sm text-muted-foreground">Własne tytuły, kolory i obrazki wiadomości bota.</p>
                   </button>
                 </div>
               </div>
             )}
+
+            {view === "composer" && <MessageComposer guildId={guildId} channels={data.channels} roles={data.roles} />}
 
             {view === "embeds" && <ContentEditor guildId={guildId} value={content} onChange={(v) => { setContent(v); setStatus("idle"); }} roles={data.roles} channels={data.channels} view="embeds" />}
 
@@ -266,7 +270,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 )}
 
                 {cat.panels.length > 0 && (
-                  <Block icon="📤" title="Wysyłanie paneli" hint="Po ustawieniu kanału kliknij „Wyślij panel”. Zapisuje ustawienia i zleca botowi wysyłkę (do ~30 s).">
+                  <Block icon="📤" title="Wysyłanie paneli" hint="Po ustawieniu kanału kliknij „Wyślij panel”. Zapisuje ustawienia i zleca botowi wysyłkę – panel pojawi się po kilku sekundach.">
                     <div className="grid gap-3 sm:grid-cols-2">
                       {PANEL_SLOTS.filter((p) => cat.panels.includes(p.key)).map((p) => (
                         <PanelSender
