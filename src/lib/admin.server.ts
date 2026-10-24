@@ -165,14 +165,12 @@ export async function readGlobal(): Promise<GlobalData> {
 }
 export async function writeGlobal(patch: Partial<GlobalData>): Promise<void> {
   const next = { ...(await readGlobal()), ...patch };
-  const { error } = await supabaseAdmin
-    .from("guild_configs")
-    .upsert({
-      guild_id: GLOBAL_ID,
-      settings: next as unknown as Json,
-      updated_by: OWNER_ID,
-      updated_at: nowIso(),
-    });
+  const { error } = await supabaseAdmin.from("guild_configs").upsert({
+    guild_id: GLOBAL_ID,
+    settings: next as unknown as Json,
+    updated_by: OWNER_ID,
+    updated_at: nowIso(),
+  });
   if (error) throw new Error("Nie udało się zapisać danych globalnych");
 }
 /** Dziennik audytu: ostatnie 500 operacji administratora. */
@@ -487,17 +485,15 @@ export async function importConfig(by: string, id: string, raw: unknown): Promis
       ? { _admin: row.settings["_admin"] }
       : {}),
   };
-  const { error } = await supabaseAdmin
-    .from("guild_configs")
-    .upsert({
-      guild_id: id,
-      channels: r.channels as Json,
-      roles: r.roles as Json,
-      settings: settings as unknown as Json,
-      content: r.content as Json,
-      updated_by: by,
-      updated_at: nowIso(),
-    });
+  const { error } = await supabaseAdmin.from("guild_configs").upsert({
+    guild_id: id,
+    channels: r.channels as Json,
+    roles: r.roles as Json,
+    settings: settings as unknown as Json,
+    content: r.content as Json,
+    updated_by: by,
+    updated_at: nowIso(),
+  });
   if (error) throw new Error("Nie udało się zaimportować konfiguracji");
   await audit(by, "import-konfiguracji", id);
 }
@@ -513,15 +509,13 @@ export async function copyConfig(by: string, from: string, to: string): Promise<
       ? { _admin: dst.settings["_admin"] }
       : {}),
   };
-  const { error } = await supabaseAdmin
-    .from("guild_configs")
-    .upsert({
-      guild_id: to,
-      settings: settings as unknown as Json,
-      content: src.content,
-      updated_by: by,
-      updated_at: nowIso(),
-    });
+  const { error } = await supabaseAdmin.from("guild_configs").upsert({
+    guild_id: to,
+    settings: settings as unknown as Json,
+    content: src.content,
+    updated_by: by,
+    updated_at: nowIso(),
+  });
   if (error) throw new Error("Nie udało się skopiować");
   await audit(by, "kopiowanie-konfiguracji", to, `z ${from}`);
 }
@@ -529,18 +523,16 @@ export async function resetConfig(by: string, id: string): Promise<void> {
   const row = await readRow(id);
   const keep =
     isObj(row?.settings) && isObj(row.settings["_admin"]) ? { _admin: row.settings["_admin"] } : {};
-  const { error } = await supabaseAdmin
-    .from("guild_configs")
-    .upsert({
-      guild_id: id,
-      channels: {},
-      roles: {},
-      settings: keep as unknown as Json,
-      content: {},
-      panels: {},
-      updated_by: by,
-      updated_at: nowIso(),
-    });
+  const { error } = await supabaseAdmin.from("guild_configs").upsert({
+    guild_id: id,
+    channels: {},
+    roles: {},
+    settings: keep as unknown as Json,
+    content: {},
+    panels: {},
+    updated_by: by,
+    updated_at: nowIso(),
+  });
   if (error) throw new Error("Nie udało się zresetować");
   await audit(by, "reset-konfiguracji", id);
 }
@@ -766,17 +758,15 @@ export async function restoreAll(
   const v = validateBackup(raw);
   let restored = 0;
   for (const r of v.rows) {
-    const { error } = await supabaseAdmin
-      .from("guild_configs")
-      .upsert({
-        guild_id: r.guild_id,
-        channels: r.channels as Json,
-        roles: r.roles as Json,
-        settings: r.settings as Json,
-        content: r.content as Json,
-        updated_by: by,
-        updated_at: nowIso(),
-      });
+    const { error } = await supabaseAdmin.from("guild_configs").upsert({
+      guild_id: r.guild_id,
+      channels: r.channels as Json,
+      roles: r.roles as Json,
+      settings: r.settings as Json,
+      content: r.content as Json,
+      updated_by: by,
+      updated_at: nowIso(),
+    });
     if (error) v.errors.push(`${r.guild_id}: błąd zapisu`);
     else restored++;
   }
@@ -867,5 +857,53 @@ export async function trackBuy(
     "kliknięcie-kup",
     guildId,
     `${clampText(username, 40)}${code ? ` • kod ${normalizeCode(code)}` : ""}`,
+  );
+}
+
+// ====================== ZAPROSZENIE DLA WŁAŚCICIELA ======================
+/** Tworzy jednorazowe zaproszenie (ważne 1 godzinę), żeby właściciel mógł wejść na serwer klienta (np. do wsparcia). */
+export async function createInvite(
+  by: string,
+  id: string,
+): Promise<{ url: string; channel: string }> {
+  if (!isSnowflake(id)) throw new Error("Złe ID serwera");
+  const gr = await discord(`/guilds/${id}`);
+  if (!gr.ok) throw new Error("Bota nie ma na tym serwerze");
+  const info = (await gr.json()) as {
+    system_channel_id: string | null;
+    rules_channel_id: string | null;
+  };
+  const cr = await discord(`/guilds/${id}/channels`);
+  const chans = cr.ok
+    ? ((await cr.json()) as { id: string; type: number; name: string; position: number }[])
+    : [];
+  const text = chans
+    .filter((c) => c.type === 0 || c.type === 5)
+    .sort((a, b) => a.position - b.position);
+  // najpierw kanał systemowy i regulaminowy, potem pozostałe tekstowe (maks. 6 prób – bot może nie mieć uprawnienia na części kanałów)
+  const order = [info.system_channel_id, info.rules_channel_id, ...text.map((c) => c.id)].filter(
+    (x): x is string => !!x,
+  );
+  const tried = [...new Set(order)].slice(0, 6);
+  let last = 0;
+  for (const ch of tried) {
+    const r = await discord(`/channels/${ch}/invites`, {
+      method: "POST",
+      body: JSON.stringify({ max_age: 3600, max_uses: 1, unique: true, temporary: false }),
+    });
+    last = r.status;
+    if (r.ok) {
+      const code = ((await r.json()) as { code: string }).code;
+      await audit(by, "zaproszenie", id, `kanał ${ch}`);
+      return {
+        url: `https://discord.gg/${code}`,
+        channel: text.find((c) => c.id === ch)?.name ?? ch,
+      };
+    }
+  }
+  throw new Error(
+    last === 403 || last === 0
+      ? "Bot nie ma uprawnienia „Tworzenie zaproszeń” na tym serwerze – nadaj je jego randze albo zaproś bota ponownie nowym linkiem."
+      : `Discord odrzucił zaproszenie (${last})`,
   );
 }

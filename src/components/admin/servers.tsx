@@ -15,6 +15,7 @@ import {
   adminForcePanel,
   adminGrant,
   adminImportConfig,
+  adminInvite,
   adminLeave,
   adminRemovePayment,
   adminAddPayment,
@@ -46,6 +47,24 @@ import { KEY_OVERVIEW } from "./overview";
 
 export const KEY_SERVERS = ["admin", "servers"] as const;
 const keyDetail = (id: string) => ["admin", "server", id] as const;
+
+/** Tworzy jednorazowe zaproszenie (1 h) przez bota, kopiuje link i otwiera go – żeby właściciel mógł wejść na serwer klienta. */
+function useInvite() {
+  const m = useAdminAction((id: string) => adminInvite({ data: { id } }), {});
+  return {
+    pending: m.isPending,
+    run: (id: string) =>
+      m.mutate(id, {
+        onSuccess: (r) => {
+          void navigator.clipboard.writeText(r.url).catch(() => undefined);
+          toast.success(`Zaproszenie gotowe (kanał #${r.channel}, 1 użycie, ważne 1 h): ${r.url}`, {
+            duration: 15000,
+          });
+          window.open(r.url, "_blank", "noopener,noreferrer");
+        },
+      }),
+  };
+}
 
 const copy = (text: string) => {
   void navigator.clipboard
@@ -121,6 +140,7 @@ function ServerList({ onSelect }: { onSelect: (id: string) => void }) {
   const q = useQuery({ queryKey: KEY_SERVERS, queryFn: () => adminServers() });
   const [text, setText] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const invite = useInvite();
   const grant = useAdminAction(
     (id: string) => adminGrant({ data: { id, mode: "lifetime", note: "szybkie nadanie z listy" } }),
     { ok: "Nadano Premium Lifetime", invalidate: [KEY_SERVERS, KEY_OVERVIEW] },
@@ -220,6 +240,17 @@ function ServerList({ onSelect }: { onSelect: (id: string) => void }) {
                   onConfirm={() => grant.mutate(s.id)}
                 />
               )}
+              {s.botIn && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={invite.pending}
+                  onClick={() => invite.run(s.id)}
+                  title="Bot utworzy jednorazowe zaproszenie na ten serwer"
+                >
+                  🔗 Wejdź
+                </Button>
+              )}
               <Button size="sm" variant="ghost" onClick={() => onSelect(s.id)}>
                 Otwórz
               </Button>
@@ -249,6 +280,7 @@ function ServerDetail({ id, onBack }: { id: string; onBack: () => void }) {
       </div>
     );
   const s = q.data;
+  const invite = useInvite();
   const inv = [keyDetail(id), KEY_SERVERS, KEY_OVERVIEW];
   return (
     <div className="space-y-5">
@@ -273,6 +305,11 @@ function ServerDetail({ id, onBack }: { id: string; onBack: () => void }) {
           </div>
           <PlanPills s={s} />
           {s.botIn && (
+            <Button type="button" disabled={invite.pending} onClick={() => invite.run(s.id)}>
+              🔗 Wejdź na serwer (zaproszenie)
+            </Button>
+          )}
+          {s.botIn && (
             <a
               href={`https://discord.com/channels/${s.id}`}
               target="_blank"
@@ -280,7 +317,7 @@ function ServerDetail({ id, onBack }: { id: string; onBack: () => void }) {
               className="inline-flex items-center gap-1 text-sm font-semibold underline"
             >
               <ExternalLink className="size-4" />
-              Discord
+              Jestem już na serwerze
             </a>
           )}
         </div>

@@ -4,7 +4,7 @@ import { Gem, ShieldCheck } from "lucide-react";
 import { getPublicNotice } from "@/lib/admin.functions";
 
 // Uprawnienia bota: rangi, kanały, wiadomości, wyrzucanie/banowanie, wyciszanie (Moderate Members), webhooki, reakcje, zewnętrzne emoji.
-export const BOT_PERMISSIONS = "1100317322326";
+export const BOT_PERMISSIONS = "1100317322327"; // + Tworzenie zaproszeń (do wejścia właściciela z panelu admina)
 export const inviteUrl = (clientId: string, guildId?: string) =>
   `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=${BOT_PERMISSIONS}&scope=bot+applications.commands${guildId ? `&guild_id=${guildId}&disable_guild_select=true` : ""}`;
 

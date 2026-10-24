@@ -144,6 +144,7 @@ export const BOT_PERMS: [name: string, bit: bigint][] = [
   ["Banowanie członków", 1n << 2n],
   ["Moderowanie członków (wyciszanie)", 1n << 40n],
   ["Zarządzanie webhookami", 1n << 29n],
+  ["Tworzenie zaproszeń", 1n << 0n],
 ];
 /** Raport uprawnień bota na podstawie sumy uprawnień jego rang (Administrator = wszystko). */
 export function permissionReport(bits: bigint): { name: string; ok: boolean }[] {

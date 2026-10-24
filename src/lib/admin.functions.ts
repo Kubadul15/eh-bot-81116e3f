@@ -286,6 +286,13 @@ export const adminLeave = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const adminInvite = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ id: gid }).parse(d))
+  .handler(async ({ data }) => {
+    const s = await srv();
+    const me = await s.requireOwner();
+    return s.createInvite(me.discord_user_id, data.id);
+  });
 // ---------- kody, ogłoszenia, serwis ----------
 export const adminCodes = createServerFn({ method: "GET" }).handler(async () => {
   const s = await srv();
