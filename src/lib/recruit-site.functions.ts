@@ -49,12 +49,25 @@ async function loadGuild(guildId: string) {
   };
 }
 
-async function guildInfo(guildId: string) {
+// nazwa i ikona serwera z Discorda: trzymane w pamięci procesu (10 min), żeby każde wejście na stronę nie czekało na osobne zapytanie do Discorda;
+// przy błędzie krótki cache (30 s), by chwilowa awaria nie utrwaliła pustej nazwy
+type GuildMeta = { id: string; name: string; icon: string | null };
+const guildMeta = new Map<string, { at: number; ttl: number; value: GuildMeta }>();
+async function guildInfo(guildId: string): Promise<GuildMeta> {
+  const hit = guildMeta.get(guildId);
+  if (hit && Date.now() - hit.at < hit.ttl) return hit.value;
   const { bot } = await import("./discord.server");
   const r = await bot(`/guilds/${guildId}`).catch(() => null);
-  if (!r?.ok) return { id: guildId, name: "Serwer", icon: null as string | null };
-  const g = (await r.json()) as { id: string; name: string; icon: string | null };
-  return { id: g.id, name: g.name, icon: g.icon };
+  let value: GuildMeta = { id: guildId, name: "Serwer", icon: null };
+  let ttl = 30_000;
+  if (r?.ok) {
+    const g = (await r.json()) as GuildMeta;
+    value = { id: g.id, name: g.name, icon: g.icon };
+    ttl = 600_000;
+  }
+  if (guildMeta.size > 500) guildMeta.clear();
+  guildMeta.set(guildId, { at: Date.now(), ttl, value });
+  return value;
 }
 
 async function postToChannel(channelId: string | undefined, body: Record<string, unknown>) {
@@ -146,13 +159,14 @@ const rowOf = (r: {
 export const getPublicRecruit = createServerFn({ method: "GET" })
   .inputValidator(guildOnly)
   .handler(async ({ data }): Promise<PublicRecruit> => {
-    const g = await loadGuild(data.guildId);
+    // baza i Discord odpytywane równolegle (wcześniej jedno po drugim)
+    const [g, guild] = await Promise.all([loadGuild(data.guildId), guildInfo(data.guildId)]);
     if (!g.usable || !g.content.recruitSite.enabled) return { state: "unavailable" };
     const { enabled: _enabled, ...site } = g.content.recruitSite;
     void _enabled;
     return {
       state: "ok",
-      guild: await guildInfo(data.guildId),
+      guild,
       site,
       open: g.content.recruitment.open,
       positions: g.content.recruitment.positions.map((p) => ({
@@ -328,8 +342,7 @@ export const getRecruitPanel = createServerFn({ method: "GET" })
     if (!s) return { state: "login" };
     if (!level)
       return { state: "forbidden", user: { id: s.discord_user_id, username: s.username } };
-    const g = await loadGuild(data.guildId);
-    const guild = await guildInfo(data.guildId);
+    const [g, guild] = await Promise.all([loadGuild(data.guildId), guildInfo(data.guildId)]);
     if (!g.usable) return { state: "unavailable", guildName: guild.name, reason: g.reason };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

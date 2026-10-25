@@ -42,13 +42,22 @@ export function useRkTheme() {
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
     );
-    const scan = () =>
-      document.querySelectorAll(".rk-reveal:not(.is-in):not([data-rk-seen])").forEach((el) => {
-        el.setAttribute("data-rk-seen", "");
-        io.observe(el);
-      });
-    scan();
-    const mo = new MutationObserver(scan);
+    const watch = (el: Element) => {
+      if (el.hasAttribute("data-rk-seen") || el.classList.contains("is-in")) return;
+      el.setAttribute("data-rk-seen", "");
+      io.observe(el);
+    };
+    const scan = (root: ParentNode) => root.querySelectorAll(".rk-reveal").forEach(watch);
+    scan(document);
+    // nowe elementy (np. po wczytaniu danych): sprawdzamy tylko dodane węzły, a nie całą stronę przy każdej zmianie
+    const mo = new MutationObserver((records) => {
+      for (const r of records)
+        r.addedNodes.forEach((n) => {
+          if (!(n instanceof Element)) return;
+          if (n.classList.contains("rk-reveal")) watch(n);
+          scan(n);
+        });
+    });
     mo.observe(document.body, { childList: true, subtree: true });
     return () => {
       mo.disconnect();

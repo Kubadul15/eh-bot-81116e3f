@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getPublicRecruit, submitApplication } from "@/lib/recruit-site.functions";
 import { MAX_ANSWER, NICK } from "@/lib/recruit-logic";
 import type { PublicRecruit } from "@/lib/recruit-types";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/rekrutacja/$guildId/")({
 });
 
 type Ok = Extract<PublicRecruit, { state: "ok" }>;
+type Question = Ok["questions"][number];
 
 const draftKey = (guildId: string) => `rk-draft-${guildId}`;
 type Draft = {
@@ -44,6 +45,15 @@ const emptyDraft = (): Draft => ({
   age: "",
   answers: {},
 });
+
+// stałe klasy poza komponentami: nie tworzą się od nowa przy każdym naciśnięciu klawisza
+const GRAD = "linear-gradient(90deg, var(--ac), var(--ac2))";
+const card = "rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-card)]";
+const inputCls =
+  "w-full rounded-xl border border-[var(--rk-line)] bg-[var(--rk-field)] px-4 py-3 text-[15px] text-[var(--rk-fg)] outline-none transition-colors placeholder:text-[var(--rk-mut)] focus:border-[var(--ac)] focus:ring-2 focus:ring-[var(--ac)]/30";
+const labelCls = "mb-1.5 block text-sm font-semibold text-[var(--rk-fg2)]";
+const ringBad = "ring-2 ring-red-500/60";
+const lenOf = (s: string | undefined) => (s ?? "").trim().length;
 
 function RecruitPage() {
   const data = Route.useLoaderData();
@@ -64,14 +74,285 @@ function RecruitPage() {
   return <Page d={data} />;
 }
 
+// ---------- sekcje statyczne: memo, żeby pisanie w formularzu nie przerysowywało całej strony ----------
+const Header = memo(function Header({ d }: { d: Ok }) {
+  const icon = d.guild.icon
+    ? `https://cdn.discordapp.com/icons/${d.guild.id}/${d.guild.icon}.png?size=64`
+    : "";
+  return (
+    <header className="animate-fade-up mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
+      <a href="#top" className="flex items-center gap-3 font-bold">
+        {icon ? (
+          <img src={icon} alt="" width={36} height={36} className="size-9 rounded-xl" />
+        ) : (
+          <span
+            className="grid size-9 place-items-center rounded-xl text-lg"
+            style={{ background: GRAD }}
+          >
+            ★
+          </span>
+        )}
+        <span>{d.guild.name}</span>
+      </a>
+      <nav className="flex items-center gap-5 text-sm font-semibold text-[var(--rk-fg2)]">
+        <a href="#jak" className="hidden hover:text-[var(--rk-fg)] sm:inline">
+          Jak aplikować
+        </a>
+        <a href="#formularz" className="hover:text-[var(--rk-fg)]">
+          Rekrutacja
+        </a>
+        {d.site.discord && (
+          <a
+            href={d.site.discord}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg border border-[var(--rk-line)] px-3 py-1.5 hover:bg-[var(--rk-hover)]"
+          >
+            Discord ↗
+          </a>
+        )}
+      </nav>
+    </header>
+  );
+});
+
+const HeroTop = memo(function HeroTop({ d }: { d: Ok }) {
+  const { site } = d;
+  return (
+    <>
+      {site.banner && (
+        <img
+          src={site.banner}
+          alt=""
+          decoding="async"
+          fetchPriority="high"
+          className="mb-8 h-44 w-full rounded-3xl border border-[var(--rk-line)] object-cover sm:h-64"
+        />
+      )}
+      <p
+        className="animate-fade-up text-xs font-bold uppercase tracking-[0.3em] text-[var(--rk-mut)]"
+        style={{ animationDelay: "80ms" }}
+      >
+        Rekrutacja do ekipy
+      </p>
+      <h1
+        className="animate-fade-up mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl"
+        style={{ animationDelay: "160ms" }}
+      >
+        <span className="rk-grad-text">{site.title}</span>
+      </h1>
+      <p
+        className="animate-fade-up mt-5 max-w-2xl whitespace-pre-line text-lg text-[var(--rk-fg2)]"
+        style={{ animationDelay: "240ms" }}
+      >
+        {site.intro}
+      </p>
+      <div
+        className="animate-fade-up mt-7 flex flex-wrap gap-3"
+        style={{ animationDelay: "320ms" }}
+      >
+        <a href="#formularz" className="rk-btn rounded-xl px-6 py-3 font-bold text-white shadow-lg">
+          Wypełnij podanie ↗
+        </a>
+        {site.discord && (
+          <a
+            href={site.discord}
+            target="_blank"
+            rel="noreferrer"
+            className="rk-lift rounded-xl border border-[var(--rk-line)] px-6 py-3 font-bold hover:bg-[var(--rk-hover)]"
+          >
+            Dołącz na Discord ↗
+          </a>
+        )}
+      </div>
+    </>
+  );
+});
+
+// jedyna część hero zależna od wpisywanych odpowiedzi (licznik „twoje odpowiedzi”)
+const Stats = memo(function Stats({ d, done }: { d: Ok; done: number }) {
+  const open = d.positions.filter((p) => p.open).length;
+  const items = [
+    [String(d.questions.length), "pytań w formularzu"],
+    [String(open), "otwartych stanowisk"],
+    [d.site.minChars ? `${d.site.minChars}+` : "—", "znaków w odpowiedzi"],
+    [`${done} / ${d.questions.length}`, "twoje odpowiedzi"],
+  ] as const;
+  return (
+    <dl className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {items.map(([v, l], n) => (
+        <div
+          key={l}
+          className={`${card} card-lift rk-reveal p-4`}
+          style={{ ["--d" as string]: `${n * 90}ms` }}
+        >
+          <dt className="text-2xl font-extrabold" style={{ color: "var(--ac)" }}>
+            {v}
+          </dt>
+          <dd className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{l}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+});
+
+const STEPS = [
+  [
+    "1",
+    "Powiedz nam o sobie",
+    "Podaj nick Discord i Roblox, wiek oraz stanowisko, o które się ubiegasz.",
+  ],
+  [
+    "2",
+    "Pokaż, co potrafisz",
+    "Odpowiedz własnymi słowami na pytania – bez kopiowania i bez pośpiechu.",
+  ],
+  ["3", "Poczekaj na decyzję", "Ekipa rozpatrzy podanie, a odpowiedź dostaniesz na Discordzie."],
+] as const;
+const Steps = memo(function Steps() {
+  return (
+    <section id="jak" className="rk-cv mx-auto max-w-5xl px-5 py-10">
+      <h2 className="rk-reveal text-2xl font-extrabold">Jak aplikować</h2>
+      <ol className="mt-5 grid gap-3 sm:grid-cols-3">
+        {STEPS.map(([n, t, x], k) => (
+          <li
+            key={n}
+            className={`${card} card-lift rk-reveal p-5`}
+            style={{ ["--d" as string]: `${k * 120}ms` }}
+          >
+            <span
+              className="grid size-9 place-items-center rounded-full font-extrabold text-white"
+              style={{ background: GRAD }}
+            >
+              {n}
+            </span>
+            <h3 className="mt-3 font-bold">{t}</h3>
+            <p className="mt-1 text-sm text-[var(--rk-mut)]">{x}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+});
+
+const Faq = memo(function Faq({ faq }: { faq: Ok["site"]["faq"] }) {
+  if (!faq.length) return null;
+  return (
+    <section className="rk-cv mx-auto max-w-3xl px-5 py-10">
+      <h2 className="rk-reveal text-2xl font-extrabold">Masz pytania?</h2>
+      <div className="mt-4 space-y-2">
+        {faq.map((f) => (
+          <details key={f.q} className={`${card} rk-reveal group p-4`}>
+            <summary className="cursor-pointer list-none font-bold marker:hidden">
+              <span
+                className="mr-2 inline-block transition-transform group-open:rotate-90"
+                style={{ color: "var(--ac)" }}
+              >
+                ▸
+              </span>
+              {f.q}
+            </summary>
+            <p className="mt-2 whitespace-pre-line pl-5 text-sm text-[var(--rk-fg2)]">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+});
+
+const Footer = memo(function Footer({ d, guildId }: { d: Ok; guildId: string }) {
+  return (
+    <footer className="rk-cv mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-t border-[var(--rk-line)] px-5 py-8 text-sm text-[var(--rk-mut)]">
+      <span>
+        © {new Date().getFullYear()} {d.guild.name} · rekrutacja przez Emergency Hamburg Bot
+      </span>
+      <span className="flex gap-4">
+        {d.site.discord && (
+          <a
+            href={d.site.discord}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-[var(--rk-fg2)]"
+          >
+            Discord
+          </a>
+        )}
+        <Link
+          to="/rekrutacja/$guildId/panel"
+          params={{ guildId }}
+          className="hover:text-[var(--rk-fg2)]"
+        >
+          Panel ekipy
+        </Link>
+      </span>
+    </footer>
+  );
+});
+
+// pole pytania: przerysowuje się tylko wtedy, gdy zmienia się jego własna wartość
+const QuestionField = memo(function QuestionField({
+  q,
+  index,
+  value,
+  minChars,
+  flagged,
+  onChange,
+}: {
+  q: Question;
+  index: number;
+  value: string;
+  minChars: number;
+  flagged: boolean;
+  onChange: (id: string, v: string) => void;
+}) {
+  const n = lenOf(value);
+  const short = n > 0 && n < minChars;
+  const valid = n === 0 ? !q.required : n >= minChars && n <= MAX_ANSWER[q.style];
+  return (
+    <div id={`field-q-${q.id}`} className={`rounded-xl ${flagged ? ringBad : ""}`}>
+      <label className={labelCls}>
+        <span style={{ color: "var(--ac)" }}>{index + 1}.</span> {q.label}
+        {!q.required && <span className="font-normal text-[var(--rk-mut)]"> (opcjonalnie)</span>}
+      </label>
+      {q.style === "long" ? (
+        <textarea
+          className={`${inputCls} min-h-32 resize-y`}
+          maxLength={MAX_ANSWER.long}
+          value={value}
+          onChange={(e) => onChange(q.id, e.target.value)}
+          placeholder={q.placeholder}
+        />
+      ) : (
+        <input
+          className={inputCls}
+          maxLength={MAX_ANSWER.short}
+          value={value}
+          onChange={(e) => onChange(q.id, e.target.value)}
+          placeholder={q.placeholder}
+        />
+      )}
+      <p
+        className={`mt-1 text-xs ${short ? "text-amber-300" : valid && n ? "text-emerald-400" : "text-[var(--rk-mut)]"}`}
+      >
+        {n}
+        {minChars ? ` / min. ${minChars}` : ""} znaków{" "}
+        {short ? "— napisz trochę więcej" : n ? "✓" : ""}
+      </p>
+    </div>
+  );
+});
+
 function Page({ d }: { d: Ok }) {
   const { guildId } = Route.useParams();
   const { site } = d;
-  const accent = {
-    ["--ac" as string]: site.accent,
-    ["--ac2" as string]: site.accent2,
-  } as React.CSSProperties;
-  const grad = "linear-gradient(90deg, var(--ac), var(--ac2))";
+  const accent = useMemo(
+    () =>
+      ({
+        ["--ac" as string]: site.accent,
+        ["--ac2" as string]: site.accent2,
+      }) as React.CSSProperties,
+    [site.accent, site.accent2],
+  );
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [agree, setAgree] = useState(false);
   const [tabs, setTabs] = useState(0);
@@ -79,6 +360,8 @@ function Page({ d }: { d: Ok }) {
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [errors, setErrors] = useState<string[]>([]);
   const loaded = useRef(false);
+  const latest = useRef(draft);
+  latest.current = draft;
 
   // szkic zapisywany w przeglądarce kandydata (nic nie trafia na serwer, dopóki nie kliknie „Wyślij”)
   useEffect(() => {
@@ -90,13 +373,22 @@ function Page({ d }: { d: Ok }) {
     }
     loaded.current = true;
   }, [guildId]);
+  // zapis z opóźnieniem (nie przy każdym klawiszu – localStorage jest synchroniczny) i przy zamykaniu karty
   useEffect(() => {
     if (!loaded.current) return;
-    try {
-      localStorage.setItem(draftKey(guildId), JSON.stringify(draft));
-    } catch {
-      /* ignorujemy */
-    }
+    const write = () => {
+      try {
+        localStorage.setItem(draftKey(guildId), JSON.stringify(latest.current));
+      } catch {
+        /* ignorujemy */
+      }
+    };
+    const t = setTimeout(write, 500);
+    window.addEventListener("pagehide", write);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("pagehide", write);
+    };
   }, [draft, guildId]);
   // licznik przełączeń kart: tylko informacja dla rekrutera
   useEffect(() => {
@@ -106,16 +398,16 @@ function Page({ d }: { d: Ok }) {
   }, []);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((x) => ({ ...x, [k]: v }));
-  const setAnswer = (id: string, v: string) =>
-    setDraft((x) => ({ ...x, answers: { ...x.answers, [id]: v } }));
+  const setAnswer = useCallback(
+    (id: string, v: string) => setDraft((x) => ({ ...x, answers: { ...x.answers, [id]: v } })),
+    [],
+  );
 
-  const openPositions = d.positions.filter((p) => p.open);
-  const len = (id: string) => (draft.answers[id] ?? "").trim().length;
-  const answerOk = (q: Ok["questions"][number]) => {
-    const n = len(q.id);
-    return n === 0 ? !q.required : n >= site.minChars && n <= MAX_ANSWER[q.style];
-  };
-  const done = d.questions.filter((q) => len(q.id) >= Math.max(1, site.minChars)).length;
+  const done = useMemo(
+    () =>
+      d.questions.filter((q) => lenOf(draft.answers[q.id]) >= Math.max(1, site.minChars)).length,
+    [d.questions, draft.answers, site.minChars],
+  );
   const missing = useMemo(() => {
     const list: string[] = [];
     if (!draft.positionId) list.push("field-position");
@@ -124,13 +416,17 @@ function Page({ d }: { d: Ok }) {
     const age = Number(draft.age);
     if (!(age >= NICK.age[0] && age <= NICK.age[1])) list.push("field-age");
     for (const q of d.questions) {
-      const n = (draft.answers[q.id] ?? "").trim().length;
+      const n = lenOf(draft.answers[q.id]);
       if (!(n === 0 ? !q.required : n >= site.minChars && n <= MAX_ANSWER[q.style]))
         list.push(`field-q-${q.id}`);
     }
     if (!agree) list.push("field-agree");
     return list;
   }, [draft, agree, d.questions, site.minChars]);
+  const flagged = useMemo(
+    () => (errors.length ? new Set(missing) : new Set<string>()),
+    [errors, missing],
+  );
 
   const jump = () => {
     const el = missing[0] ? document.getElementById(missing[0]) : null;
@@ -168,6 +464,7 @@ function Page({ d }: { d: Ok }) {
       } catch {
         /* ignorujemy */
       }
+      loaded.current = false; // po wysłaniu nie zapisujemy szkicu ponownie
       setState("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -178,184 +475,26 @@ function Page({ d }: { d: Ok }) {
     }
   }
 
-  const card = "rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-card)] backdrop-blur";
-  const input =
-    "w-full rounded-xl border border-[var(--rk-line)] bg-[var(--rk-field)] px-4 py-3 text-[15px] text-[var(--rk-fg)] outline-none transition placeholder:text-[var(--rk-mut)] focus:border-[var(--ac)] focus:ring-2 focus:ring-[var(--ac)]/30";
-  const label = "mb-1.5 block text-sm font-semibold text-[var(--rk-fg2)]";
-  const bad = (id: string) =>
-    errors.length && missing.includes(id) ? "ring-2 ring-red-500/60" : "";
-  const icon = d.guild.icon
-    ? `https://cdn.discordapp.com/icons/${d.guild.id}/${d.guild.icon}.png?size=128`
-    : "";
+  const bad = (id: string) => (flagged.has(id) ? ringBad : "");
 
   return (
     <main
       style={accent}
-      className="rk min-h-screen scroll-smooth bg-[var(--rk-bg)] text-[var(--rk-fg)] selection:bg-[var(--ac)]/40"
+      className="rk min-h-screen bg-[var(--rk-bg)] text-[var(--rk-fg)] selection:bg-[var(--ac)]/40"
     >
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-0"
-        style={{
-          background:
-            "radial-gradient(60% 40% at 0% 0%, color-mix(in srgb, var(--ac) 22%, transparent), transparent 70%), radial-gradient(60% 40% at 100% 0%, color-mix(in srgb, var(--ac2) 22%, transparent), transparent 70%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="rk-orb -left-24 top-24 size-80"
-        style={{ background: "var(--ac)" }}
-      />
-      <div
-        aria-hidden
-        className="rk-orb -right-24 top-96 size-96"
-        style={{ background: "var(--ac2)", animationDelay: "-4s" }}
-      />
+      <div aria-hidden className="rk-bg" />
+      <div aria-hidden className="rk-orb rk-orb-a" />
+      <div aria-hidden className="rk-orb rk-orb-b" />
       <div className="relative z-10">
         <div className="rk-bar h-1.5 w-full" />
-        <header className="animate-fade-up mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
-          <a href="#top" className="flex items-center gap-3 font-bold">
-            {icon ? (
-              <img src={icon} alt="" className="size-9 rounded-xl" />
-            ) : (
-              <span
-                className="grid size-9 place-items-center rounded-xl text-lg"
-                style={{ background: grad }}
-              >
-                ★
-              </span>
-            )}
-            <span>{d.guild.name}</span>
-          </a>
-          <nav className="flex items-center gap-5 text-sm font-semibold text-[var(--rk-fg2)]">
-            <a href="#jak" className="hidden hover:text-[var(--rk-fg)] sm:inline">
-              Jak aplikować
-            </a>
-            <a href="#formularz" className="hover:text-[var(--rk-fg)]">
-              Rekrutacja
-            </a>
-            {site.discord && (
-              <a
-                href={site.discord}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-lg border border-[var(--rk-line)] px-3 py-1.5 hover:bg-[var(--rk-hover)]"
-              >
-                Discord ↗
-              </a>
-            )}
-          </nav>
-        </header>
+        <Header d={d} />
 
-        {/* HERO */}
         <section id="top" className="mx-auto max-w-5xl px-5 pb-6 pt-8 sm:pt-14">
-          {site.banner && (
-            <img
-              src={site.banner}
-              alt=""
-              className="mb-8 h-44 w-full rounded-3xl border border-[var(--rk-line)] object-cover sm:h-64"
-            />
-          )}
-          <p
-            className="animate-fade-up text-xs font-bold uppercase tracking-[0.3em] text-[var(--rk-mut)]"
-            style={{ animationDelay: "80ms" }}
-          >
-            Rekrutacja do ekipy
-          </p>
-          <h1
-            className="animate-fade-up mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl"
-            style={{ animationDelay: "160ms" }}
-          >
-            <span className="rk-grad-text">{site.title}</span>
-          </h1>
-          <p
-            className="animate-fade-up mt-5 max-w-2xl whitespace-pre-line text-lg text-[var(--rk-fg2)]"
-            style={{ animationDelay: "240ms" }}
-          >
-            {site.intro}
-          </p>
-          <div
-            className="animate-fade-up mt-7 flex flex-wrap gap-3"
-            style={{ animationDelay: "320ms" }}
-          >
-            <a
-              href="#formularz"
-              className="rk-btn rounded-xl px-6 py-3 font-bold text-white shadow-lg"
-              style={{ background: grad }}
-            >
-              Wypełnij podanie ↗
-            </a>
-            {site.discord && (
-              <a
-                href={site.discord}
-                target="_blank"
-                rel="noreferrer"
-                className="rk-lift rounded-xl border border-[var(--rk-line)] px-6 py-3 font-bold hover:bg-[var(--rk-hover)]"
-              >
-                Dołącz na Discord ↗
-              </a>
-            )}
-          </div>
-
-          <dl className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              [String(d.questions.length), "pytań w formularzu"],
-              [String(openPositions.length), "otwartych stanowisk"],
-              [site.minChars ? `${site.minChars}+` : "—", "znaków w odpowiedzi"],
-              [`${done} / ${d.questions.length}`, "twoje odpowiedzi"],
-            ].map(([v, l], n) => (
-              <div
-                key={l}
-                className={`${card} card-lift rk-reveal p-4`}
-                style={{ ["--d" as string]: `${n * 90}ms` }}
-              >
-                <dt className="text-2xl font-extrabold" style={{ color: "var(--ac)" }}>
-                  {v}
-                </dt>
-                <dd className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{l}</dd>
-              </div>
-            ))}
-          </dl>
+          <HeroTop d={d} />
+          <Stats d={d} done={done} />
         </section>
 
-        {/* JAK TO DZIAŁA */}
-        <section id="jak" className="mx-auto max-w-5xl px-5 py-10">
-          <h2 className="rk-reveal text-2xl font-extrabold">Jak aplikować</h2>
-          <ol className="mt-5 grid gap-3 sm:grid-cols-3">
-            {[
-              [
-                "1",
-                "Powiedz nam o sobie",
-                "Podaj nick Discord i Roblox, wiek oraz stanowisko, o które się ubiegasz.",
-              ],
-              [
-                "2",
-                "Pokaż, co potrafisz",
-                "Odpowiedz własnymi słowami na pytania – bez kopiowania i bez pośpiechu.",
-              ],
-              [
-                "3",
-                "Poczekaj na decyzję",
-                "Ekipa rozpatrzy podanie, a odpowiedź dostaniesz na Discordzie.",
-              ],
-            ].map(([n, t, x], k) => (
-              <li
-                key={n}
-                className={`${card} card-lift rk-reveal p-5`}
-                style={{ ["--d" as string]: `${k * 120}ms` }}
-              >
-                <span
-                  className="grid size-9 place-items-center rounded-full font-extrabold text-white"
-                  style={{ background: grad }}
-                >
-                  {n}
-                </span>
-                <h3 className="mt-3 font-bold">{t}</h3>
-                <p className="mt-1 text-sm text-[var(--rk-mut)]">{x}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <Steps />
 
         {/* FORMULARZ */}
         <section id="formularz" className="mx-auto max-w-3xl scroll-mt-6 px-5 py-10">
@@ -370,14 +509,13 @@ function Page({ d }: { d: Ok }) {
                   target="_blank"
                   rel="noreferrer"
                   className="rk-btn mt-6 inline-block rounded-xl px-6 py-3 font-bold text-white"
-                  style={{ background: grad }}
                 >
                   Dołącz na Discord ↗
                 </a>
               )}
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className={`${card} rk-reveal p-5 sm:p-8`}>
+            <form onSubmit={submit} noValidate className={`${card} p-5 sm:p-8`}>
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold">Twoje podanie</h2>
@@ -403,10 +541,9 @@ function Page({ d }: { d: Ok }) {
                 aria-hidden
               >
                 <div
-                  className="rk-fill h-full rounded-full transition-all duration-500"
+                  className="rk-fill h-full w-full origin-left rounded-full transition-transform duration-500"
                   style={{
-                    width: `${d.questions.length ? (done / d.questions.length) * 100 : 0}%`,
-                    background: grad,
+                    transform: `scaleX(${d.questions.length ? done / d.questions.length : 0})`,
                   }}
                 />
               </div>
@@ -422,9 +559,9 @@ function Page({ d }: { d: Ok }) {
                 className="mt-6 space-y-5 disabled:opacity-60"
               >
                 <div id="field-position" className={`rounded-xl ${bad("field-position")}`}>
-                  <label className={label}>👤 Stanowisko</label>
+                  <label className={labelCls}>👤 Stanowisko</label>
                   <select
-                    className={input}
+                    className={inputCls}
                     value={draft.positionId}
                     onChange={(e) => set("positionId", e.target.value)}
                   >
@@ -442,9 +579,9 @@ function Page({ d }: { d: Ok }) {
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div id="field-discord" className={`rounded-xl ${bad("field-discord")}`}>
-                    <label className={label}>Nick Discord</label>
+                    <label className={labelCls}>Nick Discord</label>
                     <input
-                      className={input}
+                      className={inputCls}
                       maxLength={NICK.discord[1]}
                       value={draft.discordNick}
                       onChange={(e) => set("discordNick", e.target.value)}
@@ -453,9 +590,9 @@ function Page({ d }: { d: Ok }) {
                     />
                   </div>
                   <div id="field-roblox" className={`rounded-xl ${bad("field-roblox")}`}>
-                    <label className={label}>Nick Roblox</label>
+                    <label className={labelCls}>Nick Roblox</label>
                     <input
-                      className={input}
+                      className={inputCls}
                       maxLength={NICK.roblox[1]}
                       value={draft.robloxNick}
                       onChange={(e) => set("robloxNick", e.target.value)}
@@ -464,9 +601,9 @@ function Page({ d }: { d: Ok }) {
                     />
                   </div>
                   <div id="field-age" className={`rounded-xl ${bad("field-age")}`}>
-                    <label className={label}>Wiek</label>
+                    <label className={labelCls}>Wiek</label>
                     <input
-                      className={input}
+                      className={inputCls}
                       inputMode="numeric"
                       maxLength={2}
                       value={draft.age}
@@ -475,12 +612,12 @@ function Page({ d }: { d: Ok }) {
                     />
                   </div>
                   <div>
-                    <label className={label}>
+                    <label className={labelCls}>
                       ID Discord{" "}
                       <span className="font-normal text-[var(--rk-mut)]">(opcjonalnie)</span>
                     </label>
                     <input
-                      className={input}
+                      className={inputCls}
                       inputMode="numeric"
                       maxLength={20}
                       value={draft.discordId}
@@ -490,48 +627,17 @@ function Page({ d }: { d: Ok }) {
                   </div>
                 </div>
 
-                {d.questions.map((q, i) => {
-                  const n = len(q.id);
-                  const short = n > 0 && n < site.minChars;
-                  return (
-                    <div
-                      key={q.id}
-                      id={`field-q-${q.id}`}
-                      className={`rounded-xl ${bad(`field-q-${q.id}`)}`}
-                    >
-                      <label className={label}>
-                        <span style={{ color: "var(--ac)" }}>{i + 1}.</span> {q.label}
-                        {!q.required && (
-                          <span className="font-normal text-[var(--rk-mut)]"> (opcjonalnie)</span>
-                        )}
-                      </label>
-                      {q.style === "long" ? (
-                        <textarea
-                          className={`${input} min-h-32 resize-y`}
-                          maxLength={MAX_ANSWER.long}
-                          value={draft.answers[q.id] ?? ""}
-                          onChange={(e) => setAnswer(q.id, e.target.value)}
-                          placeholder={q.placeholder}
-                        />
-                      ) : (
-                        <input
-                          className={input}
-                          maxLength={MAX_ANSWER.short}
-                          value={draft.answers[q.id] ?? ""}
-                          onChange={(e) => setAnswer(q.id, e.target.value)}
-                          placeholder={q.placeholder}
-                        />
-                      )}
-                      <p
-                        className={`mt-1 text-xs ${short ? "text-amber-300" : answerOk(q) && n ? "text-emerald-400" : "text-[var(--rk-mut)]"}`}
-                      >
-                        {n}
-                        {site.minChars ? ` / min. ${site.minChars}` : ""} znaków{" "}
-                        {short ? "— napisz trochę więcej" : n ? "✓" : ""}
-                      </p>
-                    </div>
-                  );
-                })}
+                {d.questions.map((q, i) => (
+                  <QuestionField
+                    key={q.id}
+                    q={q}
+                    index={i}
+                    value={draft.answers[q.id] ?? ""}
+                    minChars={site.minChars}
+                    flagged={flagged.has(`field-q-${q.id}`)}
+                    onChange={setAnswer}
+                  />
+                ))}
 
                 {/* pułapka na boty: ukryte pole poza ekranem */}
                 <input
@@ -574,7 +680,6 @@ function Page({ d }: { d: Ok }) {
                   type="submit"
                   disabled={!d.open || state === "sending"}
                   className="rk-btn rounded-xl px-7 py-3.5 font-extrabold uppercase tracking-wide text-white shadow-lg disabled:opacity-50"
-                  style={{ background: grad }}
                 >
                   {state === "sending" ? "Wysyłanie…" : "📤 Wyślij rekrutację"}
                 </button>
@@ -597,55 +702,8 @@ function Page({ d }: { d: Ok }) {
           )}
         </section>
 
-        {/* FAQ */}
-        {site.faq.length > 0 && (
-          <section className="mx-auto max-w-3xl px-5 py-10">
-            <h2 className="rk-reveal text-2xl font-extrabold">Masz pytania?</h2>
-            <div className="mt-4 space-y-2">
-              {site.faq.map((f) => (
-                <details key={f.q} className={`${card} rk-reveal group p-4`}>
-                  <summary className="cursor-pointer list-none font-bold marker:hidden">
-                    <span
-                      className="mr-2 inline-block transition group-open:rotate-90"
-                      style={{ color: "var(--ac)" }}
-                    >
-                      ▸
-                    </span>
-                    {f.q}
-                  </summary>
-                  <p className="mt-2 whitespace-pre-line pl-5 text-sm text-[var(--rk-fg2)]">
-                    {f.a}
-                  </p>
-                </details>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <footer className="mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-t border-[var(--rk-line)] px-5 py-8 text-sm text-[var(--rk-mut)]">
-          <span>
-            © {new Date().getFullYear()} {d.guild.name} · rekrutacja przez Emergency Hamburg Bot
-          </span>
-          <span className="flex gap-4">
-            {site.discord && (
-              <a
-                href={site.discord}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-[var(--rk-fg2)]"
-              >
-                Discord
-              </a>
-            )}
-            <Link
-              to="/rekrutacja/$guildId/panel"
-              params={{ guildId }}
-              className="hover:text-[var(--rk-fg2)]"
-            >
-              Panel ekipy
-            </Link>
-          </span>
-        </footer>
+        <Faq faq={site.faq} />
+        <Footer d={d} guildId={guildId} />
       </div>
       <RkTools music={site.music} />
     </main>

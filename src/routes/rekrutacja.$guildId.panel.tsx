@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -143,7 +143,12 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
   const [position, setPosition] = useState("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
-  const refresh = () => qc.invalidateQueries({ queryKey: ["rk-panel", guildId] });
+  const [shown, setShown] = useState(30); // lista podań ładuje się partiami – setki rozwijalnych kart naraz spowalniałyby panel
+  const refresh = useCallback(
+    () => qc.invalidateQueries({ queryKey: ["rk-panel", guildId] }),
+    [qc, guildId],
+  );
+  const toggle = useCallback((id: string) => setOpenId((cur) => (cur === id ? null : id)), []);
   const canReview = d.level === "review" || d.level === "manage";
 
   const counts = useMemo(() => {
@@ -269,12 +274,12 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
                   Brak podań w tym widoku.
                 </p>
               )}
-              {list.map((a) => (
+              {list.slice(0, shown).map((a) => (
                 <AppCard
                   key={a.id}
                   a={a}
                   open={openId === a.id}
-                  onToggle={() => setOpenId(openId === a.id ? null : a.id)}
+                  onToggle={toggle}
                   canReview={canReview}
                   canDelete={d.level === "manage"}
                   hasRole={!!d.positions.find((p) => p.id === a.positionId)?.roleId}
@@ -283,6 +288,15 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
                   guildId={guildId}
                 />
               ))}
+              {list.length > shown && (
+                <button
+                  type="button"
+                  onClick={() => setShown((n) => n + 30)}
+                  className={`${btn} w-full border border-[var(--rk-line)] hover:bg-[var(--rk-hover)]`}
+                >
+                  Pokaż więcej ({list.length - shown})
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -295,7 +309,8 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
   );
 }
 
-function AppCard({
+const AppCard = memo(AppCardBase);
+function AppCardBase({
   a,
   open,
   onToggle,
@@ -308,7 +323,7 @@ function AppCard({
 }: {
   a: AppRow;
   open: boolean;
-  onToggle: () => void;
+  onToggle: (id: string) => void;
   canReview: boolean;
   canDelete: boolean;
   hasRole: boolean;
@@ -358,7 +373,7 @@ function AppCard({
     <article className={`${card} rk-reveal overflow-hidden`}>
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => onToggle(a.id)}
         className="flex w-full flex-wrap items-center gap-3 p-4 text-left hover:bg-[var(--rk-card)]"
       >
         <span
