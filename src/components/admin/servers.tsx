@@ -14,6 +14,7 @@ import {
   adminExportConfig,
   adminForcePanel,
   adminGrant,
+  adminSetMax,
   adminImportConfig,
   adminInvite,
   adminLeave,
@@ -106,7 +107,9 @@ export function PlanPills({
 }) {
   return (
     <span className="flex flex-wrap gap-1">
-      {s.premium.active ? (
+      {s.premium.max ? (
+        <Pill tone="gold">👑 Max</Pill>
+      ) : s.premium.active ? (
         <Pill tone="gold">
           {s.premium.lifetime ? "💎 Lifetime" : `💎 do ${fmtDate(s.premium.until)}`}
         </Pill>
@@ -333,6 +336,7 @@ function ServerDetail({ id, onBack }: { id: string; onBack: () => void }) {
 
       <div className="grid gap-5 xl:grid-cols-2">
         <PremiumCard s={s} inv={inv} />
+        <MaxCard s={s} inv={inv} />
         <PaymentsCard s={s} inv={inv} />
         <InfoCard s={s} inv={inv} />
         <ModulesCard s={s} inv={inv} />
@@ -427,6 +431,92 @@ function PremiumCard({ s, inv }: CardProps) {
             variant="outline"
             onClick={() => timed.mutate("extend")}
             disabled={!s.premium.active || s.premium.lifetime}
+          >
+            Przedłuż o X dni
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/** Plan Max jest tylko „na zaproszenie”: nadaje go wyłącznie właściciel bota (każda funkcja serwerowa sprawdza OWNER_ID). Obejmuje Premium. */
+function MaxCard({ s, inv }: CardProps) {
+  const [days, setDays] = useState("30");
+  const [note, setNote] = useState("");
+  const base = { invalidate: invKeys(inv) };
+  const max = s.maxGrant;
+  const active = s.premium.max;
+  const lifetime = useAdminAction(
+    () => adminSetMax({ data: { id: s.id, mode: "lifetime", note } }),
+    { ...base, ok: "Nadano plan Max (lifetime)" },
+  );
+  const timed = useAdminAction(
+    (mode: "days" | "extend") =>
+      adminSetMax({
+        data: { id: s.id, mode, days: Math.max(1, Math.floor(Number(days) || 1)), note },
+      }),
+    { ...base, ok: "Zapisano plan Max" },
+  );
+  const revoke = useAdminAction(() => adminSetMax({ data: { id: s.id, mode: "revoke" } }), {
+    ...base,
+    ok: "Cofnięto plan Max",
+  });
+  return (
+    <Card
+      title="👑 Plan Max (na zaproszenie)"
+      hint={
+        active
+          ? max?.until
+            ? `Aktywny do ${fmtDateTime(max.until)} (${relTime(max.until)}).`
+            : "Aktywny na zawsze."
+          : "Brak. Max obejmuje wszystko z Premium plus poczekalnię głosową. Nadajesz go tylko Ty."
+      }
+    >
+      {max && (
+        <p className="mb-3 text-xs text-muted-foreground">
+          Od {fmtDate(max.since)}
+          {max.note ? ` • „${max.note}”` : ""}
+        </p>
+      )}
+      <div className="space-y-3">
+        <div>
+          <Label>Notatka (komu i dlaczego)</Label>
+          <Input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ConfirmButton
+            label="♾️ Nadaj Max (lifetime)"
+            confirmLabel="Potwierdź Max"
+            onConfirm={() => lifetime.mutate()}
+            variant="default"
+          />
+          <ConfirmButton
+            label="Cofnij Max"
+            confirmLabel="Na pewno cofnąć?"
+            onConfirm={() => revoke.mutate()}
+            disabled={!max}
+          />
+        </div>
+        <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+          <div className="w-28">
+            <Label>Dni</Label>
+            <Input
+              type="number"
+              min={1}
+              max={3650}
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+            />
+          </div>
+          <Button type="button" variant="outline" onClick={() => timed.mutate("days")}>
+            Nadaj na X dni
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => timed.mutate("extend")}
+            disabled={!active || !max?.until}
           >
             Przedłuż o X dni
           </Button>

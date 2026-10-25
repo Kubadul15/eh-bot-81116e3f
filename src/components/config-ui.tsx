@@ -189,6 +189,37 @@ export function ChannelField({
   );
 }
 
+export function TextField({
+  label,
+  hint,
+  value,
+  placeholder,
+  max = 500,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: string;
+  placeholder?: string;
+  max?: number;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block rounded-lg border bg-card p-4 sm:col-span-2">
+      <span className="text-sm font-semibold">{label}</span>
+      {hint && <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>}
+      <input
+        type="url"
+        maxLength={max}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30"
+      />
+    </label>
+  );
+}
+
 export function NumField({
   label,
   value,

@@ -7,6 +7,8 @@ import {
   CHANNEL_SECTIONS,
   ROLE_FIELDS,
   NUM_FIELDS,
+  TEXT_FIELDS,
+  VOICE_SLOTS,
   PANEL_SLOTS,
   type Category,
 } from "@/lib/bot-slots";
@@ -17,6 +19,7 @@ import {
   Block,
   ChannelField,
   NumField,
+  TextField,
   PanelSender,
   Progress,
   RolePicker,
@@ -116,6 +119,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const [settings, setSettings] = useState<Record<string, number>>(
     data.botIn ? data.config.settings : {},
   );
+  const [texts, setTexts] = useState<Record<string, string>>(data.botIn ? data.config.texts : {});
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [view, setView] = useState<View>("home");
   const [content, setContent] = useState(() => readContent(data.botIn ? data.config.content : {}));
@@ -135,7 +139,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   async function sendOne(key: string) {
     setPanelStatus((p) => ({ ...p, [key]: "sending" }));
     try {
-      await saveGuildFn({ data: { guildId, channels, roles, settings } });
+      await saveGuildFn({ data: { guildId, channels, roles, settings, texts } });
       await saveContentFn({ data: { guildId, content } });
       await sendPanelFn({ data: { guildId, panel: key } });
       setPanelStatus((p) => ({ ...p, [key]: "sent" }));
@@ -171,7 +175,9 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
 
   const premium = data.premium;
   const locked = !premium.active; // plan Free
-  const textChannels = data.channels.filter((c) => c.type !== 4);
+  const maxLocked = !premium.max; // plan Max (tylko na zaproszenie)
+  const textChannels = data.channels.filter((c) => ![2, 4, 13].includes(c.type));
+  const voiceChannels = data.channels.filter((c) => [2, 13].includes(c.type));
   const categoryChannels = data.channels.filter((c) => c.type === 4);
 
   const touch = () => setStatus("idle");
@@ -203,7 +209,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   async function save() {
     setStatus("saving");
     try {
-      await saveGuildFn({ data: { guildId, channels, roles, settings } });
+      await saveGuildFn({ data: { guildId, channels, roles, settings, texts } });
       await saveContentFn({ data: { guildId, content } });
       await qc.invalidateQueries({ queryKey: ["guild", guildId] });
       setStatus("saved");
@@ -286,7 +292,13 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 c.id,
                 c.emoji,
                 c.label,
-                c.premiumOnly && locked ? <span className="text-xs">💎</span> : badge(c),
+                c.maxOnly && maxLocked ? (
+                  <span className="text-xs">👑</span>
+                ) : c.premiumOnly && locked ? (
+                  <span className="text-xs">💎</span>
+                ) : (
+                  badge(c)
+                ),
               ),
             )}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">
@@ -340,7 +352,11 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-2 text-3xl">
                             {c.emoji}
-                            {c.premiumOnly && locked && <PremiumBadge />}
+                            {c.maxOnly && maxLocked ? (
+                              <span className="text-xs">👑 Max</span>
+                            ) : (
+                              c.premiumOnly && locked && <PremiumBadge />
+                            )}
                           </span>
                           <ChevronRight className="size-5 text-muted-foreground transition group-hover:translate-x-1" />
                         </div>
@@ -464,7 +480,14 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                   </div>
                 </div>
 
-                {cat.premiumOnly && locked && (
+                {cat.maxOnly && maxLocked && (
+                  <p className="mt-4 rounded-lg border border-violet-500/40 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+                    👑 <b>{cat.label}</b> to funkcja planu <b>Max</b>. Plan Max jest dostępny wyłącznie
+                    na zaproszenie i nadaje go właściciel bota. Możesz już ustawić kanał i dźwięk –
+                    bot zacznie grać, gdy plan zostanie włączony.
+                  </p>
+                )}
+                {cat.premiumOnly && !cat.maxOnly && locked && (
                   <div className="mt-4">
                     <LockBanner
                       title={`${cat.label}: funkcja planu Premium`}
@@ -499,7 +522,11 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                             slot={slot}
                             value={channels[slot[0]] ?? ""}
                             options={
-                              FOLDER_SLOTS.includes(slot[0]) ? categoryChannels : textChannels
+                              FOLDER_SLOTS.includes(slot[0])
+                                ? categoryChannels
+                                : VOICE_SLOTS.includes(slot[0])
+                                  ? voiceChannels
+                                  : textChannels
                             }
                             category={FOLDER_SLOTS.includes(slot[0])}
                             onChange={(id) => {
@@ -546,6 +573,27 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                           onChange={(n) => {
                             touch();
                             setSettings((s) => ({ ...s, [f.key]: n }));
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </Block>
+                )}
+
+                {(cat.texts?.length ?? 0) > 0 && (
+                  <Block icon="🔗" title="Dźwięk">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {TEXT_FIELDS.filter((f) => cat.texts?.includes(f.key)).map((f) => (
+                        <TextField
+                          key={f.key}
+                          label={f.label}
+                          hint={f.hint}
+                          placeholder={f.placeholder}
+                          max={f.max}
+                          value={texts[f.key] ?? ""}
+                          onChange={(v) => {
+                            touch();
+                            setTexts((t) => ({ ...t, [f.key]: v }));
                           }}
                         />
                       ))}

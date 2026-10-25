@@ -60,6 +60,7 @@ export const MODULES: [id: string, label: string][] = [
   ["mafia", "Mafia"],
   ["firmy", "Firmy"],
   ["policja", "Policja"],
+  ["poczekalnia", "Poczekalnia głosowa (Max)"],
   ["nieruchomosci", "Nieruchomości"],
   ["recruit", "Rekrutacja"],
   ["embed", "Kreator /embed"],
@@ -106,6 +107,8 @@ export type PremiumGrant = {
 export const TRIAL_DAYS = 3;
 export type AdminMeta = {
   premium?: PremiumGrant;
+  /** Plan Max: tylko na zaproszenie (nadaje go wyłącznie właściciel bota), obejmuje wszystko z Premium + funkcje Max. */
+  max?: Omit<PremiumGrant, "source">;
   trial?: { at: string; until: string; by: string }; // ślad wykorzystanego triala (zostaje po jego wygaśnięciu)
   blocked?: { reason: string; at: string; by: string };
   disabled?: string[];
@@ -125,8 +128,12 @@ export function metaOf(settings: unknown): AdminMeta {
   const raw = isObj(settings) ? settings["_admin"] : undefined;
   return isObj(raw) ? (raw as AdminMeta) : {};
 }
+const grantLive = (g: { until: string | null } | undefined, now: number): boolean =>
+  !!g && (g.until === null || Date.parse(g.until) > now);
+export const maxActive = (m: AdminMeta, now = Date.now()): boolean => grantLive(m.max, now);
+/** Plan Max obejmuje wszystko z Premium, więc serwer z Max jest też „premium”. */
 export const premiumActive = (m: AdminMeta, now = Date.now()): boolean =>
-  !!m.premium && (m.premium.until === null || Date.parse(m.premium.until) > now);
+  grantLive(m.premium, now) || maxActive(m, now);
 export const isLifetime = (m: AdminMeta): boolean => !!m.premium && m.premium.until === null;
 export function limitsFor(m: AdminMeta, now = Date.now()): Limits {
   const base = premiumActive(m, now) ? PREMIUM_LIMITS : FREE_LIMITS;
@@ -184,6 +191,7 @@ export function publicPremium(m: AdminMeta, now = Date.now()) {
   return {
     trial: trialStatus(m, now),
     active: premiumActive(m, now),
+    max: maxActive(m, now),
     lifetime: isLifetime(m),
     until: m.premium?.until ?? null,
     blocked: m.blocked ? { reason: m.blocked.reason } : null,
@@ -201,6 +209,19 @@ export const keepAdmin = (
   isObj(existingSettings) && "_admin" in existingSettings
     ? { ...next, _admin: existingSettings["_admin"] }
     : next;
+
+/** Nowy stan Max po nadaniu (jak grantPremium, ale na polu `max`). */
+export function grantMax(
+  m: AdminMeta,
+  opts: { days: number | null; by: string; note?: string },
+  now = Date.now(),
+): NonNullable<AdminMeta["max"]> {
+  const since = m.max?.since ?? new Date(now).toISOString();
+  const note = opts.note ?? "";
+  if (opts.days === null) return { since, until: null, by: opts.by, note };
+  const start = m.max?.until && Date.parse(m.max.until) > now ? Date.parse(m.max.until) : now;
+  return { since, until: new Date(start + opts.days * 86_400_000).toISOString(), by: opts.by, note };
+}
 
 /** Nowy stan Premium po nadaniu: lifetime (days = null) albo na X dni (od teraz lub od końca bieżącego okresu). */
 export function grantPremium(

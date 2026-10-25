@@ -7,7 +7,7 @@ export type ServerRow = {
   icon: string | null;
   botIn: boolean;
   configured: boolean;
-  premium: { active: boolean; lifetime: boolean; until: string | null };
+  premium: { active: boolean; lifetime: boolean; until: string | null; max: boolean };
   blocked: string | null;
   disabled: number;
   note: string;
@@ -22,6 +22,8 @@ export type ServerDetail = ServerRow & {
   contact: string;
   payments: Payment[];
   grant: PremiumGrant | null;
+  maxGrant: Omit<PremiumGrant, "source"> | null;
+  maxUntil: string | null;
   limits: Partial<Limits>;
   effectiveLimits: Limits;
   disabledModules: string[];

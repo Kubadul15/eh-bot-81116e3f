@@ -7,6 +7,8 @@ import { API, getSession } from "./discord.server";
 import {
   OWNER_ID,
   grantPremium,
+  grantMax,
+  maxActive,
   isLifetime,
   limitsFor,
   metaOf,
@@ -222,6 +224,7 @@ export function toServerRow(
       active: premiumActive(m, now),
       lifetime: isLifetime(m),
       until: m.premium?.until ?? null,
+      max: maxActive(m, now),
     },
     blocked: m.blocked?.reason ?? null,
     disabled: m.disabled?.length ?? 0,
@@ -307,6 +310,8 @@ export async function serverDetail(id: string): Promise<ServerDetail> {
     contact: m.contact ?? "",
     payments: m.payments ?? [],
     grant: m.premium ?? null,
+    maxGrant: m.max ?? null,
+    maxUntil: m.max?.until ?? null,
     limits: m.limits ?? {},
     effectiveLimits: limitsFor(m),
     disabledModules: m.disabled ?? [],
@@ -344,6 +349,33 @@ export async function grant(
     `${days === null ? "lifetime" : `${days} dni`}${note ? ` • ${clampText(note, 80)}` : ""}`,
   );
   return m;
+}
+/** Plan Max (tylko na zaproszenie): nadaje wyłącznie właściciel bota. Max obejmuje Premium, więc nie trzeba osobno nadawać Premium. */
+export async function grantMaxPlan(
+  by: string,
+  id: string,
+  g: GrantMode,
+  note: string,
+): Promise<AdminMeta> {
+  const days = g.mode === "lifetime" ? null : Math.min(3650, Math.max(1, Math.floor(g.days)));
+  const m = await writeMeta(id, (cur) => ({
+    ...cur,
+    max: grantMax(cur, { days, by, note: clampText(note, 200) }),
+  }));
+  await audit(
+    by,
+    g.mode === "lifetime" ? "max-lifetime" : g.mode === "days" ? "max-dni" : "max-przedłużenie",
+    id,
+    `${days === null ? "lifetime" : `${days} dni`}${note ? ` • ${clampText(note, 80)}` : ""}`,
+  );
+  return m;
+}
+export async function revokeMax(by: string, id: string): Promise<void> {
+  await writeMeta(id, (cur) => {
+    const { max: _x, ...rest } = cur;
+    return rest;
+  });
+  await audit(by, "max-cofnięty", id);
 }
 /** Bezpłatny trial Premium (3 dni): raz na serwer i raz na konto Discord. Wywoływane przez zarządcę serwera, nie tylko właściciela bota. */
 export async function startTrial(userId: string, guildId: string): Promise<{ until: string }> {

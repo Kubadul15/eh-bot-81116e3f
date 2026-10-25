@@ -23,7 +23,7 @@ const row = (o: Partial<ServerRow> = {}): ServerRow => ({
   icon: null,
   botIn: true,
   configured: true,
-  premium: { active: true, lifetime: true, until: null },
+  premium: { active: true, lifetime: true, until: null, max: false },
   blocked: null,
   disabled: 0,
   note: "",

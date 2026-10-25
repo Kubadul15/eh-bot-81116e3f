@@ -159,6 +159,18 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
     ],
   },
   {
+    id: "poczekalnia",
+    name: "🎧 Poczekalnia głosowa",
+    slots: [
+      [
+        "poczekalnia",
+        "🎧",
+        "Kanał poczekalni (głosowy)",
+        "Kanał GŁOSOWY, na który wchodzi bot. Gra dźwięk w pętli, gdy ktoś jest na kanale, i cichnie, gdy kanał jest pusty",
+      ],
+    ],
+  },
+  {
     id: "policja",
     name: "🚓 Policja",
     slots: [
@@ -386,6 +398,22 @@ export const ROLE_FIELDS: RoleField[] = [
   },
 ];
 
+// pola kanałów, w których wybiera się kanał GŁOSOWY
+export const VOICE_SLOTS = ["poczekalnia"];
+
+// ustawienia tekstowe (reszta ustawień to liczby): klucz zapisywany w settings, walidacja po stronie serwera
+export type TextField = { key: string; label: string; placeholder: string; max: number; hint: string };
+export const TEXT_FIELDS: TextField[] = [
+  {
+    key: "voice_url",
+    label: "Dźwięk poczekalni (bezpośredni link do pliku)",
+    placeholder: "https://…/informacja.mp3",
+    max: 500,
+    hint: "Link musi prowadzić prosto do pliku audio (mp3, ogg, wav, m4a – do 25 MB). Bot pobiera go sam i gra w pętli.",
+  },
+];
+export const TEXT_KEYS = TEXT_FIELDS.map((f) => f.key);
+
 export type NumField = { key: string; label: string; def: number; min?: number; max?: number };
 export const NUM_FIELDS: NumField[] = [
   { key: "minus_limit", label: "Minusy do auto-degradu", def: 3 },
@@ -410,6 +438,7 @@ export const NUM_FIELDS: NumField[] = [
   { key: "firm_max_staff", label: "Maks. pracowników jednej firmy", def: 20, min: 3, max: 50 },
   { key: "estate_fee", label: "Prowizja miasta przy odsprzedaży nieruchomości (%)", def: 5, min: 0, max: 50 },
   { key: "estate_snipe", label: "Anty-snajper: o ile minut przedłużyć aukcję (0 = wyłączone)", def: 2, min: 0, max: 30 },
+  { key: "voice_volume", label: "Głośność poczekalni (%)", def: 60, min: 1, max: 100 },
   { key: "police_points_limit", label: "Limit punktów karnych (potem zawieszenie prawa jazdy)", def: 24, min: 1, max: 100 },
   { key: "police_fine_days", label: "Dni na opłacenie mandatu (potem +50%)", def: 7, min: 1, max: 60 },
   { key: "police_max_arrest_hours", label: "Maks. areszt policyjny (godziny)", def: 72, min: 1, max: 720 },
@@ -428,6 +457,8 @@ export type Category = {
   recruitment?: boolean;
   tickets?: boolean; // w tej kategorii działa pełny edytor ticketów
   premiumOnly?: boolean;
+  maxOnly?: boolean; // funkcja planu Max (tylko na zaproszenie); implikuje premiumOnly
+  texts?: string[]; // pola tekstowe z TEXT_FIELDS
   premiumNote?: string; // cała kategoria w Premium / uwaga o ograniczeniach planu Free
 };
 export const CATEGORIES: Category[] = [
@@ -508,6 +539,19 @@ export const CATEGORIES: Category[] = [
     nums: ["estate_fee", "estate_snipe"],
     panels: ["nieruchomosci"],
     premiumOnly: true,
+  },
+  {
+    id: "poczekalnia",
+    emoji: "🎧",
+    label: "Poczekalnia głosowa",
+    desc: "Bot wchodzi na kanał głosowy i w pętli gra Twój dźwięk (np. informację dla czekających). Gdy kanał jest pusty – cisza, gdy ktoś wejdzie – gra od początku",
+    sections: ["poczekalnia"],
+    roles: [],
+    nums: ["voice_volume"],
+    texts: ["voice_url"],
+    panels: [],
+    premiumOnly: true,
+    maxOnly: true,
   },
   {
     id: "policja",

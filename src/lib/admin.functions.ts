@@ -52,6 +52,34 @@ export const adminGrant = createServerFn({ method: "POST" })
     );
     return { ok: true as const };
   });
+// ---------- plan Max (tylko właściciel bota; to plan „na zaproszenie”) ----------
+export const adminSetMax = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: gid,
+        mode: z.enum(["lifetime", "days", "extend", "revoke"]),
+        days: z.number().int().min(1).max(3650).optional(),
+        note: z.string().max(200).default(""),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const s = await srv();
+    const me = await s.requireOwner();
+    if (data.mode === "revoke") {
+      await s.revokeMax(me.discord_user_id, data.id);
+      return { ok: true as const };
+    }
+    if (data.mode !== "lifetime" && !data.days) throw new Error("Podaj liczbę dni");
+    await s.grantMaxPlan(
+      me.discord_user_id,
+      data.id,
+      data.mode === "lifetime" ? { mode: "lifetime" } : { mode: data.mode, days: data.days ?? 1 },
+      data.note,
+    );
+    return { ok: true as const };
+  });
 export const adminRevoke = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: gid }).parse(d))
   .handler(async ({ data }) => {

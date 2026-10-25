@@ -1,5 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
-import { CHANNEL_KEYS, ROLE_FIELDS, NUM_FIELDS, PANEL_KEYS, isSnowflake } from "./bot-slots";
+import {
+  CHANNEL_KEYS,
+  ROLE_FIELDS,
+  NUM_FIELDS,
+  TEXT_FIELDS,
+  TEXT_KEYS,
+  PANEL_KEYS,
+  isSnowflake,
+} from "./bot-slots";
 import {
   OWNER_ID,
   PREMIUM_PANELS,
@@ -70,7 +78,7 @@ export const getGuild = createServerFn({ method: "GET" })
     if (!cr.ok || !rr.ok)
       return { guild: { id: g.id, name: g.name, icon: g.icon }, botIn: false as const };
     const channels = ((await cr.json()) as Ch[])
-      .filter((c) => [0, 4, 5].includes(c.type))
+      .filter((c) => [0, 2, 4, 5, 13].includes(c.type)) // tekstowe, głosowe (poczekalnia), kategorie, ogłoszeniowe, sceny
       .sort((a, b) => a.position - b.position)
       .map((c) => ({ id: c.id, name: c.name, type: c.type }));
     const roles = ((await rr.json()) as Role[])
@@ -88,6 +96,11 @@ export const getGuild = createServerFn({ method: "GET" })
         ([k, v]) => !k.startsWith("_") && typeof v === "number",
       ),
     ) as Record<string, number>;
+    const texts = Object.fromEntries(
+      Object.entries((cfg?.settings ?? {}) as Record<string, unknown>).filter(
+        ([k, v]) => TEXT_KEYS.includes(k) && typeof v === "string",
+      ),
+    ) as Record<string, string>;
     return {
       guild: { id: g.id, name: g.name, icon: g.icon },
       botIn: true as const,
@@ -98,6 +111,7 @@ export const getGuild = createServerFn({ method: "GET" })
         channels: (cfg?.channels ?? {}) as Record<string, string>,
         roles: (cfg?.roles ?? {}) as Record<string, string[] | string>,
         settings,
+        texts,
         content: cfg?.content ?? {},
       },
     };
@@ -138,6 +152,7 @@ type SaveInput = {
   channels: Record<string, string>;
   roles: Record<string, string[] | string>;
   settings: Record<string, number>;
+  texts?: Record<string, string>;
 };
 
 export const saveGuild = createServerFn({ method: "POST" })
@@ -156,7 +171,13 @@ export const saveGuild = createServerFn({ method: "POST" })
       const n = Math.round(Number(d.settings?.[f.key]));
       settings[f.key] = Number.isFinite(n) && n >= (f.min ?? 1) && n <= (f.max ?? 365) ? n : f.def;
     }
-    return { guildId: d.guildId, channels, roles, settings };
+    // ustawienia tekstowe (np. link do dźwięku poczekalni): tylko adresy http(s), reszta to pusty tekst
+    const texts: Record<string, string> = {};
+    for (const f of TEXT_FIELDS) {
+      const v = String(d.texts?.[f.key] ?? "").trim().slice(0, f.max);
+      texts[f.key] = /^https?:\/\/[^\s]+$/i.test(v) ? v : "";
+    }
+    return { guildId: d.guildId, channels, roles, settings: { ...settings, ...texts } };
   })
   .handler(async ({ data }) => {
     const { requireGuild } = await import("./discord.server");
