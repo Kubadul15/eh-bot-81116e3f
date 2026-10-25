@@ -201,9 +201,19 @@ function Page({ d }: { d: Ok }) {
             "radial-gradient(60% 40% at 0% 0%, color-mix(in srgb, var(--ac) 22%, transparent), transparent 70%), radial-gradient(60% 40% at 100% 0%, color-mix(in srgb, var(--ac2) 22%, transparent), transparent 70%)",
         }}
       />
+      <div
+        aria-hidden
+        className="rk-orb -left-24 top-24 size-80"
+        style={{ background: "var(--ac)" }}
+      />
+      <div
+        aria-hidden
+        className="rk-orb -right-24 top-96 size-96"
+        style={{ background: "var(--ac2)", animationDelay: "-4s" }}
+      />
       <div className="relative z-10">
-        <div className="h-1.5 w-full" style={{ background: grad }} />
-        <header className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
+        <div className="rk-bar h-1.5 w-full" />
+        <header className="animate-fade-up mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
           <a href="#top" className="flex items-center gap-3 font-bold">
             {icon ? (
               <img src={icon} alt="" className="size-9 rounded-xl" />
@@ -246,21 +256,31 @@ function Page({ d }: { d: Ok }) {
               className="mb-8 h-44 w-full rounded-3xl border border-[var(--rk-line)] object-cover sm:h-64"
             />
           )}
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--rk-mut)]">
+          <p
+            className="animate-fade-up text-xs font-bold uppercase tracking-[0.3em] text-[var(--rk-mut)]"
+            style={{ animationDelay: "80ms" }}
+          >
             Rekrutacja do ekipy
           </p>
-          <h1 className="mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl">
-            <span style={{ background: grad, WebkitBackgroundClip: "text", color: "transparent" }}>
-              {site.title}
-            </span>
+          <h1
+            className="animate-fade-up mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl"
+            style={{ animationDelay: "160ms" }}
+          >
+            <span className="rk-grad-text">{site.title}</span>
           </h1>
-          <p className="mt-5 max-w-2xl whitespace-pre-line text-lg text-[var(--rk-fg2)]">
+          <p
+            className="animate-fade-up mt-5 max-w-2xl whitespace-pre-line text-lg text-[var(--rk-fg2)]"
+            style={{ animationDelay: "240ms" }}
+          >
             {site.intro}
           </p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div
+            className="animate-fade-up mt-7 flex flex-wrap gap-3"
+            style={{ animationDelay: "320ms" }}
+          >
             <a
               href="#formularz"
-              className="rounded-xl px-6 py-3 font-bold text-white shadow-lg transition hover:brightness-110"
+              className="rk-btn rounded-xl px-6 py-3 font-bold text-white shadow-lg"
               style={{ background: grad }}
             >
               Wypełnij podanie ↗
@@ -270,7 +290,7 @@ function Page({ d }: { d: Ok }) {
                 href={site.discord}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-xl border border-[var(--rk-line)] px-6 py-3 font-bold hover:bg-[var(--rk-hover)]"
+                className="rk-lift rounded-xl border border-[var(--rk-line)] px-6 py-3 font-bold hover:bg-[var(--rk-hover)]"
               >
                 Dołącz na Discord ↗
               </a>
@@ -283,8 +303,12 @@ function Page({ d }: { d: Ok }) {
               [String(openPositions.length), "otwartych stanowisk"],
               [site.minChars ? `${site.minChars}+` : "—", "znaków w odpowiedzi"],
               [`${done} / ${d.questions.length}`, "twoje odpowiedzi"],
-            ].map(([v, l]) => (
-              <div key={l} className={`${card} p-4`}>
+            ].map(([v, l], n) => (
+              <div
+                key={l}
+                className={`${card} card-lift rk-reveal p-4`}
+                style={{ ["--d" as string]: `${n * 90}ms` }}
+              >
                 <dt className="text-2xl font-extrabold" style={{ color: "var(--ac)" }}>
                   {v}
                 </dt>
@@ -296,7 +320,7 @@ function Page({ d }: { d: Ok }) {
 
         {/* JAK TO DZIAŁA */}
         <section id="jak" className="mx-auto max-w-5xl px-5 py-10">
-          <h2 className="text-2xl font-extrabold">Jak aplikować</h2>
+          <h2 className="rk-reveal text-2xl font-extrabold">Jak aplikować</h2>
           <ol className="mt-5 grid gap-3 sm:grid-cols-3">
             {[
               [
@@ -314,8 +338,12 @@ function Page({ d }: { d: Ok }) {
                 "Poczekaj na decyzję",
                 "Ekipa rozpatrzy podanie, a odpowiedź dostaniesz na Discordzie.",
               ],
-            ].map(([n, t, x]) => (
-              <li key={n} className={`${card} p-5`}>
+            ].map(([n, t, x], k) => (
+              <li
+                key={n}
+                className={`${card} card-lift rk-reveal p-5`}
+                style={{ ["--d" as string]: `${k * 120}ms` }}
+              >
                 <span
                   className="grid size-9 place-items-center rounded-full font-extrabold text-white"
                   style={{ background: grad }}
@@ -332,7 +360,7 @@ function Page({ d }: { d: Ok }) {
         {/* FORMULARZ */}
         <section id="formularz" className="mx-auto max-w-3xl scroll-mt-6 px-5 py-10">
           {state === "done" ? (
-            <div className={`${card} p-8 text-center`}>
+            <div className={`${card} animate-fade-up p-8 text-center`}>
               <p className="text-5xl">🎉</p>
               <h2 className="mt-3 text-3xl font-extrabold">Rekrutacja wysłana!</h2>
               <p className="mx-auto mt-3 max-w-md text-[var(--rk-fg2)]">{site.successText}</p>
@@ -341,7 +369,7 @@ function Page({ d }: { d: Ok }) {
                   href={site.discord}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-6 inline-block rounded-xl px-6 py-3 font-bold text-white"
+                  className="rk-btn mt-6 inline-block rounded-xl px-6 py-3 font-bold text-white"
                   style={{ background: grad }}
                 >
                   Dołącz na Discord ↗
@@ -349,7 +377,7 @@ function Page({ d }: { d: Ok }) {
               )}
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className={`${card} p-5 sm:p-8`}>
+            <form onSubmit={submit} noValidate className={`${card} rk-reveal p-5 sm:p-8`}>
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold">Twoje podanie</h2>
@@ -375,7 +403,7 @@ function Page({ d }: { d: Ok }) {
                 aria-hidden
               >
                 <div
-                  className="h-full rounded-full transition-all"
+                  className="rk-fill h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${d.questions.length ? (done / d.questions.length) * 100 : 0}%`,
                     background: grad,
@@ -545,7 +573,7 @@ function Page({ d }: { d: Ok }) {
                 <button
                   type="submit"
                   disabled={!d.open || state === "sending"}
-                  className="rounded-xl px-7 py-3.5 font-extrabold uppercase tracking-wide text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
+                  className="rk-btn rounded-xl px-7 py-3.5 font-extrabold uppercase tracking-wide text-white shadow-lg disabled:opacity-50"
                   style={{ background: grad }}
                 >
                   {state === "sending" ? "Wysyłanie…" : "📤 Wyślij rekrutację"}
@@ -572,10 +600,10 @@ function Page({ d }: { d: Ok }) {
         {/* FAQ */}
         {site.faq.length > 0 && (
           <section className="mx-auto max-w-3xl px-5 py-10">
-            <h2 className="text-2xl font-extrabold">Masz pytania?</h2>
+            <h2 className="rk-reveal text-2xl font-extrabold">Masz pytania?</h2>
             <div className="mt-4 space-y-2">
               {site.faq.map((f) => (
-                <details key={f.q} className={`${card} group p-4`}>
+                <details key={f.q} className={`${card} rk-reveal group p-4`}>
                   <summary className="cursor-pointer list-none font-bold marker:hidden">
                     <span
                       className="mr-2 inline-block transition group-open:rotate-90"

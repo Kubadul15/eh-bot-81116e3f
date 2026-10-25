@@ -104,14 +104,39 @@
 .editor-select { width: 100%; min-height: 36px; border: 1px solid var(--input); border-radius: 6px; padding: 6px 10px; background: var(--card); color: var(--foreground); font-size: 14px; }
 .embed-preview { border-radius: 4px; overflow: hidden; }
 
-/* Strony rekrutacji (/rekrutacja/...): ciemny i jasny motyw na zmiennych + natywny kursor (własna kropka strony głównej jest tu niewidoczna) */
-.rk { --rk-bg: #080b16; --rk-fg: #f1f5f9; --rk-fg2: #cbd5e1; --rk-mut: #94a3b8; --rk-line: rgb(255 255 255 / 0.1); --rk-card: rgb(255 255 255 / 0.04); --rk-field: #0c1222; --rk-hover: rgb(255 255 255 / 0.08); color-scheme: dark; }
+/* Strony rekrutacji (/rekrutacja/...): ciemny i jasny motyw na zmiennych, ten sam własny kursor i animacje co w konfiguracji */
+.rk { --ac: #ff4a52; --ac2: #4da3ff; --rk-bg: #080b16; --rk-fg: #f1f5f9; --rk-fg2: #cbd5e1; --rk-mut: #94a3b8; --rk-line: rgb(255 255 255 / 0.1); --rk-card: rgb(255 255 255 / 0.04); --rk-field: #0c1222; --rk-hover: rgb(255 255 255 / 0.08); color-scheme: dark; }
 :root[data-rk-theme="light"] .rk { --rk-bg: #f4f6fb; --rk-fg: #0f172a; --rk-fg2: #334155; --rk-mut: #64748b; --rk-line: rgb(15 23 42 / 0.14); --rk-card: #ffffff; --rk-field: #ffffff; --rk-hover: rgb(15 23 42 / 0.06); color-scheme: light; }
 :root[data-rk-theme="light"] .rk .text-amber-300, :root[data-rk-theme="light"] .rk .text-amber-200 { color: #b45309; }
 :root[data-rk-theme="light"] .rk .text-emerald-300, :root[data-rk-theme="light"] .rk .text-emerald-400 { color: #047857; }
 :root[data-rk-theme="light"] .rk .text-red-300, :root[data-rk-theme="light"] .rk .text-red-200 { color: #b91c1c; }
 :root[data-rk-theme="light"] .rk .text-sky-300, :root[data-rk-theme="light"] .rk .text-sky-200 { color: #0369a1; }
-.no-dot .cursor-dot, .no-dot .cursor-ring { display: none !important; }
-.no-dot, .no-dot * { cursor: auto !important; }
-.no-dot a, .no-dot button, .no-dot select, .no-dot label, .no-dot summary, .no-dot input[type="checkbox"], .no-dot input[type="color"] { cursor: pointer !important; }
-.no-dot input:not([type]), .no-dot input[type="text"], .no-dot input[inputmode], .no-dot textarea { cursor: text !important; }
+/* własny kursor: na ciemnym motywie jasna kropka i obwódka (domyślna czarna znikałaby na ciemnym tle) */
+:root[data-rk-theme="dark"] .cursor-dot { background: #fff; box-shadow: 0 0 12px rgb(255 255 255 / 0.45); }
+:root[data-rk-theme="dark"] .cursor-ring { border-color: rgb(255 255 255 / 0.55); }
+:root[data-rk-theme="dark"] .cursor-ring.is-hover { background: rgb(255 255 255 / 0.1); }
+
+/* animacje stron rekrutacji */
+@keyframes rk-float { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -22px, 0); } }
+@keyframes rk-shift { to { background-position: 200% 0; } }
+.rk-orb { position: fixed; z-index: 0; border-radius: 9999px; filter: blur(90px); opacity: 0.28; pointer-events: none; animation: rk-float 10s ease-in-out infinite; }
+:root[data-rk-theme="light"] .rk-orb { opacity: 0.16; }
+.rk-bar { background: linear-gradient(90deg, var(--ac), var(--ac2), var(--ac)); background-size: 200% 100%; animation: rk-shift 4s linear infinite; }
+.rk-grad-text { background: linear-gradient(90deg, var(--ac), var(--ac2), var(--ac)); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rk-shift 6s linear infinite; }
+.rk-fill { background: linear-gradient(90deg, var(--ac), var(--ac2)); }
+.rk-btn { position: relative; overflow: hidden; background: linear-gradient(90deg, var(--ac), var(--ac2)); transition: transform 0.2s, box-shadow 0.2s, filter 0.2s; }
+.rk-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px -12px var(--ac); filter: brightness(1.08); }
+.rk-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+.rk-btn::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%); transform: translateX(-120%); transition: transform 0.7s; }
+.rk-btn:hover:not(:disabled)::after { transform: translateX(120%); }
+.rk-lift { transition: transform 0.2s, background-color 0.2s; }
+.rk-lift:hover { transform: translateY(-2px); }
+.rk .card-lift:hover { border-color: var(--ac); box-shadow: 0 14px 40px -18px var(--ac); }
+.rk-anim .rk-reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.25s, box-shadow 0.25s; transition-delay: var(--d, 0ms); }
+.rk-anim .rk-reveal.is-in { opacity: 1; transform: none; }
+.rk-anim .rk-reveal.is-in.card-lift:hover { transform: translateY(-3px); transition-delay: 0ms; }
+@media (prefers-reduced-motion: reduce) {
+  .rk-orb, .rk-bar, .rk-grad-text { animation: none; }
+  .rk-anim .rk-reveal { opacity: 1; transform: none; transition: none; }
+  .rk-btn::after { display: none; }
+}

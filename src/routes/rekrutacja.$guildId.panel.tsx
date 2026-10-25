@@ -30,7 +30,7 @@ const shell = "rk min-h-screen bg-[var(--rk-bg)] text-[var(--rk-fg)]";
 const card = "rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-card)]";
 const field =
   "w-full rounded-lg border border-[var(--rk-line)] bg-[var(--rk-field)] px-3 py-2 text-sm text-[var(--rk-fg)] outline-none focus:border-sky-400";
-const btn = "rounded-lg px-4 py-2 text-sm font-bold transition disabled:opacity-50";
+const btn = "rk-lift rounded-lg px-4 py-2 text-sm font-bold disabled:opacity-50";
 const STATUS_STYLE: Record<AppStatus, string> = {
   pending: "bg-amber-400/15 text-amber-300 border-amber-400/40",
   accepted: "bg-emerald-400/15 text-emerald-300 border-emerald-400/40",
@@ -157,8 +157,8 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
   return (
     <main className={`${shell} pb-16`}>
       <Toaster richColors position="top-right" />
-      <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-sky-400" />
-      <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-5">
+      <div className="rk-bar h-1.5 w-full" />
+      <header className="animate-fade-up mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-5">
         <div className="flex items-center gap-3">
           {icon && <img src={icon} alt="" className="size-10 rounded-xl" />}
           <div>
@@ -195,7 +195,7 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
             ["Przyjęte", counts.accepted, "text-emerald-300"],
             ["Odrzucone", counts.rejected, "text-red-300"],
           ].map(([l, n, c]) => (
-            <div key={String(l)} className={`${card} p-4`}>
+            <div key={String(l)} className={`${card} card-lift rk-reveal p-4`}>
               <p className={`text-3xl font-extrabold ${c}`}>{n}</p>
               <p className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{l}</p>
             </div>
@@ -333,7 +333,7 @@ function AppCard({
     a.autoScore >= 70 ? "text-emerald-300" : a.autoScore >= 40 ? "text-amber-300" : "text-red-300";
 
   return (
-    <article className={`${card} overflow-hidden`}>
+    <article className={`${card} rk-reveal overflow-hidden`}>
       <button
         type="button"
         onClick={onToggle}

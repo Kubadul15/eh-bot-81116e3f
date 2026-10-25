@@ -19,13 +19,43 @@ export function useRkTheme() {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset["rkTheme"] = theme;
-    // własny kursor strony głównej ma ciemną kropkę i chowa systemowy kursor – na ciemnych stronach rekrutacji byłby niewidoczny
-    root.classList.add("no-dot");
     return () => {
       delete root.dataset["rkTheme"];
-      root.classList.remove("no-dot");
     };
   }, [theme]);
+  // animacje wejścia: elementy z klasą rk-reveal pojawiają się przy przewijaniu (także te dodane później, np. po wczytaniu danych)
+  useEffect(() => {
+    const root = document.documentElement;
+    if (
+      !("IntersectionObserver" in window) ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      return;
+    root.classList.add("rk-anim");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries)
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            io.unobserve(e.target);
+          }
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
+    );
+    const scan = () =>
+      document.querySelectorAll(".rk-reveal:not(.is-in):not([data-rk-seen])").forEach((el) => {
+        el.setAttribute("data-rk-seen", "");
+        io.observe(el);
+      });
+    scan();
+    const mo = new MutationObserver(scan);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      mo.disconnect();
+      io.disconnect();
+      root.classList.remove("rk-anim");
+    };
+  }, []);
   const toggle = () =>
     setTheme((t) => {
       const next = t === "dark" ? "light" : "dark";
