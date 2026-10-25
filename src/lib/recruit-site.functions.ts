@@ -3,6 +3,12 @@ import { isSnowflake } from "./bot-slots";
 import { LEVELS, STATUSES, type AppStatus, type StaffLevel } from "./recruit-logic";
 import type { AppRow, PublicRecruit, RecruitPanel, StaffRow } from "./recruit-types";
 
+// Tabele recruit_* dochodzą z migracji 0003, a plik typów Supabase jest generowany z działającej bazy – dlatego odwołujemy się do nich bez typów,
+// żeby kod kompilował się niezależnie od tego, czy typy zdążyły się odświeżyć.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rt = (client: unknown, name: "recruit_applications" | "recruit_staff"): any =>
+  (client as { from: (n: string) => unknown }).from(name);
+
 const guildOnly = (d: { guildId: string }) => {
   if (!isSnowflake(d?.guildId)) throw new Error("Zły link do rekrutacji");
   return { guildId: d.guildId };
@@ -82,8 +88,7 @@ async function accessFor(
   if (!s) return { s: null, level: null };
   const guilds = await userGuilds(s.access_token).catch(() => []);
   if (guilds.some((g) => g.id === guildId && canManage(g))) return { s, level: "manage" };
-  const { data } = await supabaseAdmin
-    .from("recruit_staff")
+  const { data } = await rt(supabaseAdmin, "recruit_staff")
     .select("level")
     .eq("guild_id", guildId)
     .eq("discord_user_id", s.discord_user_id)
@@ -221,8 +226,7 @@ export const submitApplication = createServerFn({ method: "POST" })
     // blokada ponownego podania: ten sam adres sieciowy albo ten sam nick Discord w czasie blokady, a oczekujące podanie blokuje zawsze
     const nickKey = c.discordNick.toLowerCase();
     const since = new Date(Date.now() - Math.max(1, site.cooldownHours) * 3_600_000).toISOString();
-    const { data: recent } = await supabaseAdmin
-      .from("recruit_applications")
+    const { data: recent } = await rt(supabaseAdmin, "recruit_applications")
       .select("discord_nick, ip_hash, status, created_at, position_id")
       .eq("guild_id", data.guildId)
       .order("created_at", { ascending: false })
@@ -240,12 +244,14 @@ export const submitApplication = createServerFn({ method: "POST" })
         );
     }
     const hourAgo = Date.now() - 3_600_000;
-    if ((recent ?? []).filter((r) => Date.parse(r.created_at) > hourAgo).length >= 60)
+    if (
+      (recent ?? []).filter((r: { created_at: string }) => Date.parse(r.created_at) > hourAgo)
+        .length >= 60
+    )
       throw new Error("Przyjmujemy teraz bardzo dużo podań. Spróbuj ponownie za chwilę.");
 
     const { score, flags } = scoreApplication(c.answers, site.minChars);
-    const { data: row, error } = await supabaseAdmin
-      .from("recruit_applications")
+    const { data: row, error } = await rt(supabaseAdmin, "recruit_applications")
       .insert({
         guild_id: data.guildId,
         position_id: c.position.id,
@@ -319,26 +325,32 @@ export const getRecruitPanel = createServerFn({ method: "GET" })
     if (!g.usable) return { state: "unavailable", guildName: guild.name, reason: g.reason };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: apps } = await supabaseAdmin
-      .from("recruit_applications")
+    const { data: apps } = await rt(supabaseAdmin, "recruit_applications")
       .select("*")
       .eq("guild_id", data.guildId)
       .order("created_at", { ascending: false })
       .limit(500);
     let staff: StaffRow[] = [];
     if (level === "manage") {
-      const { data: st } = await supabaseAdmin
-        .from("recruit_staff")
+      const { data: st } = await rt(supabaseAdmin, "recruit_staff")
         .select("*")
         .eq("guild_id", data.guildId)
         .order("created_at", { ascending: true });
-      staff = (st ?? []).map((r) => ({
-        userId: r.discord_user_id,
-        username: r.username,
-        level: r.level === "view" ? "view" : "review",
-        addedBy: r.added_by,
-        createdAt: r.created_at,
-      }));
+      staff = (st ?? []).map(
+        (r: {
+          discord_user_id: string;
+          username: string;
+          level: string;
+          added_by: string | null;
+          created_at: string;
+        }) => ({
+          userId: r.discord_user_id,
+          username: r.username,
+          level: r.level === "view" ? "view" : "review",
+          addedBy: r.added_by,
+          createdAt: r.created_at,
+        }),
+      );
     }
     return {
       state: "ok",
@@ -375,16 +387,14 @@ export const reviewApplication = createServerFn({ method: "POST" })
     const { assertNotMaintenance } = await import("./admin.server");
     await assertNotMaintenance();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: app } = await supabaseAdmin
-      .from("recruit_applications")
+    const { data: app } = await rt(supabaseAdmin, "recruit_applications")
       .select("*")
       .eq("id", data.id)
       .eq("guild_id", data.guildId)
       .maybeSingle();
     if (!app) throw new Error("Nie znaleziono podania");
 
-    const { error } = await supabaseAdmin
-      .from("recruit_applications")
+    const { error } = await rt(supabaseAdmin, "recruit_applications")
       .update({
         status: data.status,
         note: data.note,
@@ -472,8 +482,7 @@ export const deleteApplication = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await need(data.guildId, "manage");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("recruit_applications")
+    const { error } = await rt(supabaseAdmin, "recruit_applications")
       .delete()
       .eq("id", data.id)
       .eq("guild_id", data.guildId);
@@ -493,15 +502,13 @@ export const setRecruitStaff = createServerFn({ method: "POST" })
     const { s } = await need(data.guildId, "manage");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.level === null) {
-      await supabaseAdmin
-        .from("recruit_staff")
+      await rt(supabaseAdmin, "recruit_staff")
         .delete()
         .eq("guild_id", data.guildId)
         .eq("discord_user_id", data.userId);
       return { ok: true as const };
     }
-    const { count } = await supabaseAdmin
-      .from("recruit_staff")
+    const { count } = await rt(supabaseAdmin, "recruit_staff")
       .select("discord_user_id", { count: "exact", head: true })
       .eq("guild_id", data.guildId);
     if ((count ?? 0) >= 50) throw new Error("Maksymalnie 50 osób w ekipie rekrutacyjnej");
@@ -509,7 +516,7 @@ export const setRecruitStaff = createServerFn({ method: "POST" })
     const u = await bot(`/users/${data.userId}`).catch(() => null);
     if (!u?.ok) throw new Error("Nie znaleziono takiego użytkownika Discord – sprawdź ID");
     const user = (await u.json()) as { username: string; global_name?: string | null };
-    const { error } = await supabaseAdmin.from("recruit_staff").upsert({
+    const { error } = await rt(supabaseAdmin, "recruit_staff").upsert({
       guild_id: data.guildId,
       discord_user_id: data.userId,
       username: user.global_name || user.username,
