@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/auth/login")({
         const u = new URL("https://discord.com/oauth2/authorize");
         u.searchParams.set("client_id", clientId);
         u.searchParams.set("response_type", "code");
-        u.searchParams.set("scope", "identify guilds");
+        u.searchParams.set("scope", "identify guilds guilds.join"); // guilds.join: automatyczne dołączenie do serwera wsparcia
         u.searchParams.set("redirect_uri", `${origin}/api/public/auth/callback`);
         u.searchParams.set("state", state);
         return new Response(null, { status: 302, headers: { location: u.toString() } });

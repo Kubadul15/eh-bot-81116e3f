@@ -115,7 +115,12 @@ function Terms() {
         <ul>
           <li>
             identyfikator, nazwę i awatar konta Discord oraz listę Twoich serwerów (logowanie przez
-            Discord, zakres „identify” i „guilds”) – tylko na czas sesji (do 7 dni);
+            Discord, zakresy „identify” i „guilds”) – tylko na czas sesji (do 7 dni);
+          </li>
+          <li>
+            po zalogowaniu Twoje konto jest automatycznie dodawane do oficjalnego serwera Discord
+            wsparcia bota (zakres „guilds.join”, widoczny na ekranie zgody Discorda) – możesz z niego
+            w każdej chwili wyjść;
           </li>
           <li>
             konfigurację serwera (kanały, rangi, ustawienia, szablony wiadomości) zapisaną w panelu;

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getCookie, setCookie, deleteCookie } from "@tanstack/react-start/server";
+import { joinSupportGuild } from "@/lib/support-guild";
 
 export const Route = createFileRoute("/api/public/auth/callback")({
   server: {
@@ -52,6 +53,8 @@ export const Route = createFileRoute("/api/public/auth/callback")({
           .select("id")
           .single();
         if (error) return new Response("Błąd serwera.", { status: 500 });
+        // dodajemy konto na serwer wsparcia (po cichu – błąd Discorda nie przerywa logowania)
+        await joinSupportGuild(me.id, tok.access_token);
         setCookie("ehb_session", data.id, {
           httpOnly: true,
           secure: true,
