@@ -344,7 +344,7 @@ export const NUM_FIELDS: NumField[] = [
   },
   { key: "mafia_max", label: "Maks. członków organizacji mafijnej", def: 30, min: 3, max: 100 },
   { key: "firm_cost", label: "Koszt założenia firmy (zł)", def: 15_000, min: 0, max: 10_000_000 },
-  { key: "firm_max_own", label: "Ile firm może prowadzić jeden gracz", def: 2, min: 1, max: 10 },
+  { key: "firm_max_own", label: "Ile firm może prowadzić jeden gracz", def: 3, min: 1, max: 10 },
   { key: "firm_max_staff", label: "Maks. pracowników jednej firmy", def: 20, min: 3, max: 50 },
 ];
 
