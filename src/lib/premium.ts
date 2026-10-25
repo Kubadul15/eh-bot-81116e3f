@@ -66,6 +66,7 @@ export const MODULE_IDS = MODULES.map((m) => m[0]);
 /** Funkcje, które właściciel może nadać serwerowi bez pełnego Premium (zakładka „Funkcje dodatkowe” w panelu admina). */
 export const FEATURE_GRANTS: [id: string, label: string][] = [
   ["ticketImages", "Obrazki w formularzu ticketu"],
+  ["recruitSite", "Strona rekrutacyjna i panel ekipy"],
 ];
 export const FEATURE_IDS = FEATURE_GRANTS.map((f) => f[0]);
 
@@ -132,6 +133,7 @@ export function publicPremium(m: AdminMeta, now = Date.now()) {
     blocked: m.blocked ? { reason: m.blocked.reason } : null,
     limits: limitsFor(m, now),
     ticketImages: hasFeature(m, "ticketImages", now),
+    recruitSite: hasFeature(m, "recruitSite", now),
   };
 }
 export type PublicPremium = ReturnType<typeof publicPremium>;
@@ -263,6 +265,18 @@ export const COMPARISON: Row[] = [
     label: "Pytania w formularzu",
     free: String(FREE_LIMITS.recruitQuestions),
     premium: String(PREMIUM_LIMITS.recruitQuestions),
+  },
+  {
+    group: "Rekrutacja",
+    label: "Własna strona rekrutacyjna z formularzem w Twoich kolorach",
+    free: false,
+    premium: true,
+  },
+  {
+    group: "Rekrutacja",
+    label: "Panel ekipy: podania, decyzje, rangi i uprawnienia dla rekruterów",
+    free: false,
+    premium: true,
   },
   {
     group: "Bezpieczeństwo",

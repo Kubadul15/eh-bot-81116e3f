@@ -12,6 +12,7 @@ import {
 } from "@/lib/bot-slots";
 import { SiteHeader, LoginButton, inviteUrl } from "@/components/site";
 import { ContentEditor } from "@/components/content-editor";
+import { RecruitSiteEditor } from "@/components/recruit-site-editor";
 import {
   Block,
   ChannelField,
@@ -519,6 +520,25 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                       channels={data.channels}
                       view="recruitment"
                       limits={premium.limits}
+                    />
+                  </Block>
+                )}
+
+                {cat.recruitment && (
+                  <Block
+                    icon="🌐"
+                    title="Strona rekrutacyjna i panel ekipy"
+                    hint={`${premium.recruitSite ? "Premium" : "Wymaga Premium"} • ${content.recruitSite.enabled ? "włączona" : "wyłączona"}`}
+                  >
+                    <RecruitSiteEditor
+                      guildId={guildId}
+                      guildName={data.guild.name}
+                      value={content}
+                      allowed={premium.recruitSite}
+                      onChange={(v) => {
+                        setContent(v);
+                        setStatus("idle");
+                      }}
                     />
                   </Block>
                 )}

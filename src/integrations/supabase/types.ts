@@ -44,6 +44,99 @@ export type Database = {
         }
         Relationships: []
       }
+      recruit_applications: {
+        Row: {
+          age: number
+          answers: Json
+          auto_score: number
+          created_at: string
+          discord_id: string | null
+          discord_nick: string
+          flags: Json
+          guild_id: string
+          id: string
+          ip_hash: string
+          note: string
+          position_id: string
+          position_label: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewed_by_name: string | null
+          roblox_nick: string
+          status: string
+          tab_switches: number
+        }
+        Insert: {
+          age: number
+          answers?: Json
+          auto_score?: number
+          created_at?: string
+          discord_id?: string | null
+          discord_nick: string
+          flags?: Json
+          guild_id: string
+          id?: string
+          ip_hash?: string
+          note?: string
+          position_id: string
+          position_label: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          roblox_nick: string
+          status?: string
+          tab_switches?: number
+        }
+        Update: {
+          age?: number
+          answers?: Json
+          auto_score?: number
+          created_at?: string
+          discord_id?: string | null
+          discord_nick?: string
+          flags?: Json
+          guild_id?: string
+          id?: string
+          ip_hash?: string
+          note?: string
+          position_id?: string
+          position_label?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          roblox_nick?: string
+          status?: string
+          tab_switches?: number
+        }
+        Relationships: []
+      }
+      recruit_staff: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          discord_user_id: string
+          guild_id: string
+          level: string
+          username: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          discord_user_id: string
+          guild_id: string
+          level?: string
+          username?: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          discord_user_id?: string
+          guild_id?: string
+          level?: string
+          username?: string
+        }
+        Relationships: []
+      }
       guild_configs: {
         Row: {
           channels: Json

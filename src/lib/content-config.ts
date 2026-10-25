@@ -139,9 +139,62 @@ export const defaultTickets = (): z.infer<typeof ticketsSchema> => ({
     { id: "nick", label: "Twój nick Roblox", style: "short", required: false, placeholder: "" },
   ],
 });
+/** Własna strona rekrutacyjna serwera (/rekrutacja/<id serwera>): wygląd, teksty i zasady formularza. Funkcja Premium. */
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+const inviteUrl = z
+  .string()
+  .max(200)
+  .refine(
+    (v) =>
+      !v ||
+      /^https:\/\/(discord\.gg|discord\.com\/invite|discordapp\.com\/invite)\/[\w-]{2,40}\/?$/.test(
+        v,
+      ),
+    "Podaj zaproszenie Discorda (https://discord.gg/…)",
+  );
+export const SITE_FAQ_MAX = 8;
+export const recruitSiteSchema = z.object({
+  enabled: z.boolean(),
+  title: z.string().trim().min(1).max(80),
+  intro: z.string().max(500),
+  banner: image, // zdjęcie w nagłówku strony (https)
+  accent: hexColor, // kolor przycisków i akcentów
+  accent2: hexColor, // drugi kolor gradientu
+  discord: inviteUrl, // przycisk „Dołącz na Discord”
+  minChars: z.number().int().min(0).max(500), // minimalna długość odpowiedzi
+  cooldownHours: z.number().int().min(0).max(168), // blokada ponownego podania (0 = brak)
+  successText: z.string().max(300),
+  faq: z
+    .array(z.object({ q: z.string().trim().min(1).max(120), a: z.string().trim().min(1).max(500) }))
+    .max(SITE_FAQ_MAX),
+});
+export const defaultRecruitSite = (): z.infer<typeof recruitSiteSchema> => ({
+  enabled: false,
+  title: "Zostań częścią ekipy.",
+  intro:
+    "Szukamy zaangażowanych osób do administracji naszego serwera. Wypełnij podanie – odpowiemy na Discordzie.",
+  banner: "",
+  accent: "#ff4a52",
+  accent2: "#4da3ff",
+  discord: "",
+  minChars: 45,
+  cooldownHours: 24,
+  successText: "Dziękujemy! Twoje podanie trafiło do ekipy. Odpowiedź dostaniesz na Discordzie.",
+  faq: [
+    {
+      q: "Ile trwa rozpatrzenie podania?",
+      a: "Zwykle od 24 do 72 godzin. O decyzji poinformujemy Cię na Discordzie.",
+    },
+    {
+      q: "Czy mogę wysłać podanie ponownie?",
+      a: "Tak, po upływie czasu blokady od poprzedniego podania i gdy to poprzednie zostało już rozpatrzone.",
+    },
+  ],
+});
 export const contentSchema = z.object({
   recruitment: recruitmentSchema,
   tickets: ticketsSchema.default(defaultTickets),
+  recruitSite: recruitSiteSchema.default(defaultRecruitSite),
   embeds: z.record(embedSchema),
 });
 export type ContentConfig = z.infer<typeof contentSchema>;
@@ -160,8 +213,10 @@ export const emptyEmbed = (): EmbedConfig => ({
 export const defaultContent = (): ContentConfig => ({
   recruitment: { open: false, positions: [], questions: [] },
   tickets: defaultTickets(),
+  recruitSite: defaultRecruitSite(),
   embeds: {},
 });
+export type RecruitSiteConfig = z.infer<typeof recruitSiteSchema>;
 export function readContent(value: unknown): ContentConfig {
   const result = contentSchema.safeParse(value);
   return result.success ? result.data : defaultContent();

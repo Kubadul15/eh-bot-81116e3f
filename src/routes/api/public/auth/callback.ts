@@ -10,7 +10,8 @@ export const Route = createFileRoute("/api/public/auth/callback")({
         const state = url.searchParams.get("state");
         const expected = getCookie("ehb_state");
         deleteCookie("ehb_state", { path: "/" });
-        if (!code || !state || state !== expected) return new Response("Błędne logowanie, spróbuj ponownie.", { status: 400 });
+        if (!code || !state || state !== expected)
+          return new Response("Błędne logowanie, spróbuj ponownie.", { status: 400 });
 
         const tr = await fetch("https://discord.com/api/v10/oauth2/token", {
           method: "POST",
@@ -29,7 +30,12 @@ export const Route = createFileRoute("/api/public/auth/callback")({
           headers: { authorization: `Bearer ${tok.access_token}` },
         });
         if (!ur.ok) return new Response("Nie udało się pobrać konta.", { status: 400 });
-        const me = (await ur.json()) as { id: string; username: string; global_name?: string; avatar: string | null };
+        const me = (await ur.json()) as {
+          id: string;
+          username: string;
+          global_name?: string;
+          avatar: string | null;
+        };
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin
@@ -39,13 +45,26 @@ export const Route = createFileRoute("/api/public/auth/callback")({
             username: me.global_name || me.username,
             avatar: me.avatar,
             access_token: tok.access_token,
-            expires_at: new Date(Date.now() + Math.min(tok.expires_in, 7 * 86400) * 1000).toISOString(),
+            expires_at: new Date(
+              Date.now() + Math.min(tok.expires_in, 7 * 86400) * 1000,
+            ).toISOString(),
           })
           .select("id")
           .single();
         if (error) return new Response("Błąd serwera.", { status: 500 });
-        setCookie("ehb_session", data.id, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 7 * 86400 });
-        return new Response(null, { status: 302, headers: { location: `${url.origin}/dashboard` } });
+        setCookie("ehb_session", data.id, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 7 * 86400,
+        });
+        const next = getCookie("ehb_next") ?? "";
+        deleteCookie("ehb_next", { path: "/" });
+        const back = /^\/(dashboard(\/\d{17,20})?|rekrutacja\/\d{17,20}\/panel)$/.test(next)
+          ? next
+          : "/dashboard";
+        return new Response(null, { status: 302, headers: { location: `${url.origin}${back}` } });
       },
     },
   },

@@ -44,17 +44,19 @@ export const saveContent = createServerFn({ method: "POST" })
       throw new Error(
         "Obrazki w formularzu ticketu to funkcja Premium (albo nadana przez właściciela bota).",
       );
+    if (data.content.recruitSite.enabled && !hasFeature(meta, "recruitSite"))
+      throw new Error(
+        "Strona rekrutacyjna to funkcja Premium (albo nadana przez właściciela bota).",
+      );
     const content = premiumActive(meta)
       ? data.content
       : { ...data.content, embeds: readContent(cur?.content).embeds };
-    const { error } = await supabaseAdmin
-      .from("guild_configs")
-      .upsert({
-        guild_id: data.guildId,
-        content,
-        updated_by: s.discord_user_id,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabaseAdmin.from("guild_configs").upsert({
+      guild_id: data.guildId,
+      content,
+      updated_by: s.discord_user_id,
+      updated_at: new Date().toISOString(),
+    });
     if (error) throw new Error("Nie udało się zapisać treści");
     return { ok: true };
   });

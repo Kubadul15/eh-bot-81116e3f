@@ -16,6 +16,8 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardGuildIdRouteImport } from './routes/dashboard.$guildId'
+import { Route as RekrutacjaGuildIdIndexRouteImport } from './routes/rekrutacja.$guildId.index'
+import { Route as RekrutacjaGuildIdPanelRouteImport } from './routes/rekrutacja.$guildId.panel'
 import { Route as ApiPublicAuthCallbackRouteImport } from './routes/api/public/auth/callback'
 import { Route as ApiPublicAuthLoginRouteImport } from './routes/api/public/auth/login'
 import { Route as ApiPublicAuthLogoutRouteImport } from './routes/api/public/auth/logout'
@@ -57,6 +59,16 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
 const DashboardGuildIdRoute = DashboardGuildIdRouteImport.update({
   id: '/dashboard/$guildId',
   path: '/dashboard/$guildId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RekrutacjaGuildIdIndexRoute = RekrutacjaGuildIdIndexRouteImport.update({
+  id: '/rekrutacja/$guildId/',
+  path: '/rekrutacja/$guildId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RekrutacjaGuildIdPanelRoute = RekrutacjaGuildIdPanelRouteImport.update({
+  id: '/rekrutacja/$guildId/panel',
+  path: '/rekrutacja/$guildId/panel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAuthCallbackRoute = ApiPublicAuthCallbackRouteImport.update({
@@ -103,6 +115,8 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard/$guildId': typeof DashboardGuildIdRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/rekrutacja/$guildId/panel': typeof RekrutacjaGuildIdPanelRoute
+  '/rekrutacja/$guildId/': typeof RekrutacjaGuildIdIndexRoute
   '/api/public/auth/callback': typeof ApiPublicAuthCallbackRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
@@ -119,6 +133,8 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/dashboard/$guildId': typeof DashboardGuildIdRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/rekrutacja/$guildId/panel': typeof RekrutacjaGuildIdPanelRoute
+  '/rekrutacja/$guildId': typeof RekrutacjaGuildIdIndexRoute
   '/api/public/auth/callback': typeof ApiPublicAuthCallbackRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
@@ -136,6 +152,8 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/dashboard/$guildId': typeof DashboardGuildIdRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/rekrutacja/$guildId/panel': typeof RekrutacjaGuildIdPanelRoute
+  '/rekrutacja/$guildId/': typeof RekrutacjaGuildIdIndexRoute
   '/api/public/auth/callback': typeof ApiPublicAuthCallbackRoute
   '/api/public/auth/login': typeof ApiPublicAuthLoginRoute
   '/api/public/auth/logout': typeof ApiPublicAuthLogoutRoute
@@ -154,6 +172,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard/$guildId'
     | '/dashboard/'
+    | '/rekrutacja/$guildId/panel'
+    | '/rekrutacja/$guildId/'
     | '/api/public/auth/callback'
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
@@ -170,6 +190,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard/$guildId'
     | '/dashboard'
+    | '/rekrutacja/$guildId/panel'
+    | '/rekrutacja/$guildId'
     | '/api/public/auth/callback'
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
@@ -186,6 +208,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard/$guildId'
     | '/dashboard/'
+    | '/rekrutacja/$guildId/panel'
+    | '/rekrutacja/$guildId/'
     | '/api/public/auth/callback'
     | '/api/public/auth/login'
     | '/api/public/auth/logout'
@@ -203,6 +227,8 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   DashboardGuildIdRoute: typeof DashboardGuildIdRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  RekrutacjaGuildIdPanelRoute: typeof RekrutacjaGuildIdPanelRoute
+  RekrutacjaGuildIdIndexRoute: typeof RekrutacjaGuildIdIndexRoute
   ApiPublicAuthCallbackRoute: typeof ApiPublicAuthCallbackRoute
   ApiPublicAuthLoginRoute: typeof ApiPublicAuthLoginRoute
   ApiPublicAuthLogoutRoute: typeof ApiPublicAuthLogoutRoute
@@ -261,6 +287,20 @@ declare module '@tanstack/react-router' {
       path: '/dashboard/$guildId'
       fullPath: '/dashboard/$guildId'
       preLoaderRoute: typeof DashboardGuildIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rekrutacja/$guildId/': {
+      id: '/rekrutacja/$guildId/'
+      path: '/rekrutacja/$guildId'
+      fullPath: '/rekrutacja/$guildId/'
+      preLoaderRoute: typeof RekrutacjaGuildIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rekrutacja/$guildId/panel': {
+      id: '/rekrutacja/$guildId/panel'
+      path: '/rekrutacja/$guildId/panel'
+      fullPath: '/rekrutacja/$guildId/panel'
+      preLoaderRoute: typeof RekrutacjaGuildIdPanelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/auth/callback': {
@@ -323,6 +363,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   DashboardGuildIdRoute: DashboardGuildIdRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  RekrutacjaGuildIdPanelRoute: RekrutacjaGuildIdPanelRoute,
+  RekrutacjaGuildIdIndexRoute: RekrutacjaGuildIdIndexRoute,
   ApiPublicAuthCallbackRoute: ApiPublicAuthCallbackRoute,
   ApiPublicAuthLoginRoute: ApiPublicAuthLoginRoute,
   ApiPublicAuthLogoutRoute: ApiPublicAuthLogoutRoute,

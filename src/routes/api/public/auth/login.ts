@@ -9,7 +9,23 @@ export const Route = createFileRoute("/api/public/auth/login")({
         if (!clientId) return new Response("Brak DISCORD_CLIENT_ID", { status: 500 });
         const origin = new URL(request.url).origin;
         const state = crypto.randomUUID();
-        setCookie("ehb_state", state, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
+        setCookie("ehb_state", state, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 600,
+        });
+        // po zalogowaniu wracamy tam, skąd użytkownik przyszedł (tylko własne ścieżki: panel serwera albo panel rekrutacji)
+        const next = new URL(request.url).searchParams.get("next") ?? "";
+        if (/^\/(dashboard(\/\d{17,20})?|rekrutacja\/\d{17,20}\/panel)$/.test(next))
+          setCookie("ehb_next", next, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            path: "/",
+            maxAge: 600,
+          });
         const u = new URL("https://discord.com/oauth2/authorize");
         u.searchParams.set("client_id", clientId);
         u.searchParams.set("response_type", "code");
