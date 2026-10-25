@@ -37,7 +37,7 @@ export type CleanSubmission = {
   discordId: string | null;
   robloxNick: string;
   age: number;
-  answers: { id: string; q: string; a: string }[];
+  answers: { id: string; q: string; a: string; s: "short" | "long" }[];
   tabSwitches: number;
 };
 
@@ -88,7 +88,7 @@ export function validateSubmission(
       errors.push(
         `Odpowiedź „${q.label}” jest za krótka (min. ${site.minChars} znaków, masz ${raw.length}).`,
       );
-    else answers.push({ id: q.id, q: q.label, a: raw });
+    else answers.push({ id: q.id, q: q.label, a: raw, s: q.style });
   }
 
   if (errors.length || !position) return { ok: false, errors };
@@ -106,54 +106,15 @@ export function validateSubmission(
   };
 }
 
-/** Wstępna ocena 0–100 i uwagi. To tylko podpowiedź dla rekrutera – nie decyduje o niczym. */
-export function scoreApplication(
-  answers: { q: string; a: string }[],
-  minChars: number,
-): { score: number; flags: string[] } {
-  if (!answers.length) return { score: 0, flags: ["brak odpowiedzi"] };
-  const flags: string[] = [];
-  const target = Math.max(minChars * 2, 120);
-  let lenPoints = 0;
-  let variety = 0;
-  for (const { a } of answers) {
-    lenPoints += Math.min(1, a.length / target);
-    const words = a.toLowerCase().split(/\s+/).filter(Boolean);
-    variety += words.length ? new Set(words).size / words.length : 0;
-  }
-  lenPoints /= answers.length;
-  variety /= answers.length;
-  let score = lenPoints * 70 + Math.min(1, variety) * 30;
-
-  const texts = answers.map((x) => x.a);
-  const penalty = (flag: string, hit: boolean, points = 15) => {
-    if (!hit) return;
-    flags.push(flag);
-    score -= points;
-  };
-  penalty(
-    "powtarzające się znaki",
-    texts.some((t) => /(.)\1{5,}/u.test(t)),
-  );
-  penalty("identyczne odpowiedzi", new Set(texts.map((t) => t.toLowerCase())).size < texts.length);
-  penalty(
-    "same wielkie litery",
-    texts.some((t) => t.length > 20 && t === t.toUpperCase() && /[A-ZĄĆĘŁŃÓŚŹŻ]/.test(t)),
-  );
-  penalty(
-    "linki w odpowiedzi",
-    texts.some((t) => /https?:\/\//i.test(t)),
-    10,
-  );
-  penalty(
-    "mało liter w odpowiedzi",
-    texts.some((t) => (t.match(/\p{L}/gu)?.length ?? 0) < t.length * 0.5),
-    10,
-  );
-  if (texts.reduce((n, t) => n + t.length, 0) / texts.length < minChars * 1.2)
-    flags.push("krótkie odpowiedzi");
-  return { score: Math.max(0, Math.min(100, Math.round(score))), flags };
-}
+// Ocena wstępna podania mieszka w osobnym module (reguły oceny sensu odpowiedzi).
+export {
+  analyzeApplication,
+  scoreApplication,
+  verdictOf,
+  VERDICT_LABEL,
+  type Verdict,
+  type Analysis,
+} from "./recruit-score";
 
 /** Odcisk do blokady ponownego podania: bez zapisywania surowego adresu IP. */
 export async function fingerprint(ip: string, guildId: string, salt: string): Promise<string> {

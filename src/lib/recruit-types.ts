@@ -27,7 +27,7 @@ export type AppRow = {
   discordId: string | null;
   robloxNick: string;
   age: number;
-  answers: { id: string; q: string; a: string }[];
+  answers: { id: string; q: string; a: string; s?: "short" | "long" }[];
   autoScore: number;
   flags: string[];
   tabSwitches: number;
@@ -58,4 +58,5 @@ export type RecruitPanel =
       staff: StaffRow[];
       positions: { id: string; label: string; roleId: string }[];
       siteEnabled: boolean;
+      minChars: number;
     };

@@ -7,7 +7,9 @@ import {
 } from "@/lib/content-config";
 import {
   fingerprint,
+  analyzeApplication,
   scoreApplication,
+  verdictOf,
   validateSubmission,
   type SubmitInput,
 } from "@/lib/recruit-logic";
@@ -149,45 +151,148 @@ describe("walidacja podania", () => {
   });
 });
 
-describe("ocena wstępna", () => {
-  it("rzetelne odpowiedzi dostają wysoką ocenę bez uwag", () => {
-    const a = [
-      {
-        q: "A",
-        a: "Od dawna gram w Emergency Hamburg i chcę pomagać nowym graczom poznawać zasady serwera oraz dbać o kulturę.",
-      },
-      {
-        q: "B",
-        a: "Byłem moderatorem na dwóch innych serwerach, gdzie prowadziłem rekrutację i szkolenia dla nowej ekipy.",
-      },
-    ];
-    const r = scoreApplication(a, 45);
-    expect(r.score).toBeGreaterThan(70);
-    expect(r.flags).toEqual([]);
-  });
-  it("spam, powtórki i linki obniżają ocenę i dają uwagi", () => {
-    const r = scoreApplication(
+describe("mądra ocena wstępna", () => {
+  const Q = "Dlaczego chcesz dołączyć do ekipy?";
+  const one = (a: string, style: "short" | "long" = "long", q = Q) =>
+    analyzeApplication([{ q, a, style }], 45);
+
+  it("rzetelne, konkretne odpowiedzi dostają wysoką ocenę i rekomendację przyjęcia", () => {
+    const r = analyzeApplication(
       [
-        { q: "A", a: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
-        { q: "B", a: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
-        { q: "C", a: "zobacz https://spam.example" },
+        {
+          q: Q,
+          style: "long",
+          a: "Gram w Emergency Hamburg od roku i dobrze znam zasady. Chcę pomagać nowym graczom, bo sam kiedyś miałem problemy ze zrozumieniem regulaminu i wiem, jak to jest.",
+        },
+        {
+          q: "Masz doświadczenie w moderacji?",
+          style: "long",
+          a: "Tak, byłem moderatorem na innym serwerze RP przez 6 miesięcy, gdzie prowadziłem też szkolenia dla nowych osób z ekipy.",
+        },
       ],
       45,
     );
-    expect(r.score).toBeLessThan(40);
-    expect(r.flags).toEqual(
-      expect.arrayContaining([
-        "powtarzające się znaki",
-        "identyczne odpowiedzi",
-        "linki w odpowiedzi",
-      ]),
-    );
+    expect(r.score).toBeGreaterThanOrEqual(70);
+    expect(r.verdict).toBe("accept");
+    expect(r.flags.some((f) => f.startsWith("+"))).toBe(true);
   });
-  it("brak odpowiedzi to zero", () => {
+
+  it("„aaaa…” i podobne NIE dostają punktów za długość", () => {
+    for (const a of [
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+      "hahahahahahahahahahahahahahahahahahaha",
+    ]) {
+      const r = one(a);
+      expect(r.score, a).toBeLessThanOrEqual(15);
+      expect(r.verdict, a).toBe("spam");
+    }
+  });
+
+  it("losowe uderzanie w klawiaturę i bełkot są wykrywane", () => {
+    for (const a of [
+      "asdfghjkl asdfghjkl asdfghjkl asdfghjkl",
+      "qwertyuiop zxcvbnm lkjhgfdsa",
+      "fgjhsdkjf sdkfjhsdf kjsdfh sdkjfhsd",
+      "bcdfgh klmnpr stvwxz bcdfgh",
+    ]) {
+      const r = one(a);
+      expect(r.score, a).toBeLessThanOrEqual(25);
+      expect(["spam", "reject"]).toContain(r.verdict);
+    }
+  });
+
+  it("jedno słowo powtórzone, przepisane pytanie i ciąg słów bez sensu są odrzucane", () => {
+    expect(one("xd xd xd xd xd xd xd xd").score).toBeLessThanOrEqual(15);
+    expect(one("lubie lubie lubie lubie lubie lubie").score).toBeLessThanOrEqual(15);
+    expect(one("Dlaczego chcesz dołączyć do ekipy?").score).toBeLessThanOrEqual(15);
+    expect(one("kot pies dom drzewo rower lampa stolik okno").verdict).not.toBe("accept");
+  });
+
+  it("odpowiedzi lakoniczne dostają niski wynik, ale nie są spamem", () => {
+    const r = one("nie wiem");
+    expect(r.score).toBeLessThan(45);
+    expect(["reject", "spam"]).toContain(r.verdict);
+    expect(one("bo lubie pomagac ludziom na serwerze i chce byc adminem").score).toBeLessThan(70);
+  });
+
+  it("jedna bzdura obok dobrych odpowiedzi nie pozwala przejść całemu podaniu", () => {
+    const r = analyzeApplication(
+      [
+        {
+          q: Q,
+          style: "long",
+          a: "Chcę pomagać społeczności, bo gram od dawna i znam zasady. Uważam, że dobra ekipa to podstawa porządnego serwera RP.",
+        },
+        { q: "Doświadczenie", style: "long", a: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+      ],
+      45,
+    );
+    expect(r.score).toBeLessThanOrEqual(40);
+    expect(r.verdict).not.toBe("accept");
+  });
+
+  it("identyczne odpowiedzi na różne pytania są karane", () => {
+    const same = "Chcę pomagać ludziom na serwerze i dbać o porządek w grze.";
+    const r = analyzeApplication(
+      [
+        { q: Q, style: "long", a: same },
+        { q: "Masz doświadczenie?", style: "long", a: same },
+      ],
+      45,
+    );
+    expect(r.flags.join(" ")).toContain("identyczne");
+    expect(r.verdict).not.toBe("accept");
+  });
+
+  it("krótkie pytanie (np. wiek) z krótką odpowiedzią nie jest karane jak esej", () => {
+    const r = analyzeApplication(
+      [
+        {
+          q: "Ile masz lat doświadczenia na serwerach RP?",
+          style: "short",
+          a: "Około 2 lata na dwóch serwerach",
+        },
+      ],
+      20,
+    );
+    expect(r.score).toBeGreaterThanOrEqual(45);
+  });
+
+  it("link, krzyk, wiek poniżej 13 i dużo przełączeń kart dają uwagi", () => {
+    expect(
+      one("zobacz https://spam.example/oferta").flags.length +
+        one("zobacz https://spam.example/oferta").perAnswer[0]!.notes.length,
+    ).toBeGreaterThan(0);
+    expect(
+      one("CHCE BYC ADMINEM BO JESTEM NAJLEPSZY NA CALYM SERWERZE I ZNAM WSZYSTKICH").perAnswer[0]!
+        .notes,
+    ).toContain("same wielkie litery");
+    const ex = analyzeApplication(
+      [
+        {
+          q: Q,
+          style: "long",
+          a: "Chcę pomagać społeczności, bo gram od dawna i znam zasady serwera.",
+        },
+      ],
+      45,
+      { age: 11, tabSwitches: 20 },
+    );
+    expect(ex.flags.join(" ")).toContain("poniżej 13");
+    expect(ex.flags.join(" ")).toContain("przełączeń kart");
+  });
+
+  it("brak odpowiedzi to zero, a skrót scoreApplication zwraca punkty i powody", () => {
     expect(scoreApplication([], 45)).toEqual({ score: 0, flags: ["brak odpowiedzi"] });
+    expect(analyzeApplication([], 45).verdict).toBe("spam");
+    expect(verdictOf(70)).toBe("accept");
+    expect(verdictOf(69)).toBe("maybe");
+    expect(verdictOf(44)).toBe("reject");
+    expect(verdictOf(15)).toBe("spam");
   });
 });
-
 describe("odcisk blokady", () => {
   it("jest stały, zależy od serwera i nie zawiera adresu IP", async () => {
     const a = await fingerprint("1.2.3.4", "100000000000000001", "s");

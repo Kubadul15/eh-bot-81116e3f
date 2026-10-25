@@ -15,6 +15,10 @@ import {
   STATUSES,
   type AppStatus,
   type StaffLevel,
+  analyzeApplication,
+  VERDICT_LABEL,
+  verdictOf,
+  type Verdict,
 } from "@/lib/recruit-logic";
 import type { AppRow } from "@/lib/recruit-types";
 import { RkTools } from "@/components/rk-tools";
@@ -31,6 +35,12 @@ const card = "rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-card)]";
 const field =
   "w-full rounded-lg border border-[var(--rk-line)] bg-[var(--rk-field)] px-3 py-2 text-sm text-[var(--rk-fg)] outline-none focus:border-sky-400";
 const btn = "rk-lift rounded-lg px-4 py-2 text-sm font-bold disabled:opacity-50";
+const VERDICT_STYLE: Record<Verdict, { pill: string }> = {
+  accept: { pill: "bg-emerald-400/15 text-emerald-300 border-emerald-400/40" },
+  maybe: { pill: "bg-amber-400/15 text-amber-300 border-amber-400/40" },
+  reject: { pill: "bg-orange-500/15 text-orange-300 border-orange-500/40" },
+  spam: { pill: "bg-red-500/15 text-red-300 border-red-500/40" },
+};
 const STATUS_STYLE: Record<AppStatus, string> = {
   pending: "bg-amber-400/15 text-amber-300 border-amber-400/40",
   accepted: "bg-emerald-400/15 text-emerald-300 border-emerald-400/40",
@@ -268,6 +278,7 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
                   canReview={canReview}
                   canDelete={d.level === "manage"}
                   hasRole={!!d.positions.find((p) => p.id === a.positionId)?.roleId}
+                  minChars={d.minChars}
                   onChanged={refresh}
                   guildId={guildId}
                 />
@@ -291,6 +302,7 @@ function AppCard({
   canReview,
   canDelete,
   hasRole,
+  minChars,
   onChanged,
   guildId,
 }: {
@@ -300,6 +312,7 @@ function AppCard({
   canReview: boolean;
   canDelete: boolean;
   hasRole: boolean;
+  minChars: number;
   onChanged: () => void;
   guildId: string;
 }) {
@@ -329,8 +342,17 @@ function AppCard({
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Nie udało się usunąć"),
   });
-  const scoreTone =
-    a.autoScore >= 70 ? "text-emerald-300" : a.autoScore >= 40 ? "text-amber-300" : "text-red-300";
+  // ocena liczona na bieżąco tym samym kodem co przy wysyłce – stare podania też dostają mądrą ocenę
+  const ai = useMemo(
+    () =>
+      analyzeApplication(
+        a.answers.map((x) => ({ q: x.q, a: x.a, style: x.s })),
+        minChars,
+        { tabSwitches: a.tabSwitches, age: a.age },
+      ),
+    [a, minChars],
+  );
+  const tone = VERDICT_STYLE[ai.verdict];
 
   return (
     <article className={`${card} rk-reveal overflow-hidden`}>
@@ -350,10 +372,10 @@ function AppCard({
         </span>
         <span className="ml-auto flex items-center gap-3 text-xs text-[var(--rk-mut)]">
           <span
-            className={`font-bold ${scoreTone}`}
+            className={`rounded-full border px-2.5 py-0.5 font-bold ${tone.pill}`}
             title="Wstępna ocena automatyczna (tylko podpowiedź)"
           >
-            {a.autoScore}/100
+            {ai.score}/100 · {VERDICT_LABEL[ai.verdict]}
           </span>
           {when(a.createdAt)}
           <span>{open ? "▲" : "▼"}</span>
@@ -380,21 +402,73 @@ function AppCard({
               <b className={a.tabSwitches > 5 ? "text-amber-300" : ""}>{a.tabSwitches}</b>
             </span>
           </div>
-          {a.flags.length > 0 && (
-            <p className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-200">
-              ⚠️ Uwagi automatu: {a.flags.join(", ")}. To tylko podpowiedź — oceń odpowiedzi
-              samodzielnie.
+          <div className={`rounded-xl border p-4 ${tone.pill}`}>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-3xl font-extrabold">{ai.score}</span>
+              <span className="text-xs font-bold opacity-70">/ 100 pkt</span>
+              <span className="text-sm font-extrabold uppercase tracking-wide">
+                {VERDICT_LABEL[ai.verdict]}
+              </span>
+            </div>
+            <div
+              className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--rk-hover)]"
+              aria-hidden
+            >
+              <div
+                className="h-full rounded-full bg-current transition-all duration-500"
+                style={{ width: `${ai.score}%` }}
+              />
+            </div>
+            {ai.flags.length > 0 && (
+              <ul className="mt-3 space-y-0.5 text-xs">
+                {ai.flags.map((f) =>
+                  f.startsWith("+") ? (
+                    <li key={f} className="text-emerald-400">
+                      ✅ {f.slice(1)}
+                    </li>
+                  ) : (
+                    <li key={f} className="text-amber-300">
+                      ⚠️ {f}
+                    </li>
+                  ),
+                )}
+              </ul>
+            )}
+            <p className="mt-3 text-[11px] opacity-70">
+              To tylko podpowiedź automatu (sprawdza sens, spam i powtórzenia) – decyzję zawsze
+              podejmuje człowiek.
             </p>
-          )}
+          </div>
           <div className="space-y-3">
-            {a.answers.map((x, i) => (
-              <div key={x.id} className="rounded-xl bg-[var(--rk-field)] p-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-[var(--rk-mut)]">
-                  {i + 1}. {x.q}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--rk-fg)]">{x.a}</p>
-              </div>
-            ))}
+            {a.answers.map((x, i) => {
+              const r = ai.perAnswer[i];
+              const rt = r ? VERDICT_STYLE[verdictOf(r.score)] : null;
+              return (
+                <div key={x.id} className="rounded-xl bg-[var(--rk-field)] p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--rk-mut)]">
+                      {i + 1}. {x.q}
+                    </p>
+                    {r && rt && (
+                      <span
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold ${rt.pill}`}
+                        title={r.notes.map((n) => n.replace(/^\+/, "")).join(" • ")}
+                      >
+                        {r.score}/100
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--rk-fg)]">{x.a}</p>
+                  {r && r.notes.length > 0 && (
+                    <p className="mt-2 text-[11px] text-[var(--rk-mut)]">
+                      {r.notes
+                        .map((n) => (n.startsWith("+") ? `✅ ${n.slice(1)}` : `⚠️ ${n}`))
+                        .join("  ")}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
             {a.answers.length === 0 && (
               <p className="text-sm text-[var(--rk-mut)]">Brak odpowiedzi.</p>
             )}

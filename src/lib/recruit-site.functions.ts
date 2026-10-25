@@ -205,7 +205,8 @@ export const submitApplication = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     if (data.website.trim()) return { ok: true as const }; // bot: udajemy, że się udało
-    const { validateSubmission, scoreApplication, fingerprint } = await import("./recruit-logic");
+    const { validateSubmission, analyzeApplication, VERDICT_LABEL, fingerprint } =
+      await import("./recruit-logic");
     const g = await loadGuild(data.guildId);
     if (!g.usable || !g.content.recruitSite.enabled)
       throw new Error("Rekrutacja jest teraz niedostępna.");
@@ -250,7 +251,14 @@ export const submitApplication = createServerFn({ method: "POST" })
     )
       throw new Error("Przyjmujemy teraz bardzo dużo podań. Spróbuj ponownie za chwilę.");
 
-    const { score, flags } = scoreApplication(c.answers, site.minChars);
+    const { score, flags, verdict } = analyzeApplication(
+      c.answers.map((x) => ({ q: x.q, a: x.a, style: x.s })),
+      site.minChars,
+      {
+        tabSwitches: c.tabSwitches,
+        age: c.age,
+      },
+    );
     const { data: row, error } = await rt(supabaseAdmin, "recruit_applications")
       .insert({
         guild_id: data.guildId,
@@ -284,7 +292,7 @@ export const submitApplication = createServerFn({ method: "POST" })
       { name: "Wiek", value: String(c.age), inline: true },
       {
         name: "Ocena wstępna",
-        value: `${score}/100${flags.length ? ` • ${flags.join(", ")}` : ""}`,
+        value: `**${score}/100** • ${VERDICT_LABEL[verdict]}${flags.length ? `\n${flags.map((x) => (x.startsWith("+") ? `✅ ${x.slice(1)}` : `⚠️ ${x}`)).join("\n")}` : ""}`,
         inline: false,
       },
     ];
@@ -365,6 +373,7 @@ export const getRecruitPanel = createServerFn({ method: "GET" })
         roleId: p.roleId,
       })),
       siteEnabled: g.content.recruitSite.enabled,
+      minChars: g.content.recruitSite.minChars,
     };
   });
 
