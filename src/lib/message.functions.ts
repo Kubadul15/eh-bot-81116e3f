@@ -17,6 +17,65 @@ const toEmbed = (e: ComposerEmbed) => ({
   timestamp: e.timestamp ? new Date().toISOString() : undefined,
 });
 
+// Dane do podglądu „jak na Discordzie” (Premium): prawdziwa nazwa i avatar bota na tym serwerze oraz nazwa i ikona serwera.
+const viewCache = new Map<string, { at: number; value: BotView }>();
+export type BotView = {
+  bot: { id: string; name: string; avatar: string };
+  guild: { id: string; name: string; icon: string | null };
+};
+export const getBotView = createServerFn({ method: "GET" })
+  .inputValidator((d: { guildId: string }) => {
+    if (!isSnowflake(d?.guildId)) throw new Error("Złe ID serwera");
+    return { guildId: d.guildId };
+  })
+  .handler(async ({ data }): Promise<BotView> => {
+    const { requireGuild, bot } = await import("./discord.server");
+    await requireGuild(data.guildId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cfg } = await supabaseAdmin
+      .from("guild_configs")
+      .select("settings")
+      .eq("guild_id", data.guildId)
+      .maybeSingle();
+    if (!premiumActive(metaOf(cfg?.settings)))
+      throw new Error("Podgląd jak na Discordzie to funkcja planu Premium.");
+    const hit = viewCache.get(data.guildId);
+    if (hit && Date.now() - hit.at < 600_000) return hit.value;
+
+    const { discordAvatarUrl, discordIconUrl } = await import("./discord-format");
+    const meRes = await bot("/users/@me");
+    if (!meRes.ok) throw new Error("Nie udało się pobrać danych bota");
+    const me = (await meRes.json()) as {
+      id: string;
+      username: string;
+      global_name?: string | null;
+      avatar: string | null;
+    };
+    const [memberRes, guildRes] = await Promise.all([
+      bot(`/guilds/${data.guildId}/members/${me.id}`),
+      bot(`/guilds/${data.guildId}`),
+    ]);
+    const member = memberRes.ok
+      ? ((await memberRes.json()) as { nick?: string | null; avatar?: string | null })
+      : {};
+    const g = guildRes.ok
+      ? ((await guildRes.json()) as { id: string; name: string; icon: string | null })
+      : { id: data.guildId, name: "Serwer", icon: null };
+    const value: BotView = {
+      bot: {
+        id: me.id,
+        name: member.nick || me.global_name || me.username,
+        avatar: member.avatar
+          ? `https://cdn.discordapp.com/guilds/${data.guildId}/users/${me.id}/avatars/${member.avatar}.png?size=128`
+          : discordAvatarUrl(me.id, me.avatar),
+      },
+      guild: { id: g.id, name: g.name, icon: discordIconUrl(g.id, g.icon) },
+    };
+    if (viewCache.size > 300) viewCache.clear();
+    viewCache.set(data.guildId, { at: Date.now(), value });
+    return value;
+  });
+
 export const sendMessage = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => {
     const raw = data as { guildId?: unknown; message?: unknown } | null;
@@ -33,12 +92,21 @@ export const sendMessage = createServerFn({ method: "POST" })
     const { assertNotMaintenance } = await import("./admin.server");
     await assertNotMaintenance();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: cfg } = await supabaseAdmin.from("guild_configs").select("settings").eq("guild_id", guildId).maybeSingle();
+    const { data: cfg } = await supabaseAdmin
+      .from("guild_configs")
+      .select("settings")
+      .eq("guild_id", guildId)
+      .maybeSingle();
     const meta = metaOf(cfg?.settings);
-    if (meta.blocked) throw new Error(`Ten serwer został zablokowany przez właściciela bota: ${meta.blocked.reason}`);
+    if (meta.blocked)
+      throw new Error(
+        `Ten serwer został zablokowany przez właściciela bota: ${meta.blocked.reason}`,
+      );
     // Free: jeden embed i wysyłka jako bot; webhook (własna nazwa i avatar) oraz do 3 embedów to Premium
     if (!premiumActive(meta) && (m.mode === "webhook" || m.embeds.length > 1)) {
-      throw new Error("Webhook i wiele embedów w jednej wiadomości to funkcje planu Premium (jednorazowo 20 zł, na zawsze).");
+      throw new Error(
+        "Webhook i wiele embedów w jednej wiadomości to funkcje planu Premium (jednorazowo 20 zł, na zawsze).",
+      );
     }
 
     const ch = await bot(`/channels/${m.channelId}`);

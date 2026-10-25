@@ -154,3 +154,21 @@
 }
 /* własny kursor: transform na GPU */
 .cursor-dot, .cursor-ring { will-change: transform; }
+/* podgląd wiadomości „jak na Discordzie” (kreator wiadomości, Premium) */
+.dc-window { font-family: "gg sans", "Noto Sans", Barlow, sans-serif; }
+.dc-mention { border-radius: 3px; padding: 0 2px; font-weight: 500; background: rgba(88, 101, 242, 0.3); color: #c9cdfb; }
+.dc-light .dc-mention { color: #505cdc; background: rgba(88, 101, 242, 0.15); }
+.dc-code { border-radius: 3px; padding: 0 4px; font-size: 85%; background: rgba(0, 0, 0, 0.3); font-family: ui-monospace, Menlo, monospace; }
+.dc-pre { margin: 4px 0; padding: 8px; border-radius: 4px; font-size: 13px; white-space: pre-wrap; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(0, 0, 0, 0.2); font-family: ui-monospace, Menlo, monospace; }
+.dc-light .dc-code, .dc-light .dc-pre { background: rgba(0, 0, 0, 0.07); }
+.dc-quote { border-left: 4px solid #4e5058; padding-left: 10px; margin: 2px 0; }
+.dc-h1 { font-size: 1.5em; font-weight: 700; margin: 4px 0; }
+.dc-h2 { font-size: 1.25em; font-weight: 700; margin: 4px 0; }
+.dc-h3 { font-size: 1.1em; font-weight: 700; margin: 2px 0; }
+.dc-spoiler { background: #1e1f22; color: transparent; border-radius: 3px; cursor: pointer; }
+.dc-spoiler:hover { color: inherit; background: rgba(0, 0, 0, 0.2); }
+.dc-link { color: #00a8fc; }
+.dc-light .dc-link { color: #006ce7; }
+.dc-emoji { display: inline-block; width: 1.375em; height: 1.375em; vertical-align: -0.3em; }
+.dc-time { background: rgba(255, 255, 255, 0.08); border-radius: 3px; padding: 0 2px; }
+.dc-light .dc-time { background: rgba(0, 0, 0, 0.06); }

@@ -331,6 +331,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             {view === "composer" && (
               <MessageComposer
                 guildId={guildId}
+                guildName={data.guild.name}
                 channels={data.channels}
                 roles={data.roles}
                 premium={premium.active}

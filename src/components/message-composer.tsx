@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { DiscordWindow } from "@/components/discord-window";
+import { LockBanner } from "@/components/premium-ui";
 import { Bot, ImagePlus, Plus, Send, Trash2, Webhook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +17,7 @@ import {
   type ComposerEmbed,
   type ComposerMessage,
 } from "@/lib/message-config";
-import { sendMessage } from "@/lib/message.functions";
+import { getBotView, sendMessage } from "@/lib/message.functions";
 import { uploadImage } from "@/lib/content.functions";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -207,16 +210,27 @@ function Preview({
 // ---------- formularz ----------
 export function MessageComposer({
   guildId,
+  guildName,
   channels,
   roles,
   premium,
 }: {
   guildId: string;
+  guildName?: string;
   channels: DChannel[];
   roles: DRole[];
   premium: boolean;
 }) {
   const send = useServerFn(sendMessage);
+  // Premium: podgląd „jak na Discordzie” z prawdziwym botem i serwerem; Free: prosty podgląd
+  const [pv, setPv] = useState<"simple" | "discord">("discord");
+  const botView = useQuery({
+    queryKey: ["bot-view", guildId],
+    queryFn: () => getBotView({ data: { guildId } }),
+    enabled: premium && pv === "discord",
+    staleTime: 600_000,
+    retry: false,
+  });
   const storeKey = `eh-composer:${guildId}`;
   const [m, setM] = useState<ComposerMessage>(() => {
     const fresh = emptyComposer();
@@ -257,7 +271,9 @@ export function MessageComposer({
   const chars = embedChars(m.embeds);
 
   async function submit() {
-    const parsed = composerSchema.safeParse(premium ? m : { ...m, mode: "bot", embeds: m.embeds.slice(0, 1) }); // Free: tylko jako bot i jeden embed
+    const parsed = composerSchema.safeParse(
+      premium ? m : { ...m, mode: "bot", embeds: m.embeds.slice(0, 1) },
+    ); // Free: tylko jako bot i jeden embed
     if (!parsed.success)
       return setState({
         kind: "error",
@@ -317,7 +333,9 @@ export function MessageComposer({
                   <Icon className="size-5" />
                   <span>
                     <span className="block text-sm font-bold">{name}</span>
-                    <span className="block text-xs opacity-80">{id === "webhook" && !premium ? "💎 Funkcja Premium" : hint}</span>
+                    <span className="block text-xs opacity-80">
+                      {id === "webhook" && !premium ? "💎 Funkcja Premium" : hint}
+                    </span>
                   </span>
                 </button>
               ))}
@@ -599,12 +617,65 @@ export function MessageComposer({
         </div>
 
         <div className="xl:sticky xl:top-4 xl:self-start">
-          <p className={label}>Podgląd</p>
-          <Preview
-            m={m}
-            roles={roles}
-            channelName={textChannels.find((c) => c.id === m.channelId)?.name ?? ""}
-          />
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <p className={label}>Podgląd</p>
+            {premium && (
+              <div className="flex gap-1 rounded-md border bg-card p-0.5 text-xs font-semibold">
+                {(
+                  [
+                    ["discord", "Jak na Discordzie"],
+                    ["simple", "Prosty"],
+                  ] as const
+                ).map(([id, name]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={pv === id}
+                    onClick={() => setPv(id)}
+                    className={`rounded px-2 py-1 ${pv === id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {premium && pv === "discord" ? (
+            <DiscordWindow
+              m={m}
+              roles={roles}
+              channels={channels}
+              view={botView.data}
+              loading={botView.isLoading}
+              error={
+                botView.isError
+                  ? "Nie udało się pobrać danych bota – pokazuję podgląd bez nich."
+                  : ""
+              }
+              sending={state.kind === "sending"}
+              onContent={(content) => set({ content })}
+              onSend={() => void submit()}
+            />
+          ) : (
+            <Preview
+              m={m}
+              roles={roles}
+              channelName={textChannels.find((c) => c.id === m.channelId)?.name ?? ""}
+            />
+          )}
+          {!premium && (
+            <div className="mt-3">
+              <LockBanner
+                title="Podgląd jak na prawdziwym Discordzie to funkcja Premium"
+                guildId={guildId}
+                guildName={guildName ?? ""}
+              >
+                Okno serwera z prawdziwym avatarem i nazwą bota, kanałami i kolorami ról, jasny i
+                ciemny motyw, widok na telefonie oraz wysyłka z paska wiadomości – dokładnie tak,
+                jak zobaczą to gracze.
+              </LockBanner>
+            </div>
+          )}
           <Button
             type="button"
             onClick={() => void submit()}
