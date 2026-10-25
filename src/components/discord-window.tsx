@@ -128,6 +128,7 @@ export function DiscordWindow({
   loading,
   error,
   sending,
+  large = false,
   onContent,
   onSend,
 }: {
@@ -138,6 +139,8 @@ export function DiscordWindow({
   loading: boolean;
   error: string;
   sending: boolean;
+  /** widok na cały ekran: wyższe okno, szersza lista kanałów */
+  large?: boolean;
   onContent: (v: string) => void;
   onSend: () => void;
 }) {
@@ -177,7 +180,9 @@ export function DiscordWindow({
         {chName}
       </div>
 
-      <div className="min-h-64 flex-1 overflow-hidden px-4 pb-3 pt-6">
+      <div
+        className={`${large ? "min-h-[58vh]" : "min-h-64"} flex-1 overflow-y-auto px-4 pb-3 pt-6`}
+      >
         <div className="mb-5">
           <div
             className="grid size-16 place-items-center rounded-full"
@@ -327,7 +332,7 @@ export function DiscordWindow({
                 )}
               </div>
               <div
-                className="hidden w-40 shrink-0 flex-col sm:flex"
+                className={`hidden shrink-0 flex-col sm:flex ${large ? "w-56" : "w-40"}`}
                 style={{ background: p.side, color: p.muted }}
               >
                 <div

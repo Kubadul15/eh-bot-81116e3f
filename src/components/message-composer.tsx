@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { DiscordWindow } from "@/components/discord-window";
-import { LockBanner } from "@/components/premium-ui";
-import { Bot, ImagePlus, Plus, Send, Trash2, Webhook } from "lucide-react";
+import { Bot, ImagePlus, Maximize2, Minimize2, Plus, Send, Trash2, Webhook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -210,27 +209,56 @@ function Preview({
 // ---------- formularz ----------
 export function MessageComposer({
   guildId,
-  guildName,
   channels,
   roles,
   premium,
+  studio = false,
+  onOpenStudio,
 }: {
   guildId: string;
-  guildName?: string;
   channels: DChannel[];
   roles: DRole[];
   premium: boolean;
+  /** tryb „Widok Discorda”: duże okno + pełny ekran */
+  studio?: boolean;
+  onOpenStudio?: () => void;
 }) {
   const send = useServerFn(sendMessage);
-  // Premium: podgląd „jak na Discordzie” z prawdziwym botem i serwerem; Free: prosty podgląd
-  const [pv, setPv] = useState<"simple" | "discord">("discord");
+  // dane do widoku Discorda (Premium): prawdziwy bot i serwer
   const botView = useQuery({
     queryKey: ["bot-view", guildId],
     queryFn: () => getBotView({ data: { guildId } }),
-    enabled: premium && pv === "discord",
+    enabled: premium && studio,
     staleTime: 600_000,
     retry: false,
   });
+  // pełny ekran: prawdziwe API przeglądarki (jak na YouTube); gdy niedostępne – nakładka na całą stronę
+  const shell = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    const onFs = () => setExpanded(!!document.fullscreenElement);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setExpanded(false);
+    document.addEventListener("fullscreenchange", onFs);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFs);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+  async function toggleFull() {
+    if (expanded) {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      setExpanded(false);
+      return;
+    }
+    setExpanded(true);
+    try {
+      await shell.current?.requestFullscreen?.();
+    } catch {
+      /* zostaje nakładka na całą stronę */
+    }
+  }
+
   const storeKey = `eh-composer:${guildId}`;
   const [m, setM] = useState<ComposerMessage>(() => {
     const fresh = emptyComposer();
@@ -288,360 +316,395 @@ export function MessageComposer({
     }
   }
 
-  return (
-    <div className="animate-fade-up">
-      <h2 className="font-display text-4xl">📣 Wysyłanie wiadomości</h2>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Złóż wiadomość z embedem, sprawdź podgląd i wyślij od razu na wybrany kanał – jako bot albo
-        przez webhook z własną nazwą i avatarem. Szkic zapisuje się w tej przeglądarce.
-      </p>
+  const formCol = (
+    <div className="space-y-5">
+      <div className="rounded-xl border bg-card p-5">
+        <span className={label}>Kanał</span>
+        <select
+          className="editor-select"
+          value={m.channelId}
+          onChange={(e) => set({ channelId: e.target.value })}
+        >
+          <option value="">— wybierz kanał —</option>
+          {textChannels.map((c) => (
+            <option key={c.id} value={c.id}>
+              # {c.name}
+            </option>
+          ))}
+        </select>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_minmax(0,540px)]">
-        <div className="space-y-5">
-          <div className="rounded-xl border bg-card p-5">
-            <span className={label}>Kanał</span>
-            <select
-              className="editor-select"
-              value={m.channelId}
-              onChange={(e) => set({ channelId: e.target.value })}
+        <span className={`${label} mt-4`}>Wyślij jako</span>
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              ["bot", "Bot", Bot, "Wiadomość od bota"],
+              ["webhook", "Webhook", Webhook, "Własna nazwa i avatar"],
+            ] as const
+          ).map(([id, name, Icon, hint]) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={m.mode === id}
+              disabled={id === "webhook" && !premium}
+              title={id === "webhook" && !premium ? "Webhook to funkcja Premium" : undefined}
+              onClick={() => set({ mode: id })}
+              className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${m.mode === id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
             >
-              <option value="">— wybierz kanał —</option>
-              {textChannels.map((c) => (
-                <option key={c.id} value={c.id}>
-                  # {c.name}
-                </option>
-              ))}
-            </select>
-
-            <span className={`${label} mt-4`}>Wyślij jako</span>
-            <div className="grid grid-cols-2 gap-2">
-              {(
-                [
-                  ["bot", "Bot", Bot, "Wiadomość od bota"],
-                  ["webhook", "Webhook", Webhook, "Własna nazwa i avatar"],
-                ] as const
-              ).map(([id, name, Icon, hint]) => (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={m.mode === id}
-                  disabled={id === "webhook" && !premium}
-                  title={id === "webhook" && !premium ? "Webhook to funkcja Premium" : undefined}
-                  onClick={() => set({ mode: id })}
-                  className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${m.mode === id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
-                >
-                  <Icon className="size-5" />
-                  <span>
-                    <span className="block text-sm font-bold">{name}</span>
-                    <span className="block text-xs opacity-80">
-                      {id === "webhook" && !premium ? "💎 Funkcja Premium" : hint}
-                    </span>
-                  </span>
-                </button>
-              ))}
+              <Icon className="size-5" />
+              <span>
+                <span className="block text-sm font-bold">{name}</span>
+                <span className="block text-xs opacity-80">
+                  {id === "webhook" && !premium ? "💎 Funkcja Premium" : hint}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+        {m.mode === "webhook" && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label>
+              <span className={label}>Nazwa nadawcy</span>
+              <Input
+                maxLength={80}
+                value={m.webhookName}
+                placeholder="Emergency Hamburg"
+                onChange={(e) => set({ webhookName: e.target.value })}
+              />
+            </label>
+            <div>
+              <span className={label}>Avatar (https)</span>
+              <ImageField
+                guildId={guildId}
+                value={m.webhookAvatar}
+                onChange={(v) => set({ webhookAvatar: v })}
+                placeholder="https://…"
+              />
             </div>
-            {m.mode === "webhook" && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label>
-                  <span className={label}>Nazwa nadawcy</span>
-                  <Input
-                    maxLength={80}
-                    value={m.webhookName}
-                    placeholder="Emergency Hamburg"
-                    onChange={(e) => set({ webhookName: e.target.value })}
-                  />
-                </label>
-                <div>
-                  <span className={label}>Avatar (https)</span>
-                  <ImageField
-                    guildId={guildId}
-                    value={m.webhookAvatar}
-                    onChange={(v) => set({ webhookAvatar: v })}
-                    placeholder="https://…"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground sm:col-span-2">
-                  Bot sam utworzy webhook „EH Bot” na tym kanale (wymaga uprawnienia „Zarządzanie
-                  webhookami”).
-                </p>
-              </div>
-            )}
+            <p className="text-xs text-muted-foreground sm:col-span-2">
+              Bot sam utworzy webhook „EH Bot” na tym kanale (wymaga uprawnienia „Zarządzanie
+              webhookami”).
+            </p>
           </div>
+        )}
+      </div>
 
-          <div className="rounded-xl border bg-card p-5">
-            <span className={label}>Treść wiadomości (nad embedem)</span>
-            <Textarea
-              maxLength={2000}
-              rows={3}
-              value={m.content}
-              placeholder="Zwykły tekst. Obsługuje **pogrubienie**, *kursywę*, `kod`…"
-              onChange={(e) => set({ content: e.target.value })}
-            />
-            <label className="mt-3 flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold">
-              <span>Pinguj @everyone</span>
+      <div className="rounded-xl border bg-card p-5">
+        <span className={label}>Treść wiadomości (nad embedem)</span>
+        <Textarea
+          maxLength={2000}
+          rows={3}
+          value={m.content}
+          placeholder="Zwykły tekst. Obsługuje **pogrubienie**, *kursywę*, `kod`…"
+          onChange={(e) => set({ content: e.target.value })}
+        />
+        <label className="mt-3 flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold">
+          <span>Pinguj @everyone</span>
+          <Switch
+            aria-label="Pinguj everyone"
+            checked={m.pingEveryone}
+            onCheckedChange={(v) => set({ pingEveryone: v })}
+          />
+        </label>
+      </div>
+
+      <RolePicker
+        field={{
+          key: "ping",
+          label: "Pinguj rangi",
+          desc: "Wybrane rangi zostaną oznaczone nad wiadomością",
+          multi: true,
+        }}
+        roles={roles}
+        selected={m.pingRoleIds}
+        onToggle={(id) =>
+          set({
+            pingRoleIds: m.pingRoleIds.includes(id)
+              ? m.pingRoleIds.filter((x) => x !== id)
+              : [...m.pingRoleIds, id].slice(0, 10),
+          })
+        }
+      />
+
+      {m.embeds.map((e, i) => (
+        <div key={i} className="rounded-xl border bg-card p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold">Embed {i + 1}</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => set({ embeds: m.embeds.filter((_, k) => k !== i) })}
+            >
+              <Trash2 className="size-4" />
+              Usuń
+            </Button>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="sm:col-span-2">
+              <span className={label}>Tytuł</span>
+              <Input
+                maxLength={256}
+                value={e.title}
+                onChange={(ev) => setEmbed(i, { title: ev.target.value })}
+              />
+            </label>
+            <label className="sm:col-span-2">
+              <span className={label}>Opis</span>
+              <Textarea
+                maxLength={4000}
+                rows={5}
+                value={e.description}
+                onChange={(ev) => setEmbed(i, { description: ev.target.value })}
+              />
+            </label>
+            <label>
+              <span className={label}>Kolor</span>
+              <span className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={e.color}
+                  onChange={(ev) => setEmbed(i, { color: ev.target.value })}
+                  className="h-9 w-12 cursor-pointer rounded border bg-transparent"
+                />
+                <Input
+                  value={e.color}
+                  maxLength={7}
+                  onChange={(ev) => setEmbed(i, { color: ev.target.value })}
+                />
+              </span>
+            </label>
+            <label>
+              <span className={label}>Link tytułu (https)</span>
+              <Input
+                value={e.url}
+                placeholder="https://…"
+                onChange={(ev) => setEmbed(i, { url: ev.target.value })}
+              />
+            </label>
+            <div>
+              <span className={label}>Miniatura</span>
+              <ImageField
+                guildId={guildId}
+                value={e.thumbnail}
+                onChange={(v) => setEmbed(i, { thumbnail: v })}
+                placeholder="https://…"
+              />
+            </div>
+            <div>
+              <span className={label}>Duży obrazek</span>
+              <ImageField
+                guildId={guildId}
+                value={e.image}
+                onChange={(v) => setEmbed(i, { image: v })}
+                placeholder="https://…"
+              />
+            </div>
+            <label>
+              <span className={label}>Autor</span>
+              <Input
+                maxLength={256}
+                value={e.author}
+                onChange={(ev) => setEmbed(i, { author: ev.target.value })}
+              />
+            </label>
+            <div>
+              <span className={label}>Ikona autora</span>
+              <ImageField
+                guildId={guildId}
+                value={e.authorIcon}
+                onChange={(v) => setEmbed(i, { authorIcon: v })}
+                placeholder="https://…"
+              />
+            </div>
+            <label>
+              <span className={label}>Stopka</span>
+              <Input
+                maxLength={2048}
+                value={e.footer}
+                onChange={(ev) => setEmbed(i, { footer: ev.target.value })}
+              />
+            </label>
+            <div>
+              <span className={label}>Ikona stopki</span>
+              <ImageField
+                guildId={guildId}
+                value={e.footerIcon}
+                onChange={(v) => setEmbed(i, { footerIcon: v })}
+                placeholder="https://…"
+              />
+            </div>
+            <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold sm:col-span-2">
+              <span>Pokaż znacznik czasu</span>
               <Switch
-                aria-label="Pinguj everyone"
-                checked={m.pingEveryone}
-                onCheckedChange={(v) => set({ pingEveryone: v })}
+                aria-label="Znacznik czasu"
+                checked={e.timestamp}
+                onCheckedChange={(v) => setEmbed(i, { timestamp: v })}
               />
             </label>
           </div>
 
-          <RolePicker
-            field={{
-              key: "ping",
-              label: "Pinguj rangi",
-              desc: "Wybrane rangi zostaną oznaczone nad wiadomością",
-              multi: true,
-            }}
-            roles={roles}
-            selected={m.pingRoleIds}
-            onToggle={(id) =>
-              set({
-                pingRoleIds: m.pingRoleIds.includes(id)
-                  ? m.pingRoleIds.filter((x) => x !== id)
-                  : [...m.pingRoleIds, id].slice(0, 10),
-              })
-            }
-          />
-
-          {m.embeds.map((e, i) => (
-            <div key={i} className="rounded-xl border bg-card p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold">Embed {i + 1}</h3>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => set({ embeds: m.embeds.filter((_, k) => k !== i) })}
+          <div className="mt-4">
+            <div className="flex items-center justify-between">
+              <span className={label}>Pola ({e.fields.length}/10)</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={e.fields.length >= 10}
+                onClick={() =>
+                  setEmbed(i, { fields: [...e.fields, { name: "", value: "", inline: true }] })
+                }
+              >
+                <Plus className="size-4" />
+                Dodaj pole
+              </Button>
+            </div>
+            <div className="mt-2 space-y-2">
+              {e.fields.map((f, k) => (
+                <div
+                  key={k}
+                  className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_auto_auto]"
                 >
-                  <Trash2 className="size-4" />
-                  Usuń
-                </Button>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="sm:col-span-2">
-                  <span className={label}>Tytuł</span>
                   <Input
                     maxLength={256}
-                    value={e.title}
-                    onChange={(ev) => setEmbed(i, { title: ev.target.value })}
+                    placeholder="Nazwa pola"
+                    value={f.name}
+                    onChange={(ev) =>
+                      setEmbed(i, {
+                        fields: e.fields.map((x, y) =>
+                          y === k ? { ...x, name: ev.target.value } : x,
+                        ),
+                      })
+                    }
                   />
-                </label>
-                <label className="sm:col-span-2">
-                  <span className={label}>Opis</span>
-                  <Textarea
-                    maxLength={4000}
-                    rows={5}
-                    value={e.description}
-                    onChange={(ev) => setEmbed(i, { description: ev.target.value })}
+                  <Input
+                    maxLength={1024}
+                    placeholder="Wartość"
+                    value={f.value}
+                    onChange={(ev) =>
+                      setEmbed(i, {
+                        fields: e.fields.map((x, y) =>
+                          y === k ? { ...x, value: ev.target.value } : x,
+                        ),
+                      })
+                    }
                   />
-                </label>
-                <label>
-                  <span className={label}>Kolor</span>
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={e.color}
-                      onChange={(ev) => setEmbed(i, { color: ev.target.value })}
-                      className="h-9 w-12 cursor-pointer rounded border bg-transparent"
+                  <label className="flex items-center gap-2 text-xs font-semibold">
+                    <Switch
+                      aria-label="W jednej linii"
+                      checked={f.inline}
+                      onCheckedChange={(v) =>
+                        setEmbed(i, {
+                          fields: e.fields.map((x, y) => (y === k ? { ...x, inline: v } : x)),
+                        })
+                      }
                     />
-                    <Input
-                      value={e.color}
-                      maxLength={7}
-                      onChange={(ev) => setEmbed(i, { color: ev.target.value })}
-                    />
-                  </span>
-                </label>
-                <label>
-                  <span className={label}>Link tytułu (https)</span>
-                  <Input
-                    value={e.url}
-                    placeholder="https://…"
-                    onChange={(ev) => setEmbed(i, { url: ev.target.value })}
-                  />
-                </label>
-                <div>
-                  <span className={label}>Miniatura</span>
-                  <ImageField
-                    guildId={guildId}
-                    value={e.thumbnail}
-                    onChange={(v) => setEmbed(i, { thumbnail: v })}
-                    placeholder="https://…"
-                  />
-                </div>
-                <div>
-                  <span className={label}>Duży obrazek</span>
-                  <ImageField
-                    guildId={guildId}
-                    value={e.image}
-                    onChange={(v) => setEmbed(i, { image: v })}
-                    placeholder="https://…"
-                  />
-                </div>
-                <label>
-                  <span className={label}>Autor</span>
-                  <Input
-                    maxLength={256}
-                    value={e.author}
-                    onChange={(ev) => setEmbed(i, { author: ev.target.value })}
-                  />
-                </label>
-                <div>
-                  <span className={label}>Ikona autora</span>
-                  <ImageField
-                    guildId={guildId}
-                    value={e.authorIcon}
-                    onChange={(v) => setEmbed(i, { authorIcon: v })}
-                    placeholder="https://…"
-                  />
-                </div>
-                <label>
-                  <span className={label}>Stopka</span>
-                  <Input
-                    maxLength={2048}
-                    value={e.footer}
-                    onChange={(ev) => setEmbed(i, { footer: ev.target.value })}
-                  />
-                </label>
-                <div>
-                  <span className={label}>Ikona stopki</span>
-                  <ImageField
-                    guildId={guildId}
-                    value={e.footerIcon}
-                    onChange={(v) => setEmbed(i, { footerIcon: v })}
-                    placeholder="https://…"
-                  />
-                </div>
-                <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold sm:col-span-2">
-                  <span>Pokaż znacznik czasu</span>
-                  <Switch
-                    aria-label="Znacznik czasu"
-                    checked={e.timestamp}
-                    onCheckedChange={(v) => setEmbed(i, { timestamp: v })}
-                  />
-                </label>
-              </div>
-
-              <div className="mt-4">
-                <div className="flex items-center justify-between">
-                  <span className={label}>Pola ({e.fields.length}/10)</span>
+                    W linii
+                  </label>
                   <Button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={e.fields.length >= 10}
-                    onClick={() =>
-                      setEmbed(i, { fields: [...e.fields, { name: "", value: "", inline: true }] })
-                    }
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Usuń pole"
+                    onClick={() => setEmbed(i, { fields: e.fields.filter((_, y) => y !== k) })}
                   >
-                    <Plus className="size-4" />
-                    Dodaj pole
+                    <Trash2 className="size-4" />
                   </Button>
                 </div>
-                <div className="mt-2 space-y-2">
-                  {e.fields.map((f, k) => (
-                    <div
-                      key={k}
-                      className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_auto_auto]"
-                    >
-                      <Input
-                        maxLength={256}
-                        placeholder="Nazwa pola"
-                        value={f.name}
-                        onChange={(ev) =>
-                          setEmbed(i, {
-                            fields: e.fields.map((x, y) =>
-                              y === k ? { ...x, name: ev.target.value } : x,
-                            ),
-                          })
-                        }
-                      />
-                      <Input
-                        maxLength={1024}
-                        placeholder="Wartość"
-                        value={f.value}
-                        onChange={(ev) =>
-                          setEmbed(i, {
-                            fields: e.fields.map((x, y) =>
-                              y === k ? { ...x, value: ev.target.value } : x,
-                            ),
-                          })
-                        }
-                      />
-                      <label className="flex items-center gap-2 text-xs font-semibold">
-                        <Switch
-                          aria-label="W jednej linii"
-                          checked={f.inline}
-                          onCheckedChange={(v) =>
-                            setEmbed(i, {
-                              fields: e.fields.map((x, y) => (y === k ? { ...x, inline: v } : x)),
-                            })
-                          }
-                        />
-                        W linii
-                      </label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Usuń pole"
-                        onClick={() => setEmbed(i, { fields: e.fields.filter((_, y) => y !== k) })}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={m.embeds.length >= (premium ? 3 : 1)}
-              title={premium ? undefined : "Więcej niż jeden embed to funkcja Premium"}
-              onClick={() => set({ embeds: [...m.embeds, emptyComposerEmbed()] })}
-            >
-              <Plus className="size-4" />
-              Dodaj embed ({m.embeds.length}/3)
-            </Button>
-            <span
-              className={`text-xs ${chars > 6000 ? "font-bold text-destructive" : "text-muted-foreground"}`}
-            >
-              {chars}/6000 znaków w embedach
-            </span>
           </div>
         </div>
+      ))}
 
-        <div className="xl:sticky xl:top-4 xl:self-start">
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <p className={label}>Podgląd</p>
-            {premium && (
-              <div className="flex gap-1 rounded-md border bg-card p-0.5 text-xs font-semibold">
-                {(
-                  [
-                    ["discord", "Jak na Discordzie"],
-                    ["simple", "Prosty"],
-                  ] as const
-                ).map(([id, name]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={pv === id}
-                    onClick={() => setPv(id)}
-                    className={`rounded px-2 py-1 ${pv === id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-            )}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={m.embeds.length >= (premium ? 3 : 1)}
+          title={premium ? undefined : "Więcej niż jeden embed to funkcja Premium"}
+          onClick={() => set({ embeds: [...m.embeds, emptyComposerEmbed()] })}
+        >
+          <Plus className="size-4" />
+          Dodaj embed ({m.embeds.length}/3)
+        </Button>
+        <span
+          className={`text-xs ${chars > 6000 ? "font-bold text-destructive" : "text-muted-foreground"}`}
+        >
+          {chars}/6000 znaków w embedach
+        </span>
+      </div>
+    </div>
+  );
+
+  const actions = (
+    <>
+      <Button
+        type="button"
+        onClick={() => void submit()}
+        disabled={state.kind === "sending"}
+        className="mt-4 w-full"
+        size="lg"
+      >
+        <Send className="size-4" />
+        {state.kind === "sending" ? "Wysyłanie…" : "Wyślij wiadomość"}
+      </Button>
+      {state.kind === "ok" && (
+        <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
+          ✅ Wysłano!{" "}
+          <a href={state.text} target="_blank" rel="noreferrer" className="underline">
+            Otwórz na Discordzie
+          </a>
+        </p>
+      )}
+      {state.kind === "error" && (
+        <p className="mt-3 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+          ❌ {state.text}
+        </p>
+      )}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="mt-2"
+        onClick={() => {
+          setM(emptyComposer());
+          setState({ kind: "idle" });
+        }}
+      >
+        Wyczyść formularz
+      </Button>
+    </>
+  );
+
+  // „Widok Discorda”: osobna kategoria w panelu, duże okno jak prawdziwy Discord i tryb pełnoekranowy (jak film na YouTube)
+  if (studio) {
+    return (
+      <div
+        ref={shell}
+        className={
+          expanded ? "fixed inset-0 z-[100] overflow-y-auto bg-background p-4" : "animate-fade-up"
+        }
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-4xl">🖥️ Widok Discorda</h2>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Tak zobaczą to gracze: prawdziwy bot, serwer i kanały. Układaj wiadomość po prawej, a
+              na dole okna wpisz tekst i wyślij jak na czacie. Kliknij „Pełny ekran”, żeby mieć
+              wszystko na całym monitorze (Esc wychodzi).
+            </p>
           </div>
-          {premium && pv === "discord" ? (
+          <Button type="button" variant="outline" onClick={() => void toggleFull()}>
+            {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+            {expanded ? "Zamknij pełny ekran" : "Pełny ekran"}
+          </Button>
+        </div>
+        {/* poza pełnym ekranem okno ma całą szerokość (formularz pod nim); na pełnym ekranie – okno z lewej, edytor z prawej */}
+        <div className={`mt-4 grid gap-4 ${expanded ? "lg:grid-cols-[minmax(0,1fr)_420px]" : ""}`}>
+          <div className="min-w-0">
             <DiscordWindow
+              large
               m={m}
               roles={roles}
               channels={channels}
@@ -656,25 +719,43 @@ export function MessageComposer({
               onContent={(content) => set({ content })}
               onSend={() => void submit()}
             />
-          ) : (
-            <Preview
-              m={m}
-              roles={roles}
-              channelName={textChannels.find((c) => c.id === m.channelId)?.name ?? ""}
-            />
-          )}
-          {!premium && (
-            <div className="mt-3">
-              <LockBanner
-                title="Podgląd jak na prawdziwym Discordzie to funkcja Premium"
-                guildId={guildId}
-                guildName={guildName ?? ""}
-              >
-                Okno serwera z prawdziwym avatarem i nazwą bota, kanałami i kolorami ról, jasny i
-                ciemny motyw, widok na telefonie oraz wysyłka z paska wiadomości – dokładnie tak,
-                jak zobaczą to gracze.
-              </LockBanner>
-            </div>
+            {actions}
+          </div>
+          <div className={expanded ? "lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1" : ""}>
+            {formCol}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-up">
+      <h2 className="font-display text-4xl">📣 Wysyłanie wiadomości</h2>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        Złóż wiadomość z embedem, sprawdź podgląd i wyślij od razu na wybrany kanał – jako bot albo
+        przez webhook z własną nazwą i avatarem. Szkic zapisuje się w tej przeglądarce.
+      </p>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_minmax(0,540px)]">
+        {formCol}
+
+        <div className="xl:sticky xl:top-4 xl:self-start">
+          <p className={label}>Podgląd</p>
+          <Preview
+            m={m}
+            roles={roles}
+            channelName={textChannels.find((c) => c.id === m.channelId)?.name ?? ""}
+          />
+          {onOpenStudio && (
+            <button
+              type="button"
+              onClick={onOpenStudio}
+              className="mt-3 w-full rounded-lg border border-dashed p-3 text-left text-sm font-semibold hover:bg-muted"
+            >
+              🖥️ Zobacz to jak na prawdziwym Discordzie, na całym ekranie{" "}
+              {premium ? "" : "💎 (Premium)"}
+            </button>
           )}
           <Button
             type="button"

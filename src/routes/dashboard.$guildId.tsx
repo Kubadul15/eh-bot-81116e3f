@@ -26,7 +26,15 @@ import { readContent } from "@/lib/content-config";
 import { saveContent } from "@/lib/content.functions";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
-import { Save, FileText, LayoutDashboard, ChevronRight, Megaphone, Gem } from "lucide-react";
+import {
+  Save,
+  FileText,
+  LayoutDashboard,
+  ChevronRight,
+  Megaphone,
+  Gem,
+  Monitor,
+} from "lucide-react";
 import { LockBanner, PremiumBadge } from "@/components/premium-ui";
 import { PREMIUM_PANELS } from "@/lib/premium";
 import { PremiumPanel } from "@/components/premium-panel";
@@ -85,7 +93,8 @@ function GuildPage() {
   return <Editor me={me} />;
 }
 
-type View = "home" | "embeds" | "composer" | "premium" | (typeof CATEGORIES)[number]["id"];
+type View =
+  "home" | "embeds" | "composer" | "studio" | "premium" | (typeof CATEGORIES)[number]["id"];
 
 function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const { guildId } = Route.useParams();
@@ -257,6 +266,12 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
               Wygląd
             </p>
             {navItem("composer", <Megaphone className="size-4" />, "Wysyłanie wiadomości")}
+            {navItem(
+              "studio",
+              <Monitor className="size-4" />,
+              "Widok Discorda",
+              <span className="text-xs">💎</span>,
+            )}
             {navItem("embeds", <FileText className="size-4" />, "Wiadomości bota (embedy)")}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">
               Plan
@@ -331,12 +346,41 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             {view === "composer" && (
               <MessageComposer
                 guildId={guildId}
-                guildName={data.guild.name}
                 channels={data.channels}
                 roles={data.roles}
                 premium={premium.active}
+                onOpenStudio={() => setView("studio")}
               />
             )}
+
+            {view === "studio" &&
+              (premium.active ? (
+                <MessageComposer
+                  studio
+                  guildId={guildId}
+                  channels={data.channels}
+                  roles={data.roles}
+                  premium
+                />
+              ) : (
+                <div>
+                  <h2 className="font-display text-4xl">🖥️ Widok Discorda</h2>
+                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                    Podgląd wiadomości dokładnie tak, jak zobaczą go gracze – na całym ekranie.
+                  </p>
+                  <div className="mt-4">
+                    <LockBanner
+                      title="Widok Discorda to funkcja Premium"
+                      guildId={guildId}
+                      guildName={data.guild.name}
+                    >
+                      Duże okno serwera z prawdziwym avatarem i nazwą bota, kanałami i kolorami ról,
+                      jasny i ciemny motyw, widok na telefonie, pełny ekran (jak film na YouTube)
+                      oraz wysyłka wiadomości i embedów z paska na dole okna.
+                    </LockBanner>
+                  </div>
+                </div>
+              ))}
 
             {view === "premium" && (
               <PremiumPanel
