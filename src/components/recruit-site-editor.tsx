@@ -205,6 +205,22 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
         <div className="sm:col-span-2">
+          <label className={lab}>
+            Muzyka na stronie: link do playlisty Spotify lub YouTube (opcjonalnie)
+          </label>
+          <Input
+            placeholder="https://open.spotify.com/playlist/… albo https://www.youtube.com/playlist?list=…"
+            value={s.music}
+            maxLength={300}
+            onChange={(e) => set({ music: e.target.value.trim() })}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Odwiedzający dostają przycisk 🎵 z oficjalnym odtwarzaczem (np. playlista Taco
+            Hemingwaya, którą znajdziesz na Spotify lub YouTube). Muzyka nie włącza się sama –
+            przeglądarki tego blokują, trzeba kliknąć „play”.
+          </p>
+        </div>
+        <div className="sm:col-span-2">
           <label className={lab}>Zaproszenie na Discord (przycisk „Dołącz”)</label>
           <Input
             placeholder="https://discord.gg/twoje-zaproszenie"

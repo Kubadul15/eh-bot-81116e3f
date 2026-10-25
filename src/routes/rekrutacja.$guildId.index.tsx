@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getPublicRecruit, submitApplication } from "@/lib/recruit-site.functions";
 import { MAX_ANSWER, NICK } from "@/lib/recruit-logic";
 import type { PublicRecruit } from "@/lib/recruit-types";
+import { RkTools } from "@/components/rk-tools";
 
 export const Route = createFileRoute("/rekrutacja/$guildId/")({
   loader: ({ params }) => getPublicRecruit({ data: { guildId: params.guildId } }),
@@ -48,14 +49,15 @@ function RecruitPage() {
   const data = Route.useLoaderData();
   if (data.state !== "ok") {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#080b16] px-5 text-center text-slate-100">
+      <main className="rk grid min-h-screen place-items-center bg-[var(--rk-bg)] px-5 text-center text-[var(--rk-fg)]">
         <div>
           <p className="text-6xl">📭</p>
           <h1 className="mt-4 text-2xl font-bold">Rekrutacja jest niedostępna</h1>
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-[var(--rk-mut)]">
             Ten link nie prowadzi do aktywnej strony rekrutacyjnej.
           </p>
         </div>
+        <RkTools />
       </main>
     );
   }
@@ -176,10 +178,10 @@ function Page({ d }: { d: Ok }) {
     }
   }
 
-  const card = "rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur";
+  const card = "rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-card)] backdrop-blur";
   const input =
-    "w-full rounded-xl border border-white/10 bg-[#0c1222] px-4 py-3 text-[15px] text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-[var(--ac)] focus:ring-2 focus:ring-[var(--ac)]/30";
-  const label = "mb-1.5 block text-sm font-semibold text-slate-200";
+    "w-full rounded-xl border border-[var(--rk-line)] bg-[var(--rk-field)] px-4 py-3 text-[15px] text-[var(--rk-fg)] outline-none transition placeholder:text-[var(--rk-mut)] focus:border-[var(--ac)] focus:ring-2 focus:ring-[var(--ac)]/30";
+  const label = "mb-1.5 block text-sm font-semibold text-[var(--rk-fg2)]";
   const bad = (id: string) =>
     errors.length && missing.includes(id) ? "ring-2 ring-red-500/60" : "";
   const icon = d.guild.icon
@@ -189,7 +191,7 @@ function Page({ d }: { d: Ok }) {
   return (
     <main
       style={accent}
-      className="min-h-screen scroll-smooth bg-[#080b16] text-slate-100 selection:bg-[var(--ac)]/40"
+      className="rk min-h-screen scroll-smooth bg-[var(--rk-bg)] text-[var(--rk-fg)] selection:bg-[var(--ac)]/40"
     >
       <div
         aria-hidden
@@ -215,11 +217,11 @@ function Page({ d }: { d: Ok }) {
             )}
             <span>{d.guild.name}</span>
           </a>
-          <nav className="flex items-center gap-5 text-sm font-semibold text-slate-300">
-            <a href="#jak" className="hidden hover:text-white sm:inline">
+          <nav className="flex items-center gap-5 text-sm font-semibold text-[var(--rk-fg2)]">
+            <a href="#jak" className="hidden hover:text-[var(--rk-fg)] sm:inline">
               Jak aplikować
             </a>
-            <a href="#formularz" className="hover:text-white">
+            <a href="#formularz" className="hover:text-[var(--rk-fg)]">
               Rekrutacja
             </a>
             {site.discord && (
@@ -227,7 +229,7 @@ function Page({ d }: { d: Ok }) {
                 href={site.discord}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg border border-white/15 px-3 py-1.5 hover:bg-white/10"
+                className="rounded-lg border border-[var(--rk-line)] px-3 py-1.5 hover:bg-[var(--rk-hover)]"
               >
                 Discord ↗
               </a>
@@ -241,10 +243,10 @@ function Page({ d }: { d: Ok }) {
             <img
               src={site.banner}
               alt=""
-              className="mb-8 h-44 w-full rounded-3xl border border-white/10 object-cover sm:h-64"
+              className="mb-8 h-44 w-full rounded-3xl border border-[var(--rk-line)] object-cover sm:h-64"
             />
           )}
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--rk-mut)]">
             Rekrutacja do ekipy
           </p>
           <h1 className="mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl">
@@ -252,7 +254,9 @@ function Page({ d }: { d: Ok }) {
               {site.title}
             </span>
           </h1>
-          <p className="mt-5 max-w-2xl whitespace-pre-line text-lg text-slate-300">{site.intro}</p>
+          <p className="mt-5 max-w-2xl whitespace-pre-line text-lg text-[var(--rk-fg2)]">
+            {site.intro}
+          </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a
               href="#formularz"
@@ -266,7 +270,7 @@ function Page({ d }: { d: Ok }) {
                 href={site.discord}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-xl border border-white/15 px-6 py-3 font-bold hover:bg-white/10"
+                className="rounded-xl border border-[var(--rk-line)] px-6 py-3 font-bold hover:bg-[var(--rk-hover)]"
               >
                 Dołącz na Discord ↗
               </a>
@@ -284,7 +288,7 @@ function Page({ d }: { d: Ok }) {
                 <dt className="text-2xl font-extrabold" style={{ color: "var(--ac)" }}>
                   {v}
                 </dt>
-                <dd className="text-xs uppercase tracking-wider text-slate-400">{l}</dd>
+                <dd className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{l}</dd>
               </div>
             ))}
           </dl>
@@ -319,7 +323,7 @@ function Page({ d }: { d: Ok }) {
                   {n}
                 </span>
                 <h3 className="mt-3 font-bold">{t}</h3>
-                <p className="mt-1 text-sm text-slate-400">{x}</p>
+                <p className="mt-1 text-sm text-[var(--rk-mut)]">{x}</p>
               </li>
             ))}
           </ol>
@@ -331,7 +335,7 @@ function Page({ d }: { d: Ok }) {
             <div className={`${card} p-8 text-center`}>
               <p className="text-5xl">🎉</p>
               <h2 className="mt-3 text-3xl font-extrabold">Rekrutacja wysłana!</h2>
-              <p className="mx-auto mt-3 max-w-md text-slate-300">{site.successText}</p>
+              <p className="mx-auto mt-3 max-w-md text-[var(--rk-fg2)]">{site.successText}</p>
               {site.discord && (
                 <a
                   href={site.discord}
@@ -349,13 +353,13 @@ function Page({ d }: { d: Ok }) {
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-extrabold">Twoje podanie</h2>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-[var(--rk-mut)]">
                     Szkic zapisuje się automatycznie w tej przeglądarce.
                   </p>
                 </div>
                 <button
                   type="button"
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/10"
+                  className="rounded-lg border border-[var(--rk-line)] px-3 py-1.5 text-xs font-semibold text-[var(--rk-fg2)] hover:bg-[var(--rk-hover)]"
                   onClick={() => {
                     setDraft(emptyDraft());
                     setAgree(false);
@@ -366,7 +370,10 @@ function Page({ d }: { d: Ok }) {
                 </button>
               </div>
 
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10" aria-hidden>
+              <div
+                className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--rk-hover)]"
+                aria-hidden
+              >
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -441,7 +448,8 @@ function Page({ d }: { d: Ok }) {
                   </div>
                   <div>
                     <label className={label}>
-                      ID Discord <span className="font-normal text-slate-500">(opcjonalnie)</span>
+                      ID Discord{" "}
+                      <span className="font-normal text-[var(--rk-mut)]">(opcjonalnie)</span>
                     </label>
                     <input
                       className={input}
@@ -466,7 +474,7 @@ function Page({ d }: { d: Ok }) {
                       <label className={label}>
                         <span style={{ color: "var(--ac)" }}>{i + 1}.</span> {q.label}
                         {!q.required && (
-                          <span className="font-normal text-slate-500"> (opcjonalnie)</span>
+                          <span className="font-normal text-[var(--rk-mut)]"> (opcjonalnie)</span>
                         )}
                       </label>
                       {q.style === "long" ? (
@@ -487,7 +495,7 @@ function Page({ d }: { d: Ok }) {
                         />
                       )}
                       <p
-                        className={`mt-1 text-xs ${short ? "text-amber-300" : answerOk(q) && n ? "text-emerald-400" : "text-slate-500"}`}
+                        className={`mt-1 text-xs ${short ? "text-amber-300" : answerOk(q) && n ? "text-emerald-400" : "text-[var(--rk-mut)]"}`}
                       >
                         {n}
                         {site.minChars ? ` / min. ${site.minChars}` : ""} znaków{" "}
@@ -510,7 +518,7 @@ function Page({ d }: { d: Ok }) {
 
                 <label
                   id="field-agree"
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300 ${bad("field-agree")}`}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--rk-line)] bg-[var(--rk-card)] p-4 text-sm text-[var(--rk-fg2)] ${bad("field-agree")}`}
                 >
                   <input
                     type="checkbox"
@@ -546,13 +554,15 @@ function Page({ d }: { d: Ok }) {
                   <button
                     type="button"
                     onClick={jump}
-                    className="text-sm font-semibold text-slate-300 underline-offset-4 hover:underline"
+                    className="text-sm font-semibold text-[var(--rk-fg2)] underline-offset-4 hover:underline"
                   >
                     Przejdź do brakującego ({missing.length})
                   </button>
                 )}
                 {tabs > 0 && (
-                  <span className="ml-auto text-xs text-slate-500">Przełączenia kart: {tabs}</span>
+                  <span className="ml-auto text-xs text-[var(--rk-mut)]">
+                    Przełączenia kart: {tabs}
+                  </span>
                 )}
               </div>
             </form>
@@ -575,14 +585,16 @@ function Page({ d }: { d: Ok }) {
                     </span>
                     {f.q}
                   </summary>
-                  <p className="mt-2 whitespace-pre-line pl-5 text-sm text-slate-300">{f.a}</p>
+                  <p className="mt-2 whitespace-pre-line pl-5 text-sm text-[var(--rk-fg2)]">
+                    {f.a}
+                  </p>
                 </details>
               ))}
             </div>
           </section>
         )}
 
-        <footer className="mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-t border-white/10 px-5 py-8 text-sm text-slate-500">
+        <footer className="mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-t border-[var(--rk-line)] px-5 py-8 text-sm text-[var(--rk-mut)]">
           <span>
             © {new Date().getFullYear()} {d.guild.name} · rekrutacja przez Emergency Hamburg Bot
           </span>
@@ -592,7 +604,7 @@ function Page({ d }: { d: Ok }) {
                 href={site.discord}
                 target="_blank"
                 rel="noreferrer"
-                className="hover:text-slate-300"
+                className="hover:text-[var(--rk-fg2)]"
               >
                 Discord
               </a>
@@ -600,13 +612,14 @@ function Page({ d }: { d: Ok }) {
             <Link
               to="/rekrutacja/$guildId/panel"
               params={{ guildId }}
-              className="hover:text-slate-300"
+              className="hover:text-[var(--rk-fg2)]"
             >
               Panel ekipy
             </Link>
           </span>
         </footer>
       </div>
+      <RkTools music={site.music} />
     </main>
   );
 }

@@ -103,3 +103,15 @@
 
 .editor-select { width: 100%; min-height: 36px; border: 1px solid var(--input); border-radius: 6px; padding: 6px 10px; background: var(--card); color: var(--foreground); font-size: 14px; }
 .embed-preview { border-radius: 4px; overflow: hidden; }
+
+/* Strony rekrutacji (/rekrutacja/...): ciemny i jasny motyw na zmiennych + natywny kursor (własna kropka strony głównej jest tu niewidoczna) */
+.rk { --rk-bg: #080b16; --rk-fg: #f1f5f9; --rk-fg2: #cbd5e1; --rk-mut: #94a3b8; --rk-line: rgb(255 255 255 / 0.1); --rk-card: rgb(255 255 255 / 0.04); --rk-field: #0c1222; --rk-hover: rgb(255 255 255 / 0.08); color-scheme: dark; }
+:root[data-rk-theme="light"] .rk { --rk-bg: #f4f6fb; --rk-fg: #0f172a; --rk-fg2: #334155; --rk-mut: #64748b; --rk-line: rgb(15 23 42 / 0.14); --rk-card: #ffffff; --rk-field: #ffffff; --rk-hover: rgb(15 23 42 / 0.06); color-scheme: light; }
+:root[data-rk-theme="light"] .rk .text-amber-300, :root[data-rk-theme="light"] .rk .text-amber-200 { color: #b45309; }
+:root[data-rk-theme="light"] .rk .text-emerald-300, :root[data-rk-theme="light"] .rk .text-emerald-400 { color: #047857; }
+:root[data-rk-theme="light"] .rk .text-red-300, :root[data-rk-theme="light"] .rk .text-red-200 { color: #b91c1c; }
+:root[data-rk-theme="light"] .rk .text-sky-300, :root[data-rk-theme="light"] .rk .text-sky-200 { color: #0369a1; }
+.no-dot .cursor-dot, .no-dot .cursor-ring { display: none !important; }
+.no-dot, .no-dot * { cursor: auto !important; }
+.no-dot a, .no-dot button, .no-dot select, .no-dot label, .no-dot summary, .no-dot input[type="checkbox"], .no-dot input[type="color"] { cursor: pointer !important; }
+.no-dot input:not([type]), .no-dot input[type="text"], .no-dot input[inputmode], .no-dot textarea { cursor: text !important; }

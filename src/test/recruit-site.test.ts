@@ -213,3 +213,54 @@ describe("dostęp do strony rekrutacyjnej (Premium)", () => {
     expect(publicPremium({ features: ["recruitSite"] }).recruitSite).toBe(true);
   });
 });
+
+describe("odtwarzacz muzyki", () => {
+  it("zamienia linki Spotify i YouTube na adresy osadzenia", async () => {
+    const { musicEmbed } = await import("@/lib/rk-embed");
+    expect(
+      musicEmbed("https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=abc"),
+    ).toMatchObject({
+      provider: "spotify",
+      src: "https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M",
+    });
+    expect(musicEmbed("https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC")?.height).toBe(152);
+    expect(musicEmbed("https://www.youtube.com/playlist?list=PLabcdef123456")?.src).toBe(
+      "https://www.youtube.com/embed/videoseries?list=PLabcdef123456",
+    );
+    expect(musicEmbed("https://www.youtube.com/watch?v=dQw4w9WgXcQ")?.src).toBe(
+      "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    );
+    expect(musicEmbed("https://youtu.be/dQw4w9WgXcQ")?.src).toBe(
+      "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    );
+  });
+  it("odrzuca obce i niebezpieczne adresy", async () => {
+    const { musicEmbed } = await import("@/lib/rk-embed");
+    for (const bad of [
+      "",
+      "http://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+      "https://evil.example/playlist/37i9dQZF1DXcBWIGoYBM5M",
+      "javascript:alert(1)",
+      "https://www.youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+      "https://www.youtube.com/watch?v=<script>",
+    ])
+      expect(musicEmbed(bad), bad).toBeNull();
+  });
+  it("schemat przyjmuje pustą i poprawną playlistę, a stare dane bez pola się wczytują", () => {
+    const base = defaultContent().recruitSite;
+    expect(recruitSiteSchema.safeParse({ ...base, music: "" }).success).toBe(true);
+    expect(
+      recruitSiteSchema.safeParse({
+        ...base,
+        music: "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+      }).success,
+    ).toBe(true);
+    expect(recruitSiteSchema.safeParse({ ...base, music: "https://evil.example/x" }).success).toBe(
+      false,
+    );
+    const { music: _m, ...old } = base;
+    void _m;
+    const r = recruitSiteSchema.safeParse(old);
+    expect(r.success && r.data.music).toBe("");
+  });
+});

@@ -17,18 +17,19 @@ import {
   type StaffLevel,
 } from "@/lib/recruit-logic";
 import type { AppRow } from "@/lib/recruit-types";
+import { RkTools } from "@/components/rk-tools";
 
 export const Route = createFileRoute("/rekrutacja/$guildId/panel")({
   head: () => ({
     meta: [{ title: "Panel ekipy — rekrutacja" }, { name: "robots", content: "noindex, nofollow" }],
   }),
-  component: PanelPage,
+  component: PanelRoot,
 });
 
-const shell = "min-h-screen bg-[#080b16] text-slate-100";
-const card = "rounded-2xl border border-white/10 bg-white/[0.04]";
+const shell = "rk min-h-screen bg-[var(--rk-bg)] text-[var(--rk-fg)]";
+const card = "rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-card)]";
 const field =
-  "w-full rounded-lg border border-white/10 bg-[#0c1222] px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-400";
+  "w-full rounded-lg border border-[var(--rk-line)] bg-[var(--rk-field)] px-3 py-2 text-sm text-[var(--rk-fg)] outline-none focus:border-sky-400";
 const btn = "rounded-lg px-4 py-2 text-sm font-bold transition disabled:opacity-50";
 const STATUS_STYLE: Record<AppStatus, string> = {
   pending: "bg-amber-400/15 text-amber-300 border-amber-400/40",
@@ -37,6 +38,15 @@ const STATUS_STYLE: Record<AppStatus, string> = {
 };
 const when = (iso: string) =>
   new Date(iso).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" });
+
+function PanelRoot() {
+  return (
+    <>
+      <PanelPage />
+      <RkTools />
+    </>
+  );
+}
 
 function PanelPage() {
   const { guildId } = Route.useParams();
@@ -50,7 +60,7 @@ function PanelPage() {
   if (q.isLoading || !d)
     return (
       <main className={`${shell} grid place-items-center`}>
-        <p className="text-slate-400">
+        <p className="text-[var(--rk-mut)]">
           {q.isError ? "Nie udało się wczytać panelu." : "Wczytywanie…"}
         </p>
       </main>
@@ -62,7 +72,9 @@ function PanelPage() {
         <div>
           <p className="text-5xl">🔐</p>
           <h1 className="mt-3 text-2xl font-extrabold">Panel ekipy rekrutacyjnej</h1>
-          <p className="mt-2 text-slate-400">Zaloguj się kontem Discord, żeby zobaczyć podania.</p>
+          <p className="mt-2 text-[var(--rk-mut)]">
+            Zaloguj się kontem Discord, żeby zobaczyć podania.
+          </p>
           <a
             href={`/api/public/auth/login?next=${encodeURIComponent(`/rekrutacja/${guildId}/panel`)}`}
             target="_blank"
@@ -71,7 +83,7 @@ function PanelPage() {
           >
             Zaloguj przez Discord
           </a>
-          <p className="mt-3 text-xs text-slate-500">Po zalogowaniu odśwież tę stronę.</p>
+          <p className="mt-3 text-xs text-[var(--rk-mut)]">Po zalogowaniu odśwież tę stronę.</p>
         </div>
       </main>
     );
@@ -82,10 +94,10 @@ function PanelPage() {
         <div className="max-w-md">
           <p className="text-5xl">⛔</p>
           <h1 className="mt-3 text-2xl font-extrabold">Brak dostępu</h1>
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-[var(--rk-mut)]">
             Jesteś zalogowany(-a) jako <b>{d.user.username}</b>, ale właściciel serwera nie nadał Ci
             dostępu do rekrutacji. Poproś go o dodanie Twojego ID Discord:{" "}
-            <code className="text-slate-200">{d.user.id}</code>.
+            <code className="text-[var(--rk-fg2)]">{d.user.id}</code>.
           </p>
           <Link
             to="/rekrutacja/$guildId"
@@ -104,7 +116,7 @@ function PanelPage() {
         <div className="max-w-md">
           <p className="text-5xl">🔒</p>
           <h1 className="mt-3 text-2xl font-extrabold">{d.guildName}</h1>
-          <p className="mt-2 text-slate-400">{d.reason}</p>
+          <p className="mt-2 text-[var(--rk-mut)]">{d.reason}</p>
         </div>
       </main>
     );
@@ -151,7 +163,7 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
           {icon && <img src={icon} alt="" className="size-10 rounded-xl" />}
           <div>
             <h1 className="text-xl font-extrabold leading-tight">{d.guild.name} — rekrutacja</h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[var(--rk-mut)]">
               {d.user.username} • {LEVEL_LABEL[d.level]}
             </p>
           </div>
@@ -166,7 +178,10 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
               Strona rekrutacji ↗
             </Link>
           )}
-          <a href="/api/public/auth/logout" className="text-slate-400 hover:text-white">
+          <a
+            href="/api/public/auth/logout"
+            className="text-[var(--rk-mut)] hover:text-[var(--rk-fg)]"
+          >
             Wyloguj
           </a>
         </div>
@@ -175,19 +190,19 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
       <section className="mx-auto max-w-6xl px-5">
         <div className="grid gap-3 sm:grid-cols-4">
           {[
-            ["Wszystkie", d.apps.length, "text-slate-100"],
+            ["Wszystkie", d.apps.length, "text-[var(--rk-fg)]"],
             ["Oczekują", counts.pending, "text-amber-300"],
             ["Przyjęte", counts.accepted, "text-emerald-300"],
             ["Odrzucone", counts.rejected, "text-red-300"],
           ].map(([l, n, c]) => (
             <div key={String(l)} className={`${card} p-4`}>
               <p className={`text-3xl font-extrabold ${c}`}>{n}</p>
-              <p className="text-xs uppercase tracking-wider text-slate-400">{l}</p>
+              <p className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{l}</p>
             </div>
           ))}
         </div>
 
-        <nav className="mt-6 flex gap-2 border-b border-white/10 pb-3">
+        <nav className="mt-6 flex gap-2 border-b border-[var(--rk-line)] pb-3">
           {(
             [
               ["apps", "📋 Podania"],
@@ -198,7 +213,7 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`rounded-lg border px-3 py-2 text-sm font-semibold ${tab === id ? "border-sky-400 bg-sky-400/15 text-sky-200" : "border-white/10 hover:bg-white/5"}`}
+              className={`rounded-lg border px-3 py-2 text-sm font-semibold ${tab === id ? "border-sky-400 bg-sky-400/15 text-sky-200" : "border-[var(--rk-line)] hover:bg-[var(--rk-hover)]"}`}
             >
               {label}
             </button>
@@ -213,7 +228,7 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
                   key={s}
                   type="button"
                   onClick={() => setStatus(s)}
-                  className={`rounded-full border px-3 py-1 text-xs font-bold ${status === s ? "border-sky-400 bg-sky-400/15 text-sky-200" : "border-white/10 text-slate-300 hover:bg-white/5"}`}
+                  className={`rounded-full border px-3 py-1 text-xs font-bold ${status === s ? "border-sky-400 bg-sky-400/15 text-sky-200" : "border-[var(--rk-line)] text-[var(--rk-fg2)] hover:bg-[var(--rk-hover)]"}`}
                 >
                   {s === "all" ? "Wszystkie" : STATUS_LABEL[s]}
                 </button>
@@ -240,7 +255,9 @@ function Dashboard({ d, guildId }: { d: Ok; guildId: string }) {
 
             <div className="mt-4 space-y-3">
               {list.length === 0 && (
-                <p className={`${card} p-8 text-center text-slate-400`}>Brak podań w tym widoku.</p>
+                <p className={`${card} p-8 text-center text-[var(--rk-mut)]`}>
+                  Brak podań w tym widoku.
+                </p>
               )}
               {list.map((a) => (
                 <AppCard
@@ -320,7 +337,7 @@ function AppCard({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full flex-wrap items-center gap-3 p-4 text-left hover:bg-white/[0.03]"
+        className="flex w-full flex-wrap items-center gap-3 p-4 text-left hover:bg-[var(--rk-card)]"
       >
         <span
           className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${STATUS_STYLE[a.status]}`}
@@ -328,10 +345,10 @@ function AppCard({
           {STATUS_LABEL[a.status]}
         </span>
         <span className="font-bold">{a.discordNick}</span>
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-[var(--rk-mut)]">
           Roblox: {a.robloxNick} • {a.age} l. • {a.positionLabel}
         </span>
-        <span className="ml-auto flex items-center gap-3 text-xs text-slate-400">
+        <span className="ml-auto flex items-center gap-3 text-xs text-[var(--rk-mut)]">
           <span
             className={`font-bold ${scoreTone}`}
             title="Wstępna ocena automatyczna (tylko podpowiedź)"
@@ -344,8 +361,8 @@ function AppCard({
       </button>
 
       {open && (
-        <div className="space-y-4 border-t border-white/10 p-4">
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-300">
+        <div className="space-y-4 border-t border-[var(--rk-line)] p-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--rk-fg2)]">
             <span>
               Discord: <b>{a.discordNick}</b>
             </span>
@@ -371,24 +388,26 @@ function AppCard({
           )}
           <div className="space-y-3">
             {a.answers.map((x, i) => (
-              <div key={x.id} className="rounded-xl bg-[#0c1222] p-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <div key={x.id} className="rounded-xl bg-[var(--rk-field)] p-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-[var(--rk-mut)]">
                   {i + 1}. {x.q}
                 </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-slate-100">{x.a}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--rk-fg)]">{x.a}</p>
               </div>
             ))}
-            {a.answers.length === 0 && <p className="text-sm text-slate-500">Brak odpowiedzi.</p>}
+            {a.answers.length === 0 && (
+              <p className="text-sm text-[var(--rk-mut)]">Brak odpowiedzi.</p>
+            )}
           </div>
 
           {a.reviewedBy && a.reviewedAt && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[var(--rk-mut)]">
               Ostatnia decyzja: {a.reviewedBy}, {when(a.reviewedAt)}
             </p>
           )}
 
           {canReview ? (
-            <div className="space-y-3 border-t border-white/10 pt-4">
+            <div className="space-y-3 border-t border-[var(--rk-line)] pt-4">
               <textarea
                 className={`${field} min-h-20`}
                 maxLength={1000}
@@ -397,7 +416,7 @@ function AppCard({
                 onChange={(e) => setNote(e.target.value)}
               />
               {a.discordId && (
-                <label className="flex items-start gap-2 text-sm text-slate-300">
+                <label className="flex items-start gap-2 text-sm text-[var(--rk-fg2)]">
                   <input
                     type="checkbox"
                     className="mt-0.5 size-4"
@@ -433,7 +452,7 @@ function AppCard({
                     type="button"
                     disabled={review.isPending}
                     onClick={() => review.mutate("pending")}
-                    className={`${btn} border border-white/15 hover:bg-white/10`}
+                    className={`${btn} border border-[var(--rk-line)] hover:bg-[var(--rk-hover)]`}
                   >
                     ↩ Przywróć do oczekujących
                   </button>
@@ -453,7 +472,7 @@ function AppCard({
               </div>
             </div>
           ) : (
-            <p className="border-t border-white/10 pt-3 text-xs text-slate-500">
+            <p className="border-t border-[var(--rk-line)] pt-3 text-xs text-[var(--rk-mut)]">
               Masz dostęp tylko do podglądu — decyzje podejmują rekruterzy.
             </p>
           )}
@@ -480,7 +499,7 @@ function Staff({ d, guildId, onChanged }: { d: Ok; guildId: string; onChanged: (
     <div className="mt-5 space-y-5">
       <div className={`${card} p-5`}>
         <h2 className="text-lg font-extrabold">Dodaj osobę do ekipy rekrutacyjnej</h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[var(--rk-mut)]">
           Zarządcy serwera (uprawnienie „Zarządzanie serwerem” na Discordzie) mają dostęp
           automatycznie. Pozostałym możesz nadać dostęp, wpisując ich ID Discord (Ustawienia →
           Zaawansowane → Tryb dewelopera → prawy klik na profilu → Kopiuj ID).
@@ -513,15 +532,17 @@ function Staff({ d, guildId, onChanged }: { d: Ok; guildId: string; onChanged: (
         </div>
       </div>
 
-      <div className={`${card} divide-y divide-white/10`}>
+      <div className={`${card} divide-y divide-[var(--rk-line)]`}>
         {d.staff.length === 0 && (
-          <p className="p-6 text-center text-slate-400">Nikt jeszcze nie ma nadanego dostępu.</p>
+          <p className="p-6 text-center text-[var(--rk-mut)]">
+            Nikt jeszcze nie ma nadanego dostępu.
+          </p>
         )}
         {d.staff.map((s) => (
           <div key={s.userId} className="flex flex-wrap items-center gap-3 p-4">
             <div>
               <p className="font-bold">{s.username || s.userId}</p>
-              <p className="text-xs text-slate-500">{s.userId}</p>
+              <p className="text-xs text-[var(--rk-mut)]">{s.userId}</p>
             </div>
             <select
               className={`${field} ml-auto !w-auto`}

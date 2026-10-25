@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MESSAGE_EMBEDS } from "./embed-catalog";
+import { musicEmbed } from "./rk-embed";
 
 export const EMBED_TYPES = [
   ["urzad", "Urząd — panel"],
@@ -153,6 +154,13 @@ const inviteUrl = z
     "Podaj zaproszenie Discorda (https://discord.gg/…)",
   );
 export const SITE_FAQ_MAX = 8;
+const musicUrl = z
+  .string()
+  .max(300)
+  .refine(
+    (v) => !v || musicEmbed(v) !== null,
+    "Podaj link do playlisty Spotify lub YouTube (https://…)",
+  );
 export const recruitSiteSchema = z.object({
   enabled: z.boolean(),
   title: z.string().trim().min(1).max(80),
@@ -160,6 +168,7 @@ export const recruitSiteSchema = z.object({
   banner: image, // zdjęcie w nagłówku strony (https)
   accent: hexColor, // kolor przycisków i akcentów
   accent2: hexColor, // drugi kolor gradientu
+  music: musicUrl.default(""), // playlista Spotify/YouTube w odtwarzaczu na stronie (pusta = bez muzyki)
   discord: inviteUrl, // przycisk „Dołącz na Discord”
   minChars: z.number().int().min(0).max(500), // minimalna długość odpowiedzi
   cooldownHours: z.number().int().min(0).max(168), // blokada ponownego podania (0 = brak)
@@ -176,6 +185,7 @@ export const defaultRecruitSite = (): z.infer<typeof recruitSiteSchema> => ({
   banner: "",
   accent: "#ff4a52",
   accent2: "#4da3ff",
+  music: "",
   discord: "",
   minChars: 45,
   cooldownHours: 24,
