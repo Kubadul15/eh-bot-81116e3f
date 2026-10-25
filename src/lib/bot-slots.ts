@@ -408,8 +408,8 @@ export const TEXT_FIELDS: TextField[] = [
     key: "voice_url",
     label: "Dźwięk poczekalni (bezpośredni link do pliku)",
     placeholder: "https://…/informacja.mp3",
-    max: 500,
-    hint: "Link musi prowadzić prosto do pliku audio (mp3, ogg, wav, m4a – do 25 MB). Bot pobiera go sam i gra w pętli.",
+    max: 2000,
+    hint: "Stały, bezpośredni link do pliku audio (mp3, ogg, wav, m4a – do 25 MB). Linki tymczasowe (np. filebin, z parametrem X-Amz-Expires) wygasają po kilkunastu minutach i nie zadziałają. Najpewniej wgraj plik na Discordzie komendą /poczekalnia dzwiek – ma pierwszeństwo przed tym linkiem.",
   },
 ];
 export const TEXT_KEYS = TEXT_FIELDS.map((f) => f.key);
