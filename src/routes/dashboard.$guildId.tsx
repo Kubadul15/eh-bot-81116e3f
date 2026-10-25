@@ -31,6 +31,9 @@ import { LockBanner, PremiumBadge } from "@/components/premium-ui";
 import { PREMIUM_PANELS } from "@/lib/premium";
 import { PremiumPanel } from "@/components/premium-panel";
 
+// pola kanałów, w których wybiera się KATEGORIĘ (folder), a nie zwykły kanał tekstowy
+const FOLDER_SLOTS = ["ticketcat", "mafiakat", "firmykat"];
+
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
 const guildQ = (guildId: string) =>
   queryOptions({ queryKey: ["guild", guildId], queryFn: () => getGuild({ data: { guildId } }) });
@@ -422,8 +425,10 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                             key={slot[0]}
                             slot={slot}
                             value={channels[slot[0]] ?? ""}
-                            options={slot[0] === "ticketcat" ? categoryChannels : textChannels}
-                            category={slot[0] === "ticketcat"}
+                            options={
+                              FOLDER_SLOTS.includes(slot[0]) ? categoryChannels : textChannels
+                            }
+                            category={FOLDER_SLOTS.includes(slot[0])}
                             onChange={(id) => {
                               touch();
                               setChannels((c) => ({ ...c, [slot[0]]: id }));

@@ -57,6 +57,8 @@ export const MODULES: [id: string, label: string][] = [
   ["verify", "Weryfikacja captcha"],
   ["staff", "Administracja (plusy/minusy)"],
   ["tickets", "Tickety"],
+  ["mafia", "Mafia"],
+  ["firmy", "Firmy"],
   ["recruit", "Rekrutacja"],
   ["embed", "Kreator /embed"],
   ["ban", "Bany Roblox"],
@@ -71,7 +73,15 @@ export const FEATURE_GRANTS: [id: string, label: string][] = [
 export const FEATURE_IDS = FEATURE_GRANTS.map((f) => f[0]);
 
 /** Panele do wysyłki, które wymagają Premium (klucze jak w PANEL_SLOTS). */
-export const PREMIUM_PANELS = ["sad", "adwokaci", "prawnicy", "kuratorzy", "weryfikacja"] as const;
+export const PREMIUM_PANELS = [
+  "sad",
+  "adwokaci",
+  "prawnicy",
+  "kuratorzy",
+  "weryfikacja",
+  "mafia",
+  "firmy",
+] as const;
 
 export type Payment = {
   id: string;
@@ -275,6 +285,18 @@ export const COMPARISON: Row[] = [
   {
     group: "Rekrutacja",
     label: "Panel ekipy: podania, decyzje, rangi i uprawnienia dla rekruterów",
+    free: false,
+    premium: true,
+  },
+  {
+    group: "Mafia i firmy",
+    label: "Mafia: organizacje, hierarchia rang, skarbiec, operacje, rejony, sojusze i wojny",
+    free: false,
+    premium: true,
+  },
+  {
+    group: "Mafia i firmy",
+    label: "Firmy graczy: zatrudnianie, zmiany w pracy, kasa, rozwój i ranking",
     free: false,
     premium: true,
   },

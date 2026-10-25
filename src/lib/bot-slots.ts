@@ -97,6 +97,49 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
     ],
   },
   {
+    id: "mafia",
+    name: "🕴️ Mafia",
+    slots: [
+      [
+        "mafiapanel",
+        "🕴️",
+        "Panel mafii",
+        "Przycisk „Otwórz panel mafii”: organizacje, rejony, ranking",
+      ],
+      [
+        "mafialog",
+        "📜",
+        "Logi mafii",
+        "Nowe organizacje, wojny, sojusze, zdobyte rejony i akcje administracji",
+      ],
+      [
+        "mafiakat",
+        "🗂️",
+        "Kategoria kanałów organizacji",
+        "KATEGORIA (folder) na prywatne kanały organizacji – opcjonalnie",
+      ],
+    ],
+  },
+  {
+    id: "firmy",
+    name: "🏢 Firmy",
+    slots: [
+      [
+        "firmypanel",
+        "🏢",
+        "Panel firm",
+        "Przycisk „Otwórz panel firm”: własny biznes, oferty pracy, ranking",
+      ],
+      ["firmylog", "📜", "Logi firm", "Nowe firmy, zatrudnienia, zamknięcia i akcje administracji"],
+      [
+        "firmykat",
+        "🗂️",
+        "Kategoria kanałów firm",
+        "KATEGORIA (folder) na prywatne kanały firm – opcjonalnie",
+      ],
+    ],
+  },
+  {
     id: "moderacja",
     name: "🔨 Bany i moderacja",
     slots: [
@@ -169,6 +212,8 @@ export const PANEL_SLOTS = [
   { key: "opinie", emoji: "💬", label: "Pochwały i skargi", slot: "opiniepanel" },
   { key: "staff", emoji: "🛡️", label: "Panel administracji", slot: "staffpanel" },
   { key: "ekonomia", emoji: "💰", label: "Ekonomia", slot: "ekopanel" },
+  { key: "mafia", emoji: "🕴️", label: "Mafia", slot: "mafiapanel" },
+  { key: "firmy", emoji: "🏢", label: "Firmy", slot: "firmypanel" },
   { key: "tickety", emoji: "🎫", label: "Tickety", slot: "ticketpanel" },
   { key: "rekrutacja", emoji: "📝", label: "Rekrutacja", slot: "rekrutpanel" },
   { key: "weryfikacja", emoji: "🔐", label: "Weryfikacja (captcha)", slot: "weryfpanel" },
@@ -215,6 +260,18 @@ export const ROLE_FIELDS: RoleField[] = [
     key: "moby_admin",
     label: "Administracja mObywatela",
     desc: "Kto może kliknąć „Panel administracji” w Urzędzie. Bez wyboru – cała ekipa",
+    multi: true,
+  },
+  {
+    key: "mafia_admin",
+    label: "Administracja mafii",
+    desc: "Panel administracji mafii: organizacje, członkowie, rejony miasta. Bez wyboru – cała ekipa",
+    multi: true,
+  },
+  {
+    key: "firm_admin",
+    label: "Administracja firm",
+    desc: "Panel administracji firm: kasa, poziomy, właściciele, zwolnienia. Bez wyboru – cała ekipa",
     multi: true,
   },
   {
@@ -278,6 +335,17 @@ export const NUM_FIELDS: NumField[] = [
   { key: "eco_daily", label: "Codzienna nagroda (zł)", def: 500, max: 1_000_000 },
   { key: "eco_work_min", label: "Praca: minimalny zarobek (zł)", def: 100, max: 100_000 },
   { key: "eco_work_max", label: "Praca: maksymalny zarobek (zł)", def: 400, max: 100_000 },
+  {
+    key: "mafia_cost",
+    label: "Koszt założenia organizacji mafijnej (zł)",
+    def: 25_000,
+    min: 0,
+    max: 10_000_000,
+  },
+  { key: "mafia_max", label: "Maks. członków organizacji mafijnej", def: 30, min: 3, max: 100 },
+  { key: "firm_cost", label: "Koszt założenia firmy (zł)", def: 15_000, min: 0, max: 10_000_000 },
+  { key: "firm_max_own", label: "Ile firm może prowadzić jeden gracz", def: 2, min: 1, max: 10 },
+  { key: "firm_max_staff", label: "Maks. pracowników jednej firmy", def: 20, min: 3, max: 50 },
 ];
 
 // Kategorie widoczne w panelu: co do czego należy. sections = id z CHANNEL_SECTIONS.
@@ -340,6 +408,28 @@ export const CATEGORIES: Category[] = [
     panels: ["ekonomia"],
     premiumNote:
       "Kasyno (sloty, ruletka, blackjack, orzeł) i sklep powyżej 5 przedmiotów wymagają Premium.",
+  },
+  {
+    id: "mafia",
+    emoji: "🕴️",
+    label: "Mafia",
+    desc: "Organizacje przestępcze: hierarchia, członkowie, skarbiec, operacje, rejony miasta, sojusze i wojny",
+    sections: ["mafia"],
+    roles: ["mafia_admin"],
+    nums: ["mafia_cost", "mafia_max"],
+    panels: ["mafia"],
+    premiumOnly: true,
+  },
+  {
+    id: "firmy",
+    emoji: "🏢",
+    label: "Firmy",
+    desc: "Własny biznes graczy: zakładanie firm, zatrudnianie, zmiany w pracy, kasa, rozwój i ranking",
+    sections: ["firmy"],
+    roles: ["firm_admin"],
+    nums: ["firm_cost", "firm_max_own", "firm_max_staff"],
+    panels: ["firmy"],
+    premiumOnly: true,
   },
   {
     id: "moderacja",
