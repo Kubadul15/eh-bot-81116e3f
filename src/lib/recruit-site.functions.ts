@@ -310,14 +310,21 @@ export const submitApplication = createServerFn({ method: "POST" })
         inline: false,
       },
     ];
-    for (const a of c.answers) {
-      const value = clip(a.a, 300);
-      if (budget - value.length - a.q.length < 0) {
+    // Discord: max 25 pól i 6000 znaków w całej wiadomości – przy 25 pytaniach odpowiedzi skracamy do budżetu, a resztę zostawiamy w panelu ekipy
+    const MAX_FIELDS = 25;
+    const per = Math.max(
+      60,
+      Math.min(300, Math.floor(budget / Math.max(1, c.answers.length)) - 60),
+    );
+    for (const [k, a] of c.answers.entries()) {
+      const value = clip(a.a, per);
+      const name = clip(`${k + 1}. ${a.q}`, 100);
+      if (fields.length >= MAX_FIELDS - 1 || budget - value.length - name.length < 0) {
         fields.push({ name: "…", value: "Reszta odpowiedzi jest w panelu ekipy.", inline: false });
         break;
       }
-      budget -= value.length + a.q.length;
-      fields.push({ name: clip(a.q, 250), value, inline: false });
+      budget -= value.length + name.length;
+      fields.push({ name, value, inline: false });
     }
     await postToChannel(g.channels["rekrutacja"], {
       embeds: [

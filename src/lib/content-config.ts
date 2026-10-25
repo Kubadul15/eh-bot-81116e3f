@@ -51,7 +51,7 @@ const positionSchema = z.object({
 });
 const questionSchema = z.object({
   id: idSchema,
-  label: z.string().trim().min(1).max(45),
+  label: z.string().trim().min(1).max(200), // w oknie Discorda widać ~145 znaków (etykieta + opis), pełna treść jest na stronie i w aplikacji
   style: z.enum(["short", "long"]),
   required: z.boolean(),
   placeholder: z.string().max(100),
@@ -66,7 +66,7 @@ export const recruitmentSchema = z
   .object({
     open: z.boolean(),
     positions: z.array(positionSchema).max(25),
-    questions: z.array(questionSchema).max(15),
+    questions: z.array(questionSchema).max(25),
   })
   .superRefine(uniqueIds);
 /** Formularz w oknie Discorda ma najwyżej 5 pól: przy włączonych obrazkach jedno z nich zajmuje pole wgrywania. */

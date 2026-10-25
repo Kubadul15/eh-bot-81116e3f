@@ -35,7 +35,7 @@ export const FREE_LIMITS: Limits = {
 };
 export const PREMIUM_LIMITS: Limits = {
   recruitPositions: 25,
-  recruitQuestions: 15,
+  recruitQuestions: 25,
   shopItems: 100,
   citizens: 100_000,
   vehicles: 10,

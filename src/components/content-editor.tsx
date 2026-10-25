@@ -125,7 +125,7 @@ export function ContentEditor({
     : Math.min(25, limits?.recruitPositions ?? 25);
   const maxQuestions = isTickets
     ? TICKET_FORM_FIELDS - (value.tickets.images ? 1 : 0)
-    : Math.min(15, limits?.recruitQuestions ?? 15);
+    : Math.min(25, limits?.recruitQuestions ?? 25);
 
   const key = hasSection ? c.embedKey : selected;
   const embed = value.embeds[key] ?? emptyEmbed();
@@ -438,11 +438,16 @@ export function ContentEditor({
                           </div>
                         </div>
                         <Field label={isTickets ? "Nazwa pola" : "Treść pytania"}>
-                          <Input
-                            maxLength={45}
+                          <Textarea
+                            rows={2}
+                            maxLength={200}
                             value={q.label}
                             onChange={(e) => change({ label: e.target.value })}
                           />
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {q.label.length}/200 znaków. Na stronie rekrutacji widać całość, w oknie
+                            Discorda pierwsze ok. 145 znaków (reszta jest w aplikacji).
+                          </p>
                         </Field>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
                           <Field label="Odpowiedź">

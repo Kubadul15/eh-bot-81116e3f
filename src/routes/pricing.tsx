@@ -57,7 +57,7 @@ const PREMIUM_POINTS = [
   "🎰 Kasyno: sloty, ruletka, blackjack",
   "🔐 Weryfikacja captcha",
   "🎨 Własny wygląd wiadomości, webhook, 3 embedy",
-  "📝 Rekrutacja: 25 stanowisk, 15 pytań",
+  "📝 Rekrutacja: 25 stanowisk, 25 pytań",
   "💎 Priorytetowe wsparcie na Discordzie",
 ];
 const STEPS = [
