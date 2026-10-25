@@ -80,7 +80,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Emergency Hamburg Bot" },
+      { property: "og:locale", content: "pl_PL" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#202020" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -101,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pl">
       <head>
         <HeadContent />
       </head>

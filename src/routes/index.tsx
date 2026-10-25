@@ -26,6 +26,26 @@ export const Route = createFileRoute("/")({
           "Bot do serwerów RP: urząd, sąd, ekonomia, moderacja. Konfiguracja w panelu na stronie.",
       },
     ],
+    // dane strukturalne dla Google: opis aplikacji (bot Discord) wraz z ceną
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Emergency Hamburg Bot",
+          applicationCategory: "GameApplication",
+          operatingSystem: "Discord",
+          inLanguage: "pl",
+          description:
+            "Bot na Discorda do serwerów RP: urząd mObywatel, sąd, ekonomia, mafia, firmy, policja, nieruchomości, moderacja, rekrutacja i tickety.",
+          offers: [
+            { "@type": "Offer", price: "0", priceCurrency: "PLN", name: "Free" },
+            { "@type": "Offer", price: String(PRICE_LIFETIME_PLN), priceCurrency: "PLN", name: "Premium lifetime" },
+          ],
+        }),
+      },
+    ],
   }),
   component: Index,
 });

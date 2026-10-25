@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardGuildIdRouteImport } from './routes/dashboard.$guildId'
@@ -44,6 +46,16 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -112,6 +124,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/dashboard/$guildId': typeof DashboardGuildIdRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -130,6 +144,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/dashboard/$guildId': typeof DashboardGuildIdRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -149,6 +165,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/features': typeof FeaturesRoute
   '/pricing': typeof PricingRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/dashboard/$guildId': typeof DashboardGuildIdRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -169,6 +187,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/features'
     | '/pricing'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/terms'
     | '/dashboard/$guildId'
     | '/dashboard/'
@@ -187,6 +207,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/features'
     | '/pricing'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/terms'
     | '/dashboard/$guildId'
     | '/dashboard'
@@ -205,6 +227,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/features'
     | '/pricing'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/terms'
     | '/dashboard/$guildId'
     | '/dashboard/'
@@ -224,6 +248,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   FeaturesRoute: typeof FeaturesRoute
   PricingRoute: typeof PricingRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   DashboardGuildIdRoute: typeof DashboardGuildIdRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -266,6 +292,20 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -360,6 +400,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   FeaturesRoute: FeaturesRoute,
   PricingRoute: PricingRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   DashboardGuildIdRoute: DashboardGuildIdRoute,
   DashboardIndexRoute: DashboardIndexRoute,
