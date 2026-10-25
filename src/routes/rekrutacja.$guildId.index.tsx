@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getPublicRecruit, submitApplication } from "@/lib/recruit-site.functions";
 import { MAX_ANSWER, NICK } from "@/lib/recruit-logic";
-import type { PublicRecruit } from "@/lib/recruit-types";
+import type { PublicQuestion, PublicRecruit } from "@/lib/recruit-types";
 import { RkTools } from "@/components/rk-tools";
 
 export const Route = createFileRoute("/rekrutacja/$guildId/")({
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/rekrutacja/$guildId/")({
 });
 
 type Ok = Extract<PublicRecruit, { state: "ok" }>;
-type Question = Ok["questions"][number];
+type Question = PublicQuestion;
 
 const draftKey = (guildId: string) => `rk-draft-${guildId}`;
 type Draft = {
@@ -170,13 +170,21 @@ const HeroTop = memo(function HeroTop({ d }: { d: Ok }) {
 });
 
 // jedyna część hero zależna od wpisywanych odpowiedzi (licznik „twoje odpowiedzi”)
-const Stats = memo(function Stats({ d, done }: { d: Ok; done: number }) {
+const Stats = memo(function Stats({
+  d,
+  count,
+  done,
+}: {
+  d: Ok;
+  count: number | null;
+  done: number;
+}) {
   const open = d.positions.filter((p) => p.open).length;
   const items = [
-    [String(d.questions.length), "pytań w formularzu"],
+    [count === null ? "—" : String(count), "pytań na to stanowisko"],
     [String(open), "otwartych stanowisk"],
     [d.site.minChars ? `${d.site.minChars}+` : "—", "znaków w odpowiedzi"],
-    [`${done} / ${d.questions.length}`, "twoje odpowiedzi"],
+    [count === null ? "—" : `${done} / ${count}`, "twoje odpowiedzi"],
   ] as const;
   return (
     <dl className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -403,10 +411,14 @@ function Page({ d }: { d: Ok }) {
     [],
   );
 
+  // każde stanowisko ma własne pytania: formularz pokazuje te z wybranego stanowiska
+  const qs = useMemo(
+    () => d.positions.find((p) => p.id === draft.positionId)?.questions ?? [],
+    [d.positions, draft.positionId],
+  );
   const done = useMemo(
-    () =>
-      d.questions.filter((q) => lenOf(draft.answers[q.id]) >= Math.max(1, site.minChars)).length,
-    [d.questions, draft.answers, site.minChars],
+    () => qs.filter((q) => lenOf(draft.answers[q.id]) >= Math.max(1, site.minChars)).length,
+    [qs, draft.answers, site.minChars],
   );
   const missing = useMemo(() => {
     const list: string[] = [];
@@ -415,14 +427,14 @@ function Page({ d }: { d: Ok }) {
     if (!/^[A-Za-z0-9_]{3,20}$/.test(draft.robloxNick.trim())) list.push("field-roblox");
     const age = Number(draft.age);
     if (!(age >= NICK.age[0] && age <= NICK.age[1])) list.push("field-age");
-    for (const q of d.questions) {
+    for (const q of qs) {
       const n = lenOf(draft.answers[q.id]);
       if (!(n === 0 ? !q.required : n >= site.minChars && n <= MAX_ANSWER[q.style]))
         list.push(`field-q-${q.id}`);
     }
     if (!agree) list.push("field-agree");
     return list;
-  }, [draft, agree, d.questions, site.minChars]);
+  }, [draft, agree, qs, site.minChars]);
   const flagged = useMemo(
     () => (errors.length ? new Set(missing) : new Set<string>()),
     [errors, missing],
@@ -491,7 +503,7 @@ function Page({ d }: { d: Ok }) {
 
         <section id="top" className="mx-auto max-w-5xl px-5 pb-6 pt-8 sm:pt-14">
           <HeroTop d={d} />
-          <Stats d={d} done={done} />
+          <Stats d={d} count={draft.positionId ? qs.length : null} done={done} />
         </section>
 
         <Steps />
@@ -543,7 +555,7 @@ function Page({ d }: { d: Ok }) {
                 <div
                   className="rk-fill h-full w-full origin-left rounded-full transition-transform duration-500"
                   style={{
-                    transform: `scaleX(${d.questions.length ? done / d.questions.length : 0})`,
+                    transform: `scaleX(${qs.length ? done / qs.length : 0})`,
                   }}
                 />
               </div>
@@ -627,7 +639,12 @@ function Page({ d }: { d: Ok }) {
                   </div>
                 </div>
 
-                {d.questions.map((q, i) => (
+                {!draft.positionId && (
+                  <p className="rounded-xl border border-dashed border-[var(--rk-line)] p-4 text-sm text-[var(--rk-mut)]">
+                    👆 Wybierz stanowisko – każde ma własne pytania, które pojawią się tutaj.
+                  </p>
+                )}
+                {qs.map((q, i) => (
                   <QuestionField
                     key={q.id}
                     q={q}

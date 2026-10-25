@@ -30,7 +30,21 @@ async function loadGuild(guildId: string) {
     .eq("guild_id", guildId)
     .maybeSingle();
   const meta = metaOf(data?.settings);
-  const content = readContent(data?.content);
+  // limity planu obowiązują też na stronie rekrutacyjnej (tak samo jak w bocie): stanowiska i pytania na stanowisko ponad limit są pomijane
+  const { limitsFor } = await import("./premium");
+  const lim = limitsFor(meta);
+  const full = readContent(data?.content);
+  const content = {
+    ...full,
+    recruitment: {
+      ...full.recruitment,
+      positions: full.recruitment.positions.slice(0, lim.recruitPositions).map((p) => ({
+        ...p,
+        questions: p.questions?.slice(0, lim.recruitQuestions),
+      })),
+      questions: full.recruitment.questions.slice(0, lim.recruitQuestions),
+    },
+  };
   const feature = hasFeature(meta, "recruitSite");
   const moduleOff = (meta.disabled ?? []).includes("recruit");
   return {
@@ -169,19 +183,20 @@ export const getPublicRecruit = createServerFn({ method: "GET" })
       guild,
       site,
       open: g.content.recruitment.open,
+      // każde stanowisko ma własne pytania (brak własnych = wspólna lista ze starszych ustawień)
       positions: g.content.recruitment.positions.map((p) => ({
         id: p.id,
         label: p.label,
         emoji: p.emoji,
         desc: p.desc,
         open: p.open,
-      })),
-      questions: g.content.recruitment.questions.map((q) => ({
-        id: q.id,
-        label: q.label,
-        style: q.style,
-        required: q.required,
-        placeholder: q.placeholder,
+        questions: (p.questions ?? g.content.recruitment.questions).map((q) => ({
+          id: q.id,
+          label: q.label,
+          style: q.style,
+          required: q.required,
+          placeholder: q.placeholder,
+        })),
       })),
     };
   });

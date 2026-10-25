@@ -9,15 +9,23 @@ export type PublicRecruit =
       guild: { id: string; name: string; icon: string | null };
       site: Omit<RecruitSiteConfig, "enabled">;
       open: boolean;
-      positions: { id: string; label: string; emoji: string; desc: string; open: boolean }[];
-      questions: {
+      positions: {
         id: string;
         label: string;
-        style: "short" | "long";
-        required: boolean;
-        placeholder: string;
+        emoji: string;
+        desc: string;
+        open: boolean;
+        /** pytania tego stanowiska (każde stanowisko ma własne) */
+        questions: PublicQuestion[];
       }[];
     };
+export type PublicQuestion = {
+  id: string;
+  label: string;
+  style: "short" | "long";
+  required: boolean;
+  placeholder: string;
+};
 
 export type AppRow = {
   id: string;

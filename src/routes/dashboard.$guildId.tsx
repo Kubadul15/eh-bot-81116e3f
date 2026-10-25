@@ -41,6 +41,12 @@ import { PremiumPanel } from "@/components/premium-panel";
 
 // pola kanałów, w których wybiera się KATEGORIĘ (folder), a nie zwykły kanał tekstowy
 const FOLDER_SLOTS = ["ticketcat", "mafiakat", "firmykat"];
+// w rekrutacji każde stanowisko ma własne pytania; limit planu dotyczy jednego stanowiska
+const maxQuestionsPerPosition = (c: ReturnType<typeof readContent>) =>
+  Math.max(
+    c.recruitment.questions.length,
+    ...c.recruitment.positions.map((p) => p.questions?.length ?? 0),
+  );
 
 const meQ = queryOptions({ queryKey: ["me"], queryFn: () => getMe() });
 const guildQ = (guildId: string) =>
@@ -410,7 +416,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 guildName={data.guild.name}
                 usage={{
                   recruitPositions: content.recruitment.positions.length,
-                  recruitQuestions: content.recruitment.questions.length,
+                  recruitQuestions: maxQuestionsPerPosition(content),
                 }}
                 onStartTrial={runTrial}
               />
@@ -579,7 +585,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                   <Block
                     icon="🧾"
                     title="Formularz i stanowiska"
-                    hint={`Stanowiska: ${content.recruitment.positions.length}/${premium.limits.recruitPositions} • Pytania: ${content.recruitment.questions.length}/${premium.limits.recruitQuestions}${content.recruitment.positions.length > premium.limits.recruitPositions || content.recruitment.questions.length > premium.limits.recruitQuestions ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)" : ""}`}
+                    hint={`Stanowiska: ${content.recruitment.positions.length}/${premium.limits.recruitPositions} • Pytania na stanowisko (najwięcej): ${maxQuestionsPerPosition(content)}/${premium.limits.recruitQuestions}${content.recruitment.positions.length > premium.limits.recruitPositions || maxQuestionsPerPosition(content) > premium.limits.recruitQuestions ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)" : ""}`}
                   >
                     <ContentEditor
                       guildId={guildId}

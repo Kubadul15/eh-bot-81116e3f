@@ -31,9 +31,15 @@ export const saveContent = createServerFn({ method: "POST" })
       throw new Error(
         `Limit planu: ${lim.recruitPositions} stanowisk w rekrutacji (masz ${r.positions.length}). Usuń nadmiar albo kup Premium (zakładka Cennik).`,
       );
+    // limit pytań jest liczony osobno dla każdego stanowiska (Free: 5, Premium: 25 na stanowisko)
+    for (const p of r.positions)
+      if ((p.questions?.length ?? 0) > lim.recruitQuestions)
+        throw new Error(
+          `Limit planu: ${lim.recruitQuestions} pytań na stanowisko (stanowisko „${p.label}” ma ${p.questions?.length}). Usuń nadmiar albo kup Premium (zakładka Cennik).`,
+        );
     if (r.questions.length > lim.recruitQuestions)
       throw new Error(
-        `Limit planu: ${lim.recruitQuestions} pytań w formularzu (masz ${r.questions.length}). Usuń nadmiar albo kup Premium (zakładka Cennik).`,
+        `Limit planu: ${lim.recruitQuestions} pytań na stanowisko (wspólna lista ma ${r.questions.length}). Usuń nadmiar albo kup Premium (zakładka Cennik).`,
       );
     const tk = data.content.tickets;
     if (tk.positions.length > lim.ticketTypes)

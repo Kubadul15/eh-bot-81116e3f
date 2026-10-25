@@ -21,6 +21,7 @@ import {
   emptyEmbed,
   type ContentConfig,
   type EmbedConfig,
+  type QuestionConfig,
 } from "@/lib/content-config";
 import { uploadImage, sendAnnouncement } from "@/lib/content.functions";
 import type { Limits } from "@/lib/premium";
@@ -122,10 +123,40 @@ export function ContentEditor({
 
   const maxItems = isTickets
     ? Math.min(25, limits?.ticketTypes ?? 25)
-    : Math.min(25, limits?.recruitPositions ?? 25);
+    : Math.min(8, limits?.recruitPositions ?? 8); // rekrutacja: maks. 8 stanowisk
   const maxQuestions = isTickets
     ? TICKET_FORM_FIELDS - (value.tickets.images ? 1 : 0)
     : Math.min(25, limits?.recruitQuestions ?? 25);
+
+  // pytania: w ticketach wspólne pola formularza, w rekrutacji – osobna lista dla każdego stanowiska
+  const [qPos, setQPos] = useState("");
+  const recruitPositions = value.recruitment.positions;
+  const activePos = isTickets
+    ? undefined
+    : (recruitPositions.find((p) => p.id === qPos) ?? recruitPositions[0]);
+  const questions: QuestionConfig[] = isTickets
+    ? value.tickets.questions
+    : (activePos?.questions ?? []);
+  const setQuestions = (next: QuestionConfig[]) => {
+    if (isTickets) return changeTickets({ questions: next });
+    if (!activePos) return;
+    onChange({
+      ...value,
+      recruitment: {
+        ...value.recruitment,
+        positions: recruitPositions.map((x) =>
+          x.id === activePos.id ? { ...x, questions: next } : x,
+        ),
+      },
+    });
+  };
+  const copyQuestionsFrom = (id: string) => {
+    const src = recruitPositions.find((x) => x.id === id);
+    if (src?.questions)
+      setQuestions(
+        src.questions.slice(0, maxQuestions).map((q) => ({ ...q, id: `q_${crypto.randomUUID()}` })),
+      );
+  };
 
   const key = hasSection ? c.embedKey : selected;
   const embed = value.embeds[key] ?? emptyEmbed();
@@ -148,14 +179,14 @@ export function ContentEditor({
     }
   }
   const moveQuestion = (index: number, direction: number) => {
-    const next = [...r.questions];
+    const next = [...questions];
     const target = index + direction;
     const current = next[index],
       other = next[target];
     if (!current || !other) return;
     next[index] = other;
     next[target] = current;
-    changeSection({ questions: next });
+    setQuestions(next);
   };
 
   return (
@@ -253,6 +284,7 @@ export function ContentEditor({
                             desc: "",
                             roleId: "",
                             open: true,
+                            ...(isTickets ? {} : { questions: [] }),
                           },
                         ],
                       })
@@ -262,9 +294,9 @@ export function ContentEditor({
                     {c.add}
                   </Button>
                 </div>
-                {r.positions.length >= maxItems && limits && maxItems < 25 && (
+                {r.positions.length >= maxItems && limits && maxItems < (isTickets ? 25 : 8) && (
                   <p className="mb-3 rounded-md border border-amber-500/40 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                    💎 Limit Twojego planu: {maxItems}. Premium podnosi go do 25.
+                    💎 Limit Twojego planu: {maxItems}. Premium podnosi go do {isTickets ? 25 : 8}.
                   </p>
                 )}
                 {!r.positions.length && (
@@ -357,44 +389,86 @@ export function ContentEditor({
                   <h3 className="text-lg font-semibold">
                     {c.questions}{" "}
                     <span className="text-sm font-normal text-muted-foreground">
-                      {r.questions.length}/{maxQuestions}
+                      {questions.length}/{maxQuestions}
                     </span>
                   </h3>
                   <Button
                     variant="outline"
-                    disabled={r.questions.length >= maxQuestions}
+                    disabled={questions.length >= maxQuestions || (!isTickets && !activePos)}
                     onClick={() =>
-                      changeSection({
-                        questions: [
-                          ...r.questions,
-                          {
-                            id: `q_${crypto.randomUUID()}`,
-                            label: isTickets ? "Nowe pole" : "Nowe pytanie",
-                            style: "short",
-                            required: true,
-                            placeholder: "",
-                          },
-                        ],
-                      })
+                      setQuestions([
+                        ...questions,
+                        {
+                          id: `q_${crypto.randomUUID()}`,
+                          label: isTickets ? "Nowe pole" : "Nowe pytanie",
+                          style: "short",
+                          required: true,
+                          placeholder: "",
+                        },
+                      ])
                     }
                   >
                     <Plus />
                     {isTickets ? "Pole" : "Pytanie"}
                   </Button>
                 </div>
-                {!r.questions.length && (
+                {!isTickets && (
+                  <div className="mb-4 rounded-lg border bg-muted/30 p-3">
+                    {recruitPositions.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Najpierw dodaj stanowisko powyżej – każde stanowisko ma własne pytania (do{" "}
+                        {maxQuestions}).
+                      </p>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field label="Pytania dla stanowiska">
+                          <select
+                            className="editor-select"
+                            value={activePos?.id ?? ""}
+                            onChange={(e) => setQPos(e.target.value)}
+                          >
+                            {recruitPositions.map((x) => (
+                              <option key={x.id} value={x.id}>
+                                {x.emoji ? `${x.emoji} ` : ""}
+                                {x.label} ({x.questions?.length ?? 0})
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                        {recruitPositions.length > 1 && (
+                          <Field label="Skopiuj pytania z innego stanowiska">
+                            <select
+                              className="editor-select"
+                              value=""
+                              onChange={(e) => e.target.value && copyQuestionsFrom(e.target.value)}
+                            >
+                              <option value="">— wybierz, aby zastąpić listę kopią —</option>
+                              {recruitPositions
+                                .filter((x) => x.id !== activePos?.id)
+                                .map((x) => (
+                                  <option key={x.id} value={x.id}>
+                                    {x.emoji ? `${x.emoji} ` : ""}
+                                    {x.label} ({x.questions?.length ?? 0})
+                                  </option>
+                                ))}
+                            </select>
+                          </Field>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {!questions.length && (
                   <div className="border-y py-8 text-center text-sm text-muted-foreground">
                     {isTickets ? "Brak pól – ticket powstanie bez formularza" : "Brak pytań"}
                   </div>
                 )}
                 <div className="space-y-3">
-                  {r.questions.map((q, index) => {
+                  {questions.map((q, index) => {
                     const change = (patch: Partial<typeof q>) =>
-                      changeSection({
-                        questions: r.questions.map((item, i) =>
-                          i === index ? { ...item, ...patch } : item,
-                        ),
-                      });
+                      setQuestions(
+                        questions.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+                      );
                     return (
                       <div key={q.id} className="rounded-lg border bg-card p-4">
                         <div className="mb-3 flex items-center justify-between">
@@ -415,7 +489,7 @@ export function ContentEditor({
                             <Button
                               size="icon"
                               variant="ghost"
-                              disabled={index === r.questions.length - 1}
+                              disabled={index === questions.length - 1}
                               aria-label={`Pozycja ${index + 1} w dół`}
                               title="W dół"
                               onClick={() => moveQuestion(index, 1)}
@@ -427,11 +501,7 @@ export function ContentEditor({
                               variant="ghost"
                               title="Usuń"
                               aria-label={`Usuń pole ${index + 1}`}
-                              onClick={() =>
-                                changeSection({
-                                  questions: r.questions.filter((x) => x.id !== q.id),
-                                })
-                              }
+                              onClick={() => setQuestions(questions.filter((x) => x.id !== q.id))}
                             >
                               <Trash2 />
                             </Button>
@@ -695,11 +765,11 @@ export function ContentEditor({
                 {embed.footer || "Emergency Hamburg"}
               </p>
             </div>
-            {hasSection && (r.questions.length > 0 || (isTickets && value.tickets.images)) && (
+            {hasSection && (questions.length > 0 || (isTickets && value.tickets.images)) && (
               <div className="mt-6 border-t pt-5">
                 <h4 className="mb-4 text-sm font-semibold">{c.formTitle}</h4>
                 <div className="space-y-4">
-                  {r.questions.map((q) => (
+                  {questions.map((q) => (
                     <div key={q.id}>
                       <p className="mb-1 break-words text-xs font-semibold">
                         {q.label}

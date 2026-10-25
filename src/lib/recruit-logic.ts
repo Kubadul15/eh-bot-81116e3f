@@ -75,7 +75,8 @@ export function validateSubmission(
   if (input.agree !== true) errors.push("Potwierdź, że odpowiedzi napisałeś(-aś) samodzielnie.");
 
   const answers: CleanSubmission["answers"] = [];
-  for (const q of content.recruitment.questions) {
+  // każde stanowisko ma własne pytania; brak własnych (stare dane) = wspólna lista
+  for (const q of position?.questions ?? content.recruitment.questions) {
     const raw = collapse(String(input.answers?.[q.id] ?? ""));
     const max = MAX_ANSWER[q.style];
     if (!raw) {

@@ -8,7 +8,7 @@ export const PRICE_LIFETIME_PLN = 20;
 
 export type Limits = {
   recruitPositions: number; // stanowiska w rekrutacji
-  recruitQuestions: number; // pytania w formularzu rekrutacji
+  recruitQuestions: number; // pytania w formularzu rekrutacji – osobno dla każdego stanowiska
   shopItems: number; // przedmioty w sklepie ekonomii
   citizens: number; // profile obywateli w mObywatelu
   vehicles: number; // pojazdy na obywatela
@@ -17,7 +17,7 @@ export type Limits = {
 };
 export const LIMIT_LABELS: Record<keyof Limits, string> = {
   recruitPositions: "Stanowiska w rekrutacji",
-  recruitQuestions: "Pytania w formularzu rekrutacji",
+  recruitQuestions: "Pytania na stanowisko w rekrutacji",
   shopItems: "Przedmioty w sklepie",
   citizens: "Obywatele w mObywatelu",
   vehicles: "Pojazdy na obywatela",
@@ -34,7 +34,7 @@ export const FREE_LIMITS: Limits = {
   ticketTypes: 5,
 };
 export const PREMIUM_LIMITS: Limits = {
-  recruitPositions: 25,
+  recruitPositions: 8,
   recruitQuestions: 25,
   shopItems: 100,
   citizens: 100_000,
@@ -314,7 +314,7 @@ export const COMPARISON: Row[] = [
   },
   {
     group: "Rekrutacja",
-    label: "Pytania w formularzu",
+    label: "Pytania na każde stanowisko",
     free: String(FREE_LIMITS.recruitQuestions),
     premium: String(PREMIUM_LIMITS.recruitQuestions),
   },

@@ -62,13 +62,29 @@ const uniqueIds = (r: Sectioned, ctx: z.RefinementCtx) => {
     if (new Set(r[key].map((x) => x.id)).size !== r[key].length)
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Powtarzające się ID", path: [key] });
 };
+/** Pytania w rekrutacji: do 25 na stanowisko (Premium), Free ma mniej – limit planu egzekwuje zapis (saveContent) i bot. */
+export const MAX_RECRUIT_QUESTIONS = 25;
+/** Stanowisko rekrutacji ma własne pytania; brak pola (stare dane) = używa wspólnej listy `recruitment.questions`. */
+const recruitPositionSchema = positionSchema.extend({
+  questions: z.array(questionSchema).max(MAX_RECRUIT_QUESTIONS).optional(),
+});
 export const recruitmentSchema = z
   .object({
     open: z.boolean(),
-    positions: z.array(positionSchema).max(25),
-    questions: z.array(questionSchema).max(25),
+    positions: z.array(recruitPositionSchema).max(25), // dawny limit Premium; obecny (8) egzekwuje zapis, żeby stare dane się wczytywały
+    questions: z.array(questionSchema).max(MAX_RECRUIT_QUESTIONS).default([]), // wspólna lista ze starszych ustawień
   })
-  .superRefine(uniqueIds);
+  .superRefine((r, ctx) => {
+    uniqueIds(r, ctx);
+    r.positions.forEach((p, i) => {
+      if (p.questions && new Set(p.questions.map((q) => q.id)).size !== p.questions.length)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Powtarzające się ID pytań w stanowisku",
+          path: ["positions", i, "questions"],
+        });
+    });
+  });
 /** Formularz w oknie Discorda ma najwyżej 5 pól: przy włączonych obrazkach jedno z nich zajmuje pole wgrywania. */
 export const TICKET_FORM_FIELDS = 5;
 export const ticketsSchema = z
@@ -211,6 +227,7 @@ export type ContentConfig = z.infer<typeof contentSchema>;
 export type EmbedConfig = z.infer<typeof embedSchema>;
 export type TicketsConfig = z.infer<typeof ticketsSchema>;
 export type PositionConfig = z.infer<typeof positionSchema>;
+export type RecruitPositionConfig = z.infer<typeof recruitPositionSchema>;
 export type QuestionConfig = z.infer<typeof questionSchema>;
 export const emptyEmbed = (): EmbedConfig => ({
   title: "",
@@ -227,7 +244,28 @@ export const defaultContent = (): ContentConfig => ({
   embeds: {},
 });
 export type RecruitSiteConfig = z.infer<typeof recruitSiteSchema>;
+/** Pytania danego stanowiska: własne albo (stare dane) wspólna lista. */
+export const questionsOf = (c: ContentConfig, positionId: string): QuestionConfig[] => {
+  const p = c.recruitment.positions.find((x) => x.id === positionId);
+  return p?.questions ?? c.recruitment.questions;
+};
+/** Stare ustawienia miały jedną listę pytań dla całej rekrutacji: każdemu stanowisku bez własnych pytań przypisujemy jej kopię. */
+export function migrateRecruitQuestions(c: ContentConfig): ContentConfig {
+  const shared = c.recruitment.questions;
+  const { positions } = c.recruitment;
+  if (!shared.length || !positions.some((p) => p.questions === undefined)) return c;
+  return {
+    ...c,
+    recruitment: {
+      ...c.recruitment,
+      positions: positions.map((p) =>
+        p.questions === undefined ? { ...p, questions: shared.map((q) => ({ ...q })) } : p,
+      ),
+      questions: [],
+    },
+  };
+}
 export function readContent(value: unknown): ContentConfig {
   const result = contentSchema.safeParse(value);
-  return result.success ? result.data : defaultContent();
+  return result.success ? migrateRecruitQuestions(result.data) : defaultContent();
 }

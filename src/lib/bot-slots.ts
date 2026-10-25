@@ -476,7 +476,7 @@ export const CATEGORIES: Category[] = [
     panels: ["rekrutacja"],
     recruitment: true,
     premiumNote:
-      "Plan Free: do 3 stanowisk i 5 pytań w formularzu. Premium: 25 stanowisk i 25 pytań (pytania do 200 znaków).",
+      "Plan Free: do 3 stanowisk i 5 pytań w formularzu. Premium: 8 stanowisk, a każde ma własne pytania (do 25, treść do 200 znaków).",
   },
   {
     id: "weryfikacja",
