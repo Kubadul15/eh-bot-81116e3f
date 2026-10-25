@@ -139,7 +139,8 @@ describe("premium", () => {
 
   it("tabela porównania: każdy wiersz coś daje Premium i nic nie jest tylko dla Free", () => {
     for (const r of COMPARISON) {
-      expect(r.premium, r.label).toBeTruthy();
+      // wiersz daje coś Premium albo (funkcje na zaproszenie) tylko planowi Max
+      expect(r.premium || r.max, r.label).toBeTruthy();
       if (r.free === true) expect(r.premium, r.label).toBe(true);
     }
     expect(COMPARISON.some((r) => r.free === false)).toBe(true);

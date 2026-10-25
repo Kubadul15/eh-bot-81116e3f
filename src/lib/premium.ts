@@ -251,6 +251,8 @@ export type Row = {
   label: string;
   free: string | boolean;
   premium: string | boolean;
+  /** Plan Max (na zaproszenie); gdy nie podano, Max ma to samo co Premium. */
+  max?: string | boolean;
 };
 export const COMPARISON: Row[] = [
   {
@@ -379,6 +381,13 @@ export const COMPARISON: Row[] = [
     label: "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
     free: false,
     premium: true,
+  },
+  {
+    group: "Plan Max (na zaproszenie)",
+    label: "Poczekalnia głosowa: bot gra Twój dźwięk w pętli na kanale głosowym, gdy ktoś na nim jest",
+    free: false,
+    premium: false,
+    max: true,
   },
   {
     group: "Bezpieczeństwo",

@@ -29,7 +29,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "Plan Free na start, Premium lifetime za 20 zł jednorazowo: sąd, kasyno, captcha, własny wygląd i wyższe limity.",
+          "Plan Free na start, Premium lifetime za 20 zł jednorazowo: sąd, kasyno, captcha, własny wygląd i wyższe limity. Plan Max – na zaproszenie.",
       },
       { property: "og:title", content: "Cennik — Emergency Hamburg Bot" },
       {
@@ -60,6 +60,12 @@ const PREMIUM_POINTS = [
   "📝 Rekrutacja: 8 stanowisk, po 25 pytań na każde",
   "💎 Priorytetowe wsparcie na Discordzie",
 ];
+const MAX_POINTS = [
+  "Wszystko z Premium",
+  "🎧 Poczekalnia głosowa: bot wchodzi na kanał i w pętli gra Twój dźwięk",
+  "⏯️ Gra, gdy ktoś jest na kanale, i cichnie, gdy jest pusty",
+  "👑 Nowe funkcje Max jako pierwsze",
+];
 const STEPS = [
   {
     n: "01",
@@ -81,6 +87,10 @@ const FAQ = [
   [
     "Czy to subskrypcja?",
     "Nie. Płacisz raz 20 zł i masz Premium na stałe dla jednego serwera – bez odnowień i ukrytych opłat.",
+  ],
+  [
+    "Czym jest plan Max i jak go dostać?",
+    "Max to plan na zaproszenie: obejmuje wszystko z Premium plus poczekalnię głosową (bot gra Twój dźwięk w pętli na kanale głosowym). Nie można go kupić – nadaje go wybranym serwerom właściciel bota.",
   ],
   [
     "Co znaczy „lifetime”?",
@@ -175,7 +185,7 @@ function Pricing() {
         </p>
       </section>
 
-      <section className="mx-auto grid max-w-5xl gap-5 px-5 md:grid-cols-2">
+      <section className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
         <div className="card-lift flex flex-col rounded-2xl border bg-card p-7">
           <h2 className="font-display text-4xl">Free</h2>
           <p className="mt-1 text-muted-foreground">Na start i do mniejszych serwerów.</p>
@@ -291,6 +301,47 @@ function Pricing() {
             />
           </div>
         </div>
+
+        <div className="card-lift relative flex flex-col rounded-2xl border-2 border-violet-500 bg-gradient-to-b from-violet-50 to-card p-7 shadow-[0_20px_60px_-25px_rgba(139,92,246,.6)]">
+          <div className="absolute -top-3 left-6">
+            <span className="rounded-full bg-violet-600 px-3 py-1 text-xs font-bold text-white">
+              👑 Na zaproszenie
+            </span>
+          </div>
+          <h2 className="font-display text-4xl">
+            <span className="text-violet-600">Max</span>
+          </h2>
+          <p className="mt-1 text-muted-foreground">Dla wybranych serwerów.</p>
+          <p className="mt-5 font-display text-5xl leading-[1.1]">Invite only</p>
+          <p className="text-xs text-muted-foreground">nie jest na sprzedaż • nadaje go właściciel bota</p>
+          <ul className="mt-5 flex-1 space-y-2.5 text-sm">
+            {MAX_POINTS.map((p) => (
+              <li key={p} className="flex gap-2">
+                <Check className="mt-0.5 size-4 shrink-0 text-violet-600" />
+                {p}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 border-t pt-5">
+            <span
+              aria-disabled="true"
+              className="block cursor-not-allowed rounded-md border border-violet-300 bg-violet-100/60 px-6 py-3 text-center font-semibold text-violet-900"
+            >
+              🔒 Tylko na zaproszenie
+            </span>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Chcesz Max? Napisz do właściciela – plan przyznajemy po rozmowie.{" "}
+              <a
+                href={OWNER_PROFILE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="font-semibold underline"
+              >
+                Profil na Discordzie
+              </a>
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto max-w-4xl px-5 py-16">
@@ -302,6 +353,7 @@ function Pricing() {
                 <th className="px-4 py-3 font-semibold">Funkcja</th>
                 <th className="w-32 px-4 py-3 text-center font-semibold">Free</th>
                 <th className="w-32 px-4 py-3 text-center font-semibold text-amber-700">Premium</th>
+                <th className="w-32 px-4 py-3 text-center font-semibold text-violet-700">Max</th>
               </tr>
             </thead>
             <tbody>
@@ -309,7 +361,7 @@ function Pricing() {
                 <Fragment key={g}>
                   <tr className="bg-muted/30">
                     <td
-                      colSpan={3}
+                      colSpan={4}
                       className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
                     >
                       {g}
@@ -323,6 +375,9 @@ function Pricing() {
                       </td>
                       <td className="bg-amber-50/60 px-4 py-2.5 text-center font-semibold">
                         <Cell v={r.premium} />
+                      </td>
+                      <td className="bg-violet-50/60 px-4 py-2.5 text-center font-semibold">
+                        <Cell v={r.max ?? r.premium} />
                       </td>
                     </tr>
                   ))}
