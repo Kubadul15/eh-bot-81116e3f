@@ -13,6 +13,8 @@ import {
   premiumActive,
   MODULE_IDS,
   FEATURE_IDS,
+  TRIAL_DAYS,
+  trialCheck,
   type AdminMeta,
   type Payment,
 } from "./premium";
@@ -342,6 +344,28 @@ export async function grant(
     `${days === null ? "lifetime" : `${days} dni`}${note ? ` • ${clampText(note, 80)}` : ""}`,
   );
   return m;
+}
+/** Bezpłatny trial Premium (3 dni): raz na serwer i raz na konto Discord. Wywoływane przez zarządcę serwera, nie tylko właściciela bota. */
+export async function startTrial(userId: string, guildId: string): Promise<{ until: string }> {
+  if (!isSnowflake(userId) || !isSnowflake(guildId)) throw new Error("Złe ID");
+  const cur = metaOf((await readRow(guildId))?.settings);
+  // to samo konto nie uruchomi triala na kolejnym serwerze (ślad zostaje w bloku _admin.trial.by)
+  const { data: used } = await supabaseAdmin
+    .from("guild_configs")
+    .select("guild_id")
+    .eq("settings->_admin->trial->>by", userId)
+    .limit(1);
+  const check = trialCheck(cur, (used?.length ?? 0) > 0);
+  if (!check.ok) throw new Error(check.reason);
+  const now = nowIso();
+  const until = new Date(Date.now() + TRIAL_DAYS * 86_400_000).toISOString();
+  await writeMeta(guildId, (m) => ({
+    ...m,
+    premium: { since: now, until, by: userId, source: "trial", note: `Trial ${TRIAL_DAYS} dni` },
+    trial: { at: now, until, by: userId },
+  }));
+  await audit(userId, "trial", guildId, `Trial ${TRIAL_DAYS} dni do ${until.slice(0, 10)}`);
+  return { until };
 }
 export async function revoke(by: string, id: string): Promise<void> {
   await writeMeta(id, (cur) => {

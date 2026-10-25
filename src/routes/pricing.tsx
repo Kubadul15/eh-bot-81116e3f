@@ -166,6 +166,13 @@ function Pricing() {
           Zacznij za darmo, a gdy serwer urośnie – odblokuj sąd, kasyno, captcha i własny wygląd za
           20 zł, bez subskrypcji.
         </p>
+        <p className="mx-auto mt-3 inline-block rounded-full border-2 border-emerald-500/60 bg-emerald-50 px-4 py-1.5 text-sm font-bold text-emerald-900">
+          🎁 Nowy serwer?{" "}
+          <a href="/dashboard" className="underline">
+            Wypróbuj Premium przez 3 dni za darmo
+          </a>{" "}
+          – bez karty
+        </p>
       </section>
 
       <section className="mx-auto grid max-w-5xl gap-5 px-5 md:grid-cols-2">

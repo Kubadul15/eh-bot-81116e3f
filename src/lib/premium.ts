@@ -95,11 +95,14 @@ export type PremiumGrant = {
   since: string;
   until: string | null;
   by: string;
-  source: "admin" | "payment" | "gift" | "bulk";
+  source: "admin" | "payment" | "gift" | "bulk" | "trial";
   note: string;
 };
+/** Bezpłatny okres próbny Premium: raz na serwer i raz na konto Discord. */
+export const TRIAL_DAYS = 3;
 export type AdminMeta = {
   premium?: PremiumGrant;
+  trial?: { at: string; until: string; by: string }; // ślad wykorzystanego triala (zostaje po jego wygaśnięciu)
   blocked?: { reason: string; at: string; by: string };
   disabled?: string[];
   features?: string[]; // funkcje nadane ręcznie (FEATURE_GRANTS), niezależnie od Premium
@@ -134,9 +137,48 @@ export function limitsFor(m: AdminMeta, now = Date.now()): Limits {
 export const hasFeature = (m: AdminMeta, id: string, now = Date.now()): boolean =>
   premiumActive(m, now) || !!m.features?.includes(id);
 
+/**
+ * Czy serwer może uruchomić trial: tylko gdy nigdy nie miał Premium (ani płatnego, ani nadanego) i nie wykorzystał triala.
+ * `usedByUser` = to konto Discord uruchomiło już trial na innym serwerze.
+ */
+export function trialCheck(
+  m: AdminMeta,
+  usedByUser = false,
+  now = Date.now(),
+): { ok: true } | { ok: false; reason: string } {
+  if (m.blocked) return { ok: false, reason: "Ten serwer jest zablokowany." };
+  if (premiumActive(m, now))
+    return { ok: false, reason: "Ten serwer ma już aktywny plan Premium." };
+  if (m.trial) return { ok: false, reason: "Trial na tym serwerze został już wykorzystany." };
+  if (m.premium)
+    return {
+      ok: false,
+      reason: "Ten serwer miał już Premium – okres próbny dotyczy tylko nowych serwerów.",
+    };
+  if (usedByUser)
+    return { ok: false, reason: "To konto Discord wykorzystało już trial na innym serwerze." };
+  return { ok: true };
+}
+/** Stan triala do pokazania w panelu. */
+export function trialStatus(m: AdminMeta, now = Date.now()) {
+  const active = premiumActive(m, now) && m.premium?.source === "trial";
+  return {
+    days: TRIAL_DAYS,
+    available: trialCheck(m, false, now).ok,
+    active,
+    used: !!m.trial,
+    until: m.trial?.until ?? null,
+    daysLeft:
+      active && m.premium?.until
+        ? Math.max(0, Math.ceil((Date.parse(m.premium.until) - now) / 86_400_000))
+        : 0,
+  };
+}
+
 /** Co wolno pokazać klientowi: bez notatek, płatności i danych kontaktowych. */
 export function publicPremium(m: AdminMeta, now = Date.now()) {
   return {
+    trial: trialStatus(m, now),
     active: premiumActive(m, now),
     lifetime: isLifetime(m),
     until: m.premium?.until ?? null,

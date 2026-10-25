@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { getGuild, getMe, saveGuild, sendPanel } from "@/lib/dashboard.functions";
+import { getGuild, getMe, saveGuild, sendPanel, startTrial } from "@/lib/dashboard.functions";
 import {
   CATEGORIES,
   CHANNEL_SECTIONS,
@@ -35,7 +35,7 @@ import {
   Gem,
   Monitor,
 } from "lucide-react";
-import { LockBanner, PremiumBadge } from "@/components/premium-ui";
+import { LockBanner, PremiumBadge, TrialCard } from "@/components/premium-ui";
 import { PREMIUM_PANELS } from "@/lib/premium";
 import { PremiumPanel } from "@/components/premium-panel";
 
@@ -117,6 +117,12 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
   const saveContentFn = useServerFn(saveContent);
   const saveGuildFn = useServerFn(saveGuild);
   const sendPanelFn = useServerFn(sendPanel);
+  const startTrialFn = useServerFn(startTrial);
+  // bezpłatny trial Premium (3 dni): po aktywacji odświeżamy dane serwera, więc od razu odblokowują się funkcje
+  async function runTrial() {
+    await startTrialFn({ data: { guildId } });
+    await qc.invalidateQueries({ queryKey: ["guild", guildId] });
+  }
   const [panelStatus, setPanelStatus] = useState<Record<string, "sending" | "sent" | "error">>({});
   const [panelError, setPanelError] = useState<Record<string, string>>({});
 
@@ -242,6 +248,21 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
           <div className="mt-4 rounded-xl border border-red-500/50 bg-red-50 p-4 text-sm font-semibold text-red-800">
             ⛔ Ten serwer został zablokowany przez właściciela bota: {premium.blocked.reason}.
             Zapisywanie zmian jest wyłączone.
+          </div>
+        )}
+        {premium.trial.available && !premium.blocked && (
+          <div className="mt-4">
+            <TrialCard days={premium.trial.days} onStart={runTrial} compact />
+          </div>
+        )}
+        {premium.trial.active && (
+          <div className="mt-4 rounded-xl border border-emerald-500/50 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
+            🎁 Trial Premium: zostało {premium.trial.daysLeft}{" "}
+            {premium.trial.daysLeft === 1 ? "dzień" : "dni"}. Później serwer wraca do planu Free
+            (dane zostają).{" "}
+            <button type="button" onClick={() => setView("premium")} className="underline">
+              Jak zostać na Premium
+            </button>
           </div>
         )}
 
@@ -391,6 +412,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                   recruitPositions: content.recruitment.positions.length,
                   recruitQuestions: content.recruitment.questions.length,
                 }}
+                onStartTrial={runTrial}
               />
             )}
 

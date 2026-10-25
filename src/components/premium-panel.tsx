@@ -1,6 +1,6 @@
 import { Check, Gem, Minus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { BuyButton, PremiumBadge } from "@/components/premium-ui";
+import { BuyButton, PremiumBadge, TrialCard } from "@/components/premium-ui";
 import {
   COMPARISON,
   LIMIT_LABELS,
@@ -16,11 +16,14 @@ export function PremiumPanel({
   guildId,
   guildName,
   usage,
+  onStartTrial,
 }: {
   premium: PublicPremium;
   guildId: string;
   guildName: string;
   usage: Partial<Record<keyof Limits, number>>;
+  /** uruchamia bezpłatny trial; po sukcesie dane serwera są odświeżane */
+  onStartTrial?: () => Promise<void>;
 }) {
   const free = !premium.active;
   return (
@@ -34,6 +37,25 @@ export function PremiumPanel({
         </div>
       )}
 
+      {free && premium.trial.available && onStartTrial && (
+        <div className="mt-4">
+          <TrialCard days={premium.trial.days} onStart={onStartTrial} />
+        </div>
+      )}
+      {premium.trial.active && (
+        <div className="mt-4 rounded-xl border border-emerald-500/50 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">
+          🎁 Trwa bezpłatny trial Premium – zostało {premium.trial.daysLeft}{" "}
+          {premium.trial.daysLeft === 1 ? "dzień" : "dni"} (do{" "}
+          {premium.until ? fmtDate(premium.until) : "?"}). Po tym czasie serwer wraca do planu Free,
+          a dane zostają. Kup Premium, żeby zachować wszystkie funkcje.
+        </div>
+      )}
+      {free && premium.trial.used && !premium.trial.active && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Bezpłatny trial na tym serwerze został już wykorzystany.
+        </p>
+      )}
+
       <div
         className={`mt-4 rounded-2xl border-2 p-6 ${free ? "bg-card" : "border-amber-500 bg-gradient-to-b from-amber-50 to-card"}`}
       >
@@ -43,14 +65,22 @@ export function PremiumPanel({
               Plan serwera {guildName}
             </p>
             <p className="mt-1 font-display text-5xl">
-              {free ? "Free" : premium.lifetime ? "Premium Lifetime" : "Premium"}
+              {free
+                ? "Free"
+                : premium.lifetime
+                  ? "Premium Lifetime"
+                  : premium.trial.active
+                    ? "Premium (trial)"
+                    : "Premium"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {free
                 ? "Podstawowe funkcje z limitami. Odblokuj sąd, kasyno, captcha i własny wygląd jedną płatnością."
                 : premium.lifetime
                   ? "Aktywne na zawsze – dziękujemy za wsparcie! 🎉"
-                  : `Aktywne do ${premium.until ? fmtDate(premium.until) : "?"}. Przed wygaśnięciem napisz do właściciela o przedłużenie.`}
+                  : premium.trial.active
+                    ? `Okres próbny do ${premium.until ? fmtDate(premium.until) : "?"}. Kup Premium, żeby zachować funkcje.`
+                    : `Aktywne do ${premium.until ? fmtDate(premium.until) : "?"}. Przed wygaśnięciem napisz do właściciela o przedłużenie.`}
             </p>
           </div>
           {free ? (

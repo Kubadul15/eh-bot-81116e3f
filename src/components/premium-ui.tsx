@@ -79,6 +79,55 @@ export function BuyButton({
   );
 }
 
+/** Zaproszenie do bezpłatnego okresu próbnego Premium (raz na serwer i konto Discord). */
+export function TrialCard({
+  days,
+  onStart,
+  compact = false,
+}: {
+  days: number;
+  onStart: () => Promise<void>;
+  compact?: boolean;
+}) {
+  const [state, setState] = useState<{ busy: boolean; error: string }>({ busy: false, error: "" });
+  async function go() {
+    setState({ busy: true, error: "" });
+    try {
+      await onStart();
+      setState({ busy: false, error: "" });
+    } catch (e) {
+      setState({
+        busy: false,
+        error: e instanceof Error ? e.message : "Nie udało się uruchomić okresu próbnego",
+      });
+    }
+  }
+  return (
+    <div
+      className={`rounded-2xl border-2 border-emerald-500/60 bg-gradient-to-r from-emerald-50 to-card ${compact ? "p-4" : "p-6"}`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-3xl leading-none">🎁 {days} dni Premium za darmo</p>
+          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+            Wypróbuj wszystkie funkcje: sąd, mafię, firmy, stronę rekrutacyjną, widok Discorda i
+            wyższe limity. Bez karty i bez zobowiązań – po {days} dniach serwer wraca do planu Free.
+          </p>
+        </div>
+        <Button size="lg" onClick={() => void go()} disabled={state.busy}>
+          <Gem />
+          {state.busy ? "Aktywuję…" : `Aktywuj ${days} dni za darmo`}
+        </Button>
+      </div>
+      {state.error && (
+        <p className="mt-3 text-sm font-semibold text-destructive" role="alert">
+          {state.error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function PremiumBadge({ className = "" }: { className?: string }) {
   return (
     <span
