@@ -43,7 +43,11 @@ const roleIdSchema = z.string().refine((v) => !v || /^\d{17,20}$/.test(v));
 // stanowisko w rekrutacji = rodzaj ticketu w menu wyboru (ta sama budowa: nazwa, emoji, opis, ranga, otwarte/zamknięte)
 const positionSchema = z.object({
   id: idSchema,
-  label: z.string().trim().min(1).max(40),
+  label: z
+    .string()
+    .trim()
+    .min(1, "Rodzaj ticketu / stanowisko ma pustą nazwę – uzupełnij ją w edytorze (Tickety lub Rekrutacja)")
+    .max(40),
   emoji: z.string().max(8).default(""),
   desc: z.string().max(80),
   roleId: roleIdSchema,
