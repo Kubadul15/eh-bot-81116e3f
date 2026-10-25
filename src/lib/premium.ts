@@ -59,6 +59,7 @@ export const MODULES: [id: string, label: string][] = [
   ["tickets", "Tickety"],
   ["mafia", "Mafia"],
   ["firmy", "Firmy"],
+  ["policja", "Policja"],
   ["recruit", "Rekrutacja"],
   ["embed", "Kreator /embed"],
   ["ban", "Bany Roblox"],
@@ -81,6 +82,7 @@ export const PREMIUM_PANELS = [
   "weryfikacja",
   "mafia",
   "firmy",
+  "policja",
 ] as const;
 
 export type Payment = {
@@ -339,6 +341,13 @@ export const COMPARISON: Row[] = [
   {
     group: "Mafia i firmy",
     label: "Firmy graczy: zatrudnianie, zmiany w pracy, kasa, rozwój i ranking",
+    free: false,
+    premium: true,
+  },
+  {
+    group: "Policja",
+    label:
+      "Policja: taryfikator, mandaty z punktami karnymi, zatrzymania z kaucją, poszukiwani, zgłoszenia 112, raporty i ranking",
     free: false,
     premium: true,
   },

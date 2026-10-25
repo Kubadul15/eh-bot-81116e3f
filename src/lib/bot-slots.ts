@@ -140,6 +140,30 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
     ],
   },
   {
+    id: "policja",
+    name: "🚓 Policja",
+    slots: [
+      [
+        "policjapanel",
+        "🚓",
+        "Panel policji",
+        "Moje mandaty, zgłoszenie 112, taryfikator i panel funkcjonariusza",
+      ],
+      [
+        "policjalog",
+        "📜",
+        "Logi policji",
+        "Mandaty, zatrzymania, poszukiwani, raporty i decyzje komendantów",
+      ],
+      [
+        "dyspozytornia",
+        "📞",
+        "Dyspozytornia 112",
+        "Zgłoszenia graczy z przyciskiem „Przyjmij” (puste = logi policji)",
+      ],
+    ],
+  },
+  {
     id: "moderacja",
     name: "🔨 Bany i moderacja",
     slots: [
@@ -214,6 +238,7 @@ export const PANEL_SLOTS = [
   { key: "ekonomia", emoji: "💰", label: "Ekonomia", slot: "ekopanel" },
   { key: "mafia", emoji: "🕴️", label: "Mafia", slot: "mafiapanel" },
   { key: "firmy", emoji: "🏢", label: "Firmy", slot: "firmypanel" },
+  { key: "policja", emoji: "🚓", label: "Policja", slot: "policjapanel" },
   { key: "tickety", emoji: "🎫", label: "Tickety", slot: "ticketpanel" },
   { key: "rekrutacja", emoji: "📝", label: "Rekrutacja", slot: "rekrutpanel" },
   { key: "weryfikacja", emoji: "🔐", label: "Weryfikacja (captcha)", slot: "weryfpanel" },
@@ -255,7 +280,18 @@ export const ROLE_FIELDS: RoleField[] = [
     desc: "Dostęp do /mod (ostrzeżenia, wyciszenia, kicki…), konkursów i zgłoszeń",
     multi: true,
   },
-  { key: "police", label: "Policja / służby", desc: "Dostęp do komendy /kontrola", multi: true },
+  {
+    key: "police",
+    label: "Policja / służby",
+    desc: "Funkcjonariusze: /kontrola oraz panel policji (mandaty, zatrzymania, zgłoszenia 112)",
+    multi: true,
+  },
+  {
+    key: "police_chief",
+    label: "Komendanci policji",
+    desc: "Edytują taryfikator, uchylają mandaty i rozpatrują odwołania. Bez wyboru – administracja mObywatela / ekipa",
+    multi: true,
+  },
   {
     key: "moby_admin",
     label: "Administracja mObywatela",
@@ -346,6 +382,9 @@ export const NUM_FIELDS: NumField[] = [
   { key: "firm_cost", label: "Koszt założenia firmy (zł)", def: 15_000, min: 0, max: 10_000_000 },
   { key: "firm_max_own", label: "Ile firm może prowadzić jeden gracz", def: 3, min: 1, max: 10 },
   { key: "firm_max_staff", label: "Maks. pracowników jednej firmy", def: 20, min: 3, max: 50 },
+  { key: "police_points_limit", label: "Limit punktów karnych (potem zawieszenie prawa jazdy)", def: 24, min: 1, max: 100 },
+  { key: "police_fine_days", label: "Dni na opłacenie mandatu (potem +50%)", def: 7, min: 1, max: 60 },
+  { key: "police_max_arrest_hours", label: "Maks. areszt policyjny (godziny)", def: 72, min: 1, max: 720 },
 ];
 
 // Kategorie widoczne w panelu: co do czego należy. sections = id z CHANNEL_SECTIONS.
@@ -429,6 +468,17 @@ export const CATEGORIES: Category[] = [
     roles: ["firm_admin"],
     nums: ["firm_cost", "firm_max_own", "firm_max_staff"],
     panels: ["firmy"],
+    premiumOnly: true,
+  },
+  {
+    id: "policja",
+    emoji: "🚓",
+    label: "Policja",
+    desc: "Służba, kontrole, mandaty z taryfikatora i punkty karne, zatrzymania, poszukiwani, zgłoszenia 112, raporty i odwołania",
+    sections: ["policja"],
+    roles: ["police", "police_chief"],
+    nums: ["police_points_limit", "police_fine_days", "police_max_arrest_hours"],
+    panels: ["policja"],
     premiumOnly: true,
   },
   {
