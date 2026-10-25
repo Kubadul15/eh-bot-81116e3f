@@ -25,6 +25,7 @@ export type ServerDetail = ServerRow & {
   limits: Partial<Limits>;
   effectiveLimits: Limits;
   disabledModules: string[];
+  features: string[];
   channelsSet: number;
   rolesSet: number;
   pendingPanels: string[];

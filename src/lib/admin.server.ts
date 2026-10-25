@@ -12,6 +12,7 @@ import {
   metaOf,
   premiumActive,
   MODULE_IDS,
+  FEATURE_IDS,
   type AdminMeta,
   type Payment,
 } from "./premium";
@@ -307,6 +308,7 @@ export async function serverDetail(id: string): Promise<ServerDetail> {
     limits: m.limits ?? {},
     effectiveLimits: limitsFor(m),
     disabledModules: m.disabled ?? [],
+    features: m.features ?? [],
     channelsSet: isObj(row?.channels) ? Object.keys(row.channels).length : 0,
     rolesSet: isObj(row?.roles) ? Object.keys(row.roles).length : 0,
     pendingPanels: isObj(row?.panels) ? Object.keys(row.panels) : [],
@@ -906,4 +908,13 @@ export async function createInvite(
       ? "Bot nie ma uprawnienia „Tworzenie zaproszeń” na tym serwerze – nadaj je jego randze albo zaproś bota ponownie nowym linkiem."
       : `Discord odrzucił zaproszenie (${last})`,
   );
+}
+
+/** Funkcje dodatkowe nadawane ręcznie (np. obrazki w formularzu ticketu) – działają bez pełnego Premium. */
+export async function setFeatures(by: string, id: string, features: unknown): Promise<void> {
+  const list = (Array.isArray(features) ? features : []).filter(
+    (f): f is string => typeof f === "string" && FEATURE_IDS.includes(f),
+  );
+  await writeMeta(id, (cur) => ({ ...cur, features: [...new Set(list)] }));
+  await audit(by, "funkcje", id, list.length ? list.join(", ") : "brak");
 }

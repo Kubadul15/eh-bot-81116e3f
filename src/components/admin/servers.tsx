@@ -25,11 +25,19 @@ import {
   adminServerDetail,
   adminServers,
   adminSetDisabled,
+  adminSetFeatures,
   adminSetLimits,
   adminUpdateInfo,
 } from "@/lib/admin.functions";
 import type { DiagnoseReport, ServerRow } from "@/lib/admin-types";
-import { LIMIT_KEYS, LIMIT_LABELS, MODULES, FREE_LIMITS, PREMIUM_LIMITS } from "@/lib/premium";
+import {
+  FEATURE_GRANTS,
+  LIMIT_KEYS,
+  LIMIT_LABELS,
+  MODULES,
+  FREE_LIMITS,
+  PREMIUM_LIMITS,
+} from "@/lib/premium";
 import { PANEL_SLOTS } from "@/lib/bot-slots";
 import { fmtDate, fmtDateTime, fmtMoney, relTime } from "@/lib/format";
 import {
@@ -328,6 +336,7 @@ function ServerDetail({ id, onBack }: { id: string; onBack: () => void }) {
         <PaymentsCard s={s} inv={inv} />
         <InfoCard s={s} inv={inv} />
         <ModulesCard s={s} inv={inv} />
+        <FeaturesCard s={s} inv={inv} />
         <LimitsCard s={s} inv={inv} />
         <BlockCard s={s} inv={inv} />
         <ConfigCard s={s} inv={inv} onBack={onBack} />
@@ -986,6 +995,49 @@ function ServerAudit({ id }: { id: string }) {
           ))}
         </ul>
       )}
+    </Card>
+  );
+}
+
+function FeaturesCard({ s, inv }: CardProps) {
+  const [on, setOn] = useState<string[]>(s.features);
+  const save = useAdminAction(() => adminSetFeatures({ data: { id: s.id, features: on } }), {
+    ok: "Zapisano funkcje dodatkowe",
+    invalidate: invKeys(inv),
+  });
+  return (
+    <Card
+      title="🎁 Funkcje dodatkowe (nadajesz Ty)"
+      hint="Zaznaczone funkcje działają na tym serwerze nawet bez Premium – np. jako prezent albo test dla klienta."
+    >
+      <div className="space-y-1.5">
+        {FEATURE_GRANTS.map(([fid, label]) => (
+          <label
+            key={fid}
+            className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm"
+          >
+            <input
+              type="checkbox"
+              checked={on.includes(fid)}
+              onChange={(e) =>
+                setOn((o) => (e.target.checked ? [...o, fid] : o.filter((x) => x !== fid)))
+              }
+            />
+            {label}
+            {s.premium.active && (
+              <span className="ml-auto text-xs text-muted-foreground">i tak aktywne (Premium)</span>
+            )}
+          </label>
+        ))}
+      </div>
+      <Button
+        type="button"
+        className="mt-3"
+        onClick={() => save.mutate()}
+        disabled={save.isPending}
+      >
+        Zapisz
+      </Button>
     </Card>
   );
 }

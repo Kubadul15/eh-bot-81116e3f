@@ -150,6 +150,16 @@ export const adminSetDisabled = createServerFn({ method: "POST" })
     await s.setDisabled(me.discord_user_id, data.id, data.modules);
     return { ok: true as const };
   });
+export const adminSetFeatures = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ id: gid, features: z.array(z.string().max(40)).max(20) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const s = await srv();
+    const me = await s.requireOwner();
+    await s.setFeatures(me.discord_user_id, data.id, data.features);
+    return { ok: true as const };
+  });
 export const adminSetLimits = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: gid, limits: z.record(z.number()) }).parse(d))
   .handler(async ({ data }) => {

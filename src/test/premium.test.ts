@@ -6,6 +6,7 @@ import {
   PRICE_LIFETIME_PLN,
   OWNER_ID,
   grantPremium,
+  hasFeature,
   keepAdmin,
   limitsFor,
   metaOf,
@@ -142,5 +143,46 @@ describe("premium", () => {
       if (r.free === true) expect(r.premium, r.label).toBe(true);
     }
     expect(COMPARISON.some((r) => r.free === false)).toBe(true);
+  });
+
+  it("rodzaje ticketów: Free 5, Premium 25", () => {
+    expect(limitsFor({}, NOW).ticketTypes).toBe(5);
+    expect(
+      limitsFor(
+        {
+          premium: {
+            since: "2026-01-01T00:00:00Z",
+            until: null,
+            by: "1",
+            source: "admin",
+            note: "",
+          },
+        },
+        NOW,
+      ).ticketTypes,
+    ).toBe(25);
+  });
+
+  it("obrazki w formularzu ticketu: Premium albo nadane ręcznie", () => {
+    expect(hasFeature({}, "ticketImages", NOW)).toBe(false);
+    expect(hasFeature({ features: ["ticketImages"] }, "ticketImages", NOW)).toBe(true);
+    expect(hasFeature({ features: ["inne"] }, "ticketImages", NOW)).toBe(false);
+    expect(
+      hasFeature(
+        {
+          premium: {
+            since: "2026-01-01T00:00:00Z",
+            until: null,
+            by: "1",
+            source: "admin",
+            note: "",
+          },
+        },
+        "ticketImages",
+        NOW,
+      ),
+    ).toBe(true);
+    expect(publicPremium({ features: ["ticketImages"] }, NOW).ticketImages).toBe(true);
+    expect(publicPremium({}, NOW).ticketImages).toBe(false);
   });
 });

@@ -13,6 +13,7 @@ export type Limits = {
   citizens: number; // profile obywateli w mObywatelu
   vehicles: number; // pojazdy na obywatela
   giveaways: number; // jednocześnie trwające konkursy
+  ticketTypes: number; // rodzaje ticketów w menu wyboru (select menu)
 };
 export const LIMIT_LABELS: Record<keyof Limits, string> = {
   recruitPositions: "Stanowiska w rekrutacji",
@@ -21,6 +22,7 @@ export const LIMIT_LABELS: Record<keyof Limits, string> = {
   citizens: "Obywatele w mObywatelu",
   vehicles: "Pojazdy na obywatela",
   giveaways: "Jednoczesne konkursy",
+  ticketTypes: "Rodzaje ticketów w menu",
 };
 export const FREE_LIMITS: Limits = {
   recruitPositions: 3,
@@ -29,6 +31,7 @@ export const FREE_LIMITS: Limits = {
   citizens: 150,
   vehicles: 3,
   giveaways: 1,
+  ticketTypes: 5,
 };
 export const PREMIUM_LIMITS: Limits = {
   recruitPositions: 25,
@@ -37,6 +40,7 @@ export const PREMIUM_LIMITS: Limits = {
   citizens: 100_000,
   vehicles: 10,
   giveaways: 20,
+  ticketTypes: 25,
 };
 export const LIMIT_KEYS = Object.keys(FREE_LIMITS) as (keyof Limits)[];
 
@@ -58,6 +62,12 @@ export const MODULES: [id: string, label: string][] = [
   ["ban", "Bany Roblox"],
 ];
 export const MODULE_IDS = MODULES.map((m) => m[0]);
+
+/** Funkcje, które właściciel może nadać serwerowi bez pełnego Premium (zakładka „Funkcje dodatkowe” w panelu admina). */
+export const FEATURE_GRANTS: [id: string, label: string][] = [
+  ["ticketImages", "Obrazki w formularzu ticketu"],
+];
+export const FEATURE_IDS = FEATURE_GRANTS.map((f) => f[0]);
 
 /** Panele do wysyłki, które wymagają Premium (klucze jak w PANEL_SLOTS). */
 export const PREMIUM_PANELS = ["sad", "adwokaci", "prawnicy", "kuratorzy", "weryfikacja"] as const;
@@ -81,6 +91,7 @@ export type AdminMeta = {
   premium?: PremiumGrant;
   blocked?: { reason: string; at: string; by: string };
   disabled?: string[];
+  features?: string[]; // funkcje nadane ręcznie (FEATURE_GRANTS), niezależnie od Premium
   limits?: Partial<Limits>;
   note?: string;
   contact?: string;
@@ -108,6 +119,10 @@ export function limitsFor(m: AdminMeta, now = Date.now()): Limits {
   }
   return out;
 }
+/** Funkcja jest dostępna w Premium albo została nadana serwerowi ręcznie. */
+export const hasFeature = (m: AdminMeta, id: string, now = Date.now()): boolean =>
+  premiumActive(m, now) || !!m.features?.includes(id);
+
 /** Co wolno pokazać klientowi: bez notatek, płatności i danych kontaktowych. */
 export function publicPremium(m: AdminMeta, now = Date.now()) {
   return {
@@ -116,6 +131,7 @@ export function publicPremium(m: AdminMeta, now = Date.now()) {
     until: m.premium?.until ?? null,
     blocked: m.blocked ? { reason: m.blocked.reason } : null,
     limits: limitsFor(m, now),
+    ticketImages: hasFeature(m, "ticketImages", now),
   };
 }
 export type PublicPremium = ReturnType<typeof publicPremium>;
@@ -215,6 +231,24 @@ export const COMPARISON: Row[] = [
   {
     group: "Ekonomia",
     label: "Kasyno: sloty, ruletka, blackjack, orzeł i reszka",
+    free: false,
+    premium: true,
+  },
+  {
+    group: "Tickety",
+    label: "Rodzaje ticketów w menu wyboru",
+    free: String(FREE_LIMITS.ticketTypes),
+    premium: String(PREMIUM_LIMITS.ticketTypes),
+  },
+  {
+    group: "Tickety",
+    label: "Pełna edycja ticketów: rodzaje, pytania, rangi obsługi",
+    free: true,
+    premium: true,
+  },
+  {
+    group: "Tickety",
+    label: "Obrazki i zrzuty ekranu w formularzu ticketu",
     free: false,
     premium: true,
   },
