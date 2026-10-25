@@ -140,6 +140,25 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
     ],
   },
   {
+    id: "nieruchomosci",
+    name: "🏠 Nieruchomości",
+    slots: [
+      [
+        "nieruchpanel",
+        "🏠",
+        "Panel nieruchomości",
+        "Przycisk „Otwórz panel”: aukcje, moje nieruchomości, licytacje",
+      ],
+      [
+        "aukcje",
+        "🔨",
+        "Kanał aukcji",
+        "Tu bot publikuje karty aukcji z przyciskami „Podbij” i „Auto-licytacja” (wymagany do wystawiania)",
+      ],
+      ["nieruchlog", "📜", "Logi nieruchomości", "Sprzedaże, anulowania, odsprzedaże i akcje administracji"],
+    ],
+  },
+  {
     id: "policja",
     name: "🚓 Policja",
     slots: [
@@ -239,6 +258,7 @@ export const PANEL_SLOTS = [
   { key: "mafia", emoji: "🕴️", label: "Mafia", slot: "mafiapanel" },
   { key: "firmy", emoji: "🏢", label: "Firmy", slot: "firmypanel" },
   { key: "policja", emoji: "🚓", label: "Policja", slot: "policjapanel" },
+  { key: "nieruchomosci", emoji: "🏠", label: "Nieruchomości", slot: "nieruchpanel" },
   { key: "tickety", emoji: "🎫", label: "Tickety", slot: "ticketpanel" },
   { key: "rekrutacja", emoji: "📝", label: "Rekrutacja", slot: "rekrutpanel" },
   { key: "weryfikacja", emoji: "🔐", label: "Weryfikacja (captcha)", slot: "weryfpanel" },
@@ -308,6 +328,12 @@ export const ROLE_FIELDS: RoleField[] = [
     key: "firm_admin",
     label: "Administracja firm",
     desc: "Panel administracji firm: kasa, poziomy, właściciele, zwolnienia. Bez wyboru – cała ekipa",
+    multi: true,
+  },
+  {
+    key: "estate_admin",
+    label: "Administracja nieruchomości",
+    desc: "Wystawia aukcje, edytuje je, anuluje i odbiera nieruchomości. Bez wyboru – administracja mObywatela / ekipa",
     multi: true,
   },
   {
@@ -382,6 +408,8 @@ export const NUM_FIELDS: NumField[] = [
   { key: "firm_cost", label: "Koszt założenia firmy (zł)", def: 15_000, min: 0, max: 10_000_000 },
   { key: "firm_max_own", label: "Ile firm może prowadzić jeden gracz", def: 3, min: 1, max: 10 },
   { key: "firm_max_staff", label: "Maks. pracowników jednej firmy", def: 20, min: 3, max: 50 },
+  { key: "estate_fee", label: "Prowizja miasta przy odsprzedaży nieruchomości (%)", def: 5, min: 0, max: 50 },
+  { key: "estate_snipe", label: "Anty-snajper: o ile minut przedłużyć aukcję (0 = wyłączone)", def: 2, min: 0, max: 30 },
   { key: "police_points_limit", label: "Limit punktów karnych (potem zawieszenie prawa jazdy)", def: 24, min: 1, max: 100 },
   { key: "police_fine_days", label: "Dni na opłacenie mandatu (potem +50%)", def: 7, min: 1, max: 60 },
   { key: "police_max_arrest_hours", label: "Maks. areszt policyjny (godziny)", def: 72, min: 1, max: 720 },
@@ -468,6 +496,17 @@ export const CATEGORIES: Category[] = [
     roles: ["firm_admin"],
     nums: ["firm_cost", "firm_max_own", "firm_max_staff"],
     panels: ["firmy"],
+    premiumOnly: true,
+  },
+  {
+    id: "nieruchomosci",
+    emoji: "🏠",
+    label: "Nieruchomości",
+    desc: "Aukcje mieszkań: wystawianie ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
+    sections: ["nieruchomosci"],
+    roles: ["estate_admin"],
+    nums: ["estate_fee", "estate_snipe"],
+    panels: ["nieruchomosci"],
     premiumOnly: true,
   },
   {

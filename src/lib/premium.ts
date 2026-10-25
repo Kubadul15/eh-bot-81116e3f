@@ -60,6 +60,7 @@ export const MODULES: [id: string, label: string][] = [
   ["mafia", "Mafia"],
   ["firmy", "Firmy"],
   ["policja", "Policja"],
+  ["nieruchomosci", "Nieruchomości"],
   ["recruit", "Rekrutacja"],
   ["embed", "Kreator /embed"],
   ["ban", "Bany Roblox"],
@@ -83,6 +84,7 @@ export const PREMIUM_PANELS = [
   "mafia",
   "firmy",
   "policja",
+  "nieruchomosci",
 ] as const;
 
 export type Payment = {
@@ -352,8 +354,20 @@ export const COMPARISON: Row[] = [
     premium: true,
   },
   {
+    group: "Nieruchomości",
+    label: "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
+    free: false,
+    premium: true,
+  },
+  {
     group: "Bezpieczeństwo",
     label: "Weryfikacja captcha dla nowych osób",
+    free: false,
+    premium: true,
+  },
+  {
+    group: "Nieruchomości",
+    label: "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
     free: false,
     premium: true,
   },
