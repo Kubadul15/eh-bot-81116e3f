@@ -33,7 +33,7 @@ export const Route = createFileRoute("/pricing")({
         {
           name: "description",
           content: L(
-            "Plan Free na start, Premium lifetime za 20 zł jednorazowo: sąd, kasyno, captcha, własny wygląd i wyższe limity. Plan Max – na zaproszenie.",
+            "Plan Free na start, Premium lifetime za 20 zł jednorazowo: sąd, policja, nieruchomości, captcha, własny wygląd i wyższe limity. Plan Max – na zaproszenie.",
           ),
         },
         { property: "og:title", content: L("Cennik — Emergency Hamburg Bot") },
@@ -50,7 +50,6 @@ export const Route = createFileRoute("/pricing")({
 
 const FREE_POINTS = [
   "Urząd i mObywatel (do 150 obywateli)",
-  "Ekonomia: praca, bank, nagrody, sklep",
   "Moderacja: ostrzeżenia, wyciszenia, bany, logi",
   "Tickety i bany Roblox",
   "Rekrutacja: 3 stanowiska, 5 pytań",
@@ -60,7 +59,7 @@ const PREMIUM_POINTS = [
   "Wszystko z Free – z wyższymi limitami",
   "⚖️ Sąd, adwokaci, prawnicy i kuratorzy",
   "🛡️ Panel administracji mObywatela",
-  "🎰 Kasyno: sloty, ruletka, blackjack",
+  "🚓 Policja, 🏠 nieruchomości, 🕴️ mafia i 🏢 firmy",
   "🔐 Weryfikacja captcha",
   "🎨 Własny wygląd wiadomości, webhook, 3 embedy",
   "📝 Rekrutacja: 8 stanowisk, po 25 pytań na każde",
@@ -183,7 +182,7 @@ function Pricing() {
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
           {t(
-            "Zacznij za darmo, a gdy serwer urośnie – odblokuj sąd, kasyno, captcha i własny wygląd za 20 zł, bez subskrypcji.",
+            "Zacznij za darmo, a gdy serwer urośnie – odblokuj sąd, policję, nieruchomości, captcha i własny wygląd za 20 zł, bez subskrypcji.",
           )}
         </p>
         <p className="mx-auto mt-3 inline-block rounded-full border-2 border-emerald-500/60 bg-emerald-50 px-4 py-1.5 text-sm font-bold text-emerald-900">

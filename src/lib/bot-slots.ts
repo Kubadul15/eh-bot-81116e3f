@@ -78,25 +78,6 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
     ],
   },
   {
-    id: "ekonomia",
-    name: "💰 Ekonomia",
-    slots: [
-      [
-        "ekokanal",
-        "🔒",
-        "Kanał komend ekonomii",
-        "Komendy (/saldo, !bal…) i przyciski ekonomii działają tylko tu i w jego wątkach. Puste = na każdym kanale",
-      ],
-      [
-        "ekopanel",
-        "💰",
-        "Panel ekonomii",
-        "Przyciski: portfel, praca, codzienna nagroda, sklep, ranking",
-      ],
-      ["ekolog", "📜", "Logi ekonomii", "Operacje administracji na pieniądzach (opcjonalnie)"],
-    ],
-  },
-  {
     id: "mafia",
     name: "🕴️ Mafia",
     slots: [
@@ -155,7 +136,12 @@ export const CHANNEL_SECTIONS: { id: string; name: string; slots: ChannelSlot[] 
         "Kanał aukcji",
         "Tu bot publikuje karty aukcji z przyciskami „Podbij” i „Auto-licytacja” (wymagany do wystawiania)",
       ],
-      ["nieruchlog", "📜", "Logi nieruchomości", "Sprzedaże, anulowania, odsprzedaże i akcje administracji"],
+      [
+        "nieruchlog",
+        "📜",
+        "Logi nieruchomości",
+        "Sprzedaże, anulowania, odsprzedaże i akcje administracji",
+      ],
     ],
   },
   {
@@ -266,7 +252,6 @@ export const PANEL_SLOTS = [
   { key: "kuratorzy", emoji: "🪢", label: "Kuratorzy", slot: "kurpanel" },
   { key: "opinie", emoji: "💬", label: "Pochwały i skargi", slot: "opiniepanel" },
   { key: "staff", emoji: "🛡️", label: "Panel administracji", slot: "staffpanel" },
-  { key: "ekonomia", emoji: "💰", label: "Ekonomia", slot: "ekopanel" },
   { key: "mafia", emoji: "🕴️", label: "Mafia", slot: "mafiapanel" },
   { key: "firmy", emoji: "🏢", label: "Firmy", slot: "firmypanel" },
   { key: "policja", emoji: "🚓", label: "Policja", slot: "policjapanel" },
@@ -329,6 +314,24 @@ export const ROLE_FIELDS: RoleField[] = [
     label: "Administracja mObywatela",
     desc: "Kto może kliknąć „Panel administracji” w Urzędzie. Bez wyboru – cała ekipa",
     multi: true,
+  },
+  {
+    key: "doc_role_id",
+    label: "Ranga za dowód osobisty",
+    desc: "Opcjonalnie: ranga nadawana po założeniu profilu mObywatela (zdejmowana po usunięciu profilu). Puste = bez rangi",
+    multi: false,
+  },
+  {
+    key: "doc_role_license",
+    label: "Ranga za prawo jazdy",
+    desc: "Opcjonalnie: ranga nadawana po wydaniu prawa jazdy (zdejmowana po jego odebraniu). Puste = bez rangi",
+    multi: false,
+  },
+  {
+    key: "doc_role_weapon",
+    label: "Ranga za licencję na broń",
+    desc: "Opcjonalnie: ranga nadawana po wydaniu licencji na broń (zdejmowana po jej odebraniu). Puste = bez rangi",
+    multi: false,
   },
   {
     key: "mafia_admin",
@@ -402,7 +405,13 @@ export const ROLE_FIELDS: RoleField[] = [
 export const VOICE_SLOTS = ["poczekalnia"];
 
 // ustawienia tekstowe (reszta ustawień to liczby): klucz zapisywany w settings, walidacja po stronie serwera
-export type TextField = { key: string; label: string; placeholder: string; max: number; hint: string };
+export type TextField = {
+  key: string;
+  label: string;
+  placeholder: string;
+  max: number;
+  hint: string;
+};
 export const TEXT_FIELDS: TextField[] = [
   {
     key: "voice_url",
@@ -421,28 +430,45 @@ export const NUM_FIELDS: NumField[] = [
   { key: "appeal_days", label: "Dni na odwołanie", def: 7 },
   { key: "max_leave_days", label: "Maks. dni urlopu", def: 30 },
   { key: "warn_limit", label: "Ostrzeżeń do automatycznego wyciszenia (24 h)", def: 3, max: 20 },
-  { key: "eco_start", label: "Kwota startowa nowego konta (zł)", def: 1000, max: 1_000_000 },
-  { key: "eco_daily", label: "Codzienna nagroda (zł)", def: 500, max: 1_000_000 },
-  { key: "eco_work_min", label: "Praca: minimalny zarobek (zł)", def: 100, max: 100_000 },
-  { key: "eco_work_max", label: "Praca: maksymalny zarobek (zł)", def: 400, max: 100_000 },
-  {
-    key: "mafia_cost",
-    label: "Koszt założenia organizacji mafijnej (zł)",
-    def: 25_000,
-    min: 0,
-    max: 10_000_000,
-  },
   { key: "mafia_max", label: "Maks. członków organizacji mafijnej", def: 30, min: 3, max: 100 },
-  { key: "firm_cost", label: "Koszt założenia firmy (zł)", def: 15_000, min: 0, max: 10_000_000 },
   { key: "firm_max_own", label: "Ile firm może prowadzić jeden gracz", def: 3, min: 1, max: 10 },
   { key: "firm_max_staff", label: "Maks. pracowników jednej firmy", def: 20, min: 3, max: 50 },
-  { key: "estate_fee", label: "Prowizja miasta przy odsprzedaży nieruchomości (%)", def: 5, min: 0, max: 50 },
-  { key: "estate_snipe", label: "Anty-snajper: o ile minut przedłużyć aukcję (0 = wyłączone)", def: 2, min: 0, max: 30 },
+  {
+    key: "estate_snipe",
+    label: "Anty-snajper: o ile minut przedłużyć aukcję (0 = wyłączone)",
+    def: 2,
+    min: 0,
+    max: 30,
+  },
   { key: "voice_volume", label: "Głośność poczekalni (%)", def: 60, min: 1, max: 100 },
-  { key: "voice_gap", label: "Przerwa między powtórzeniami dźwięku (sekundy, 0 = bez przerwy)", def: 0, min: 0, max: 600 },
-  { key: "police_points_limit", label: "Limit punktów karnych (potem zawieszenie prawa jazdy)", def: 24, min: 1, max: 100 },
-  { key: "police_fine_days", label: "Dni na opłacenie mandatu (potem +50%)", def: 7, min: 1, max: 60 },
-  { key: "police_max_arrest_hours", label: "Maks. areszt policyjny (godziny)", def: 72, min: 1, max: 720 },
+  {
+    key: "voice_gap",
+    label: "Przerwa między powtórzeniami dźwięku (sekundy, 0 = bez przerwy)",
+    def: 0,
+    min: 0,
+    max: 600,
+  },
+  {
+    key: "police_points_limit",
+    label: "Limit punktów karnych (potem zawieszenie prawa jazdy)",
+    def: 24,
+    min: 1,
+    max: 100,
+  },
+  {
+    key: "police_fine_days",
+    label: "Dni na załatwienie mandatu (potem oznaczony jako zaległy)",
+    def: 7,
+    min: 1,
+    max: 60,
+  },
+  {
+    key: "police_max_arrest_hours",
+    label: "Maks. areszt policyjny (godziny)",
+    def: 72,
+    min: 1,
+    max: 720,
+  },
 ];
 
 // Kategorie widoczne w panelu: co do czego należy. sections = id z CHANNEL_SECTIONS.
@@ -469,7 +495,7 @@ export const CATEGORIES: Category[] = [
     label: "Urząd",
     desc: "mObywatel: dowody, prawa jazdy, licencje, pojazdy i panel administracji",
     sections: ["urzad"],
-    roles: ["moby_admin", "police"],
+    roles: ["moby_admin", "doc_role_id", "doc_role_license", "doc_role_weapon", "police"],
     nums: [],
     panels: ["urzad"],
     premiumNote:
@@ -497,25 +523,13 @@ export const CATEGORIES: Category[] = [
     panels: ["opinie", "staff"],
   },
   {
-    id: "ekonomia",
-    emoji: "💰",
-    label: "Ekonomia",
-    desc: "Pieniądze w grze: praca, nagrody, bank, sklep, pensje dla rang, gry i ranking",
-    sections: ["ekonomia"],
-    roles: [],
-    nums: ["eco_start", "eco_daily", "eco_work_min", "eco_work_max"],
-    panels: ["ekonomia"],
-    premiumNote:
-      "Kasyno (sloty, ruletka, blackjack, orzeł) i sklep powyżej 5 przedmiotów wymagają Premium.",
-  },
-  {
     id: "mafia",
     emoji: "🕴️",
     label: "Mafia",
-    desc: "Organizacje przestępcze: hierarchia, członkowie, skarbiec, operacje, rejony miasta, sojusze i wojny",
+    desc: "Organizacje przestępcze: hierarchia, członkowie, punkty organizacji, operacje, rejony miasta, sojusze i wojny",
     sections: ["mafia"],
     roles: ["mafia_admin"],
-    nums: ["mafia_cost", "mafia_max"],
+    nums: ["mafia_max"],
     panels: ["mafia"],
     premiumOnly: true,
   },
@@ -523,10 +537,10 @@ export const CATEGORIES: Category[] = [
     id: "firmy",
     emoji: "🏢",
     label: "Firmy",
-    desc: "Własny biznes graczy: zakładanie firm, zatrudnianie, zmiany w pracy, kasa, rozwój i ranking",
+    desc: "Własny biznes graczy: zakładanie firm, zatrudnianie, zmiany w pracy, punkty firmy, rozwój i ranking",
     sections: ["firmy"],
     roles: ["firm_admin"],
-    nums: ["firm_cost", "firm_max_own", "firm_max_staff"],
+    nums: ["firm_max_own", "firm_max_staff"],
     panels: ["firmy"],
     premiumOnly: true,
   },
@@ -537,7 +551,7 @@ export const CATEGORIES: Category[] = [
     desc: "Aukcje mieszkań: wystawianie ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
     sections: ["nieruchomosci"],
     roles: ["estate_admin"],
-    nums: ["estate_fee", "estate_snipe"],
+    nums: ["estate_snipe"],
     panels: ["nieruchomosci"],
     premiumOnly: true,
   },

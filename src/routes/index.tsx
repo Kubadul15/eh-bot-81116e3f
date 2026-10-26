@@ -16,11 +16,11 @@ export const Route = createFileRoute("/")({
     const L = headL(match);
     return {
       meta: [
-        { title: L("Emergency Hamburg Bot — bot RP na Discorda: urząd, sąd, ekonomia") },
+        { title: L("Emergency Hamburg Bot — bot RP na Discorda: urząd, sąd, policja") },
         {
           name: "description",
           content: L(
-            "Urząd, mObywatel, sąd, ekonomia, moderacja, rekrutacja i tickety. Zacznij za darmo, Premium lifetime za {PRICE_LIFETIME_PLN} zł.",
+            "Urząd, mObywatel, sąd, policja, nieruchomości, moderacja, rekrutacja i tickety. Zacznij za darmo, Premium lifetime za {PRICE_LIFETIME_PLN} zł.",
             { PRICE_LIFETIME_PLN },
           ),
         },
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
         {
           property: "og:description",
           content: L(
-            "Bot do serwerów RP: urząd, sąd, ekonomia, moderacja. Konfiguracja w panelu na stronie.",
+            "Bot do serwerów RP: urząd, sąd, policja, moderacja. Konfiguracja w panelu na stronie.",
           ),
         },
       ],
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
             operatingSystem: "Discord",
             inLanguage: normLang(match.context.lang),
             description: L(
-              "Bot na Discorda do serwerów RP: urząd mObywatel, sąd, ekonomia, mafia, firmy, policja, nieruchomości, moderacja, rekrutacja i tickety.",
+              "Bot na Discorda do serwerów RP: urząd mObywatel, sąd, mafia, firmy, policja, nieruchomości, moderacja, rekrutacja i tickety.",
             ),
             offers: [
               { "@type": "Offer", price: "0", priceCurrency: "PLN", name: "Free" },
@@ -79,8 +79,8 @@ const FEATURES: { e: string; t: string; d: string; premium?: boolean }[] = [
   },
   {
     e: "💰",
-    t: "Ekonomia",
-    d: "Praca, bank, sklep, pensje dla rang, ranking – i kasyno dla odważnych.",
+    t: "Policja i nieruchomości",
+    d: "Mandaty z punktami karnymi, zatrzymania, zgłoszenia 112 oraz aukcje mieszkań z licytacją.",
   },
   {
     e: "🔨",
@@ -140,7 +140,7 @@ function Index() {
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
           {t(
-            "Wszystko, czego potrzebuje serwer RP — urząd, sąd, ekonomia, policja, bany i administracja. Ustawiasz to w wygodnym panelu na stronie.",
+            "Wszystko, czego potrzebuje serwer RP — urząd, sąd, policja, nieruchomości, bany i administracja. Ustawiasz to w wygodnym panelu na stronie.",
           )}
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -207,7 +207,7 @@ function Index() {
         <h2 className="font-display text-5xl">{t("Gotowy na służbę?")}</h2>
         <p className="mt-2 text-muted-foreground">
           {t(
-            "Zacznij za darmo. Premium odblokuje sąd, kasyno, captcha i własny wygląd – jedna płatność, bez subskrypcji.",
+            "Zacznij za darmo. Premium odblokuje sąd, policję, nieruchomości, captcha i własny wygląd – jedna płatność, bez subskrypcji.",
           )}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">

@@ -15,7 +15,7 @@ export const Route = createFileRoute("/features")({
         {
           name: "description",
           content: L(
-            "Urząd, sąd, ekonomia, moderacja, rekrutacja, tickety i weryfikacja – wszystko dla serwerów RP.",
+            "Urząd, sąd, policja, nieruchomości, moderacja, rekrutacja, tickety i weryfikacja – wszystko dla serwerów RP.",
           ),
         },
         { property: "og:title", content: L("Funkcje — Emergency Hamburg Bot") },
@@ -51,7 +51,7 @@ const GROUPS: { name: string; items: Item[] }[] = [
       {
         e: "🧑‍⚖️",
         t: "Adwokaci i prawnicy",
-        d: "Zlecenia, rachunki płacone z ekonomii, porady prawne i pisma procesowe dołączane do spraw.",
+        d: "Zlecenia dla adwokatów, porady prawne i pisma procesowe dołączane do spraw.",
         premium: true,
       },
       {
@@ -64,27 +64,6 @@ const GROUPS: { name: string; items: Item[] }[] = [
         e: "🚓",
         t: "Kontrola policyjna",
         d: "Służby sprawdzają obywateli, tablice rejestracyjne i status poszukiwania jedną komendą.",
-      },
-    ],
-  },
-  {
-    name: "Ekonomia",
-    items: [
-      {
-        e: "💰",
-        t: "Pieniądze w grze",
-        d: "Portfel i bank, praca, nagrody dzienne i tygodniowe, pensje dla rang, przelewy, ranking, komendy / i !bal, !pay.",
-      },
-      {
-        e: "🛒",
-        t: "Sklep",
-        d: "Przedmioty, rangi i kłódki chroniące przed napadami. Mandaty płacisz prosto z portfela.",
-      },
-      {
-        e: "🎰",
-        t: "Kasyno",
-        d: "Sloty, ruletka, blackjack z przyciskami oraz orzeł i reszka.",
-        premium: true,
       },
     ],
   },

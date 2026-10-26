@@ -61,11 +61,11 @@ describe("premium", () => {
 
   it("nadpisanie limitów przez admina działa i ignoruje śmieci", () => {
     const m = metaOf({
-      _admin: { limits: { recruitPositions: 10, shopItems: -1, citizens: "dużo" } },
+      _admin: { limits: { recruitPositions: 10, vehicles: -1, citizens: "dużo" } },
     });
     const l = limitsFor(m, NOW);
     expect(l.recruitPositions).toBe(10);
-    expect(l.shopItems).toBe(FREE_LIMITS.shopItems);
+    expect(l.vehicles).toBe(FREE_LIMITS.vehicles);
     expect(l.citizens).toBe(FREE_LIMITS.citizens);
   });
 

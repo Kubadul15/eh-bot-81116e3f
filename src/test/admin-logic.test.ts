@@ -227,7 +227,6 @@ describe("walidacja pól admina", () => {
     expect(
       cleanLimits({
         recruitPositions: 12.7,
-        shopItems: -1,
         citizens: "x",
         vehicles: 2e9,
         nieznany: 5,

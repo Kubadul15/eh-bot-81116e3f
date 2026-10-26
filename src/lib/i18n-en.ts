@@ -1,5 +1,51 @@
 // Tłumaczenia angielskie (klucz = polski tekst z kodu). Nowe teksty dopisuj tutaj; test pokrycia (src/test/i18n.test.ts) pilnuje, żeby każdy t("…") miał tłumaczenie.
 export const en: Record<string, string> = {
+  "🚓 Policja, 🏠 nieruchomości, 🕴️ mafia i 🏢 firmy":
+    "🚓 Police, 🏠 real estate, 🕴️ mafia and 🏢 companies",
+  "Bot do serwerów RP: urząd, sąd, policja, moderacja. Konfiguracja w panelu na stronie.":
+    "A bot for RP servers: office, court, police, moderation. Configured from the web dashboard.",
+  "Bot na Discorda do serwerów RP: urząd mObywatel, sąd, mafia, firmy, policja, nieruchomości, moderacja, rekrutacja i tickety.":
+    "A Discord bot for RP servers: mObywatel office, court, mafia, companies, police, real estate, moderation, recruitment and tickets.",
+  "dane postaci i dokumentów RP, sprawy i wnioski tworzone przez graczy na serwerach, na których działa bot;":
+    "RP character and document data, cases and applications created by players on servers where the bot runs;",
+  "Dni na załatwienie mandatu (potem oznaczony jako zaległy)":
+    "Days to settle a fine (then marked as overdue)",
+  "Emergency Hamburg Bot — bot RP na Discorda: urząd, sąd, policja":
+    "Emergency Hamburg Bot — RP Discord bot: office, court, police",
+  "Firmy graczy: zatrudnianie, zmiany w pracy, punkty firmy, rozwój i ranking":
+    "Player companies: hiring, work shifts, company points, growth and ranking",
+  "Mandaty z punktami karnymi, zatrzymania, zgłoszenia 112 oraz aukcje mieszkań z licytacją.":
+    "Fines with penalty points, arrests, 112 reports and apartment auctions with bidding.",
+  "Opcjonalnie: ranga nadawana po wydaniu licencji na broń (zdejmowana po jej odebraniu). Puste = bez rangi":
+    "Optional: role given after a weapon licence is issued (removed when it is revoked). Empty = no role",
+  "Opcjonalnie: ranga nadawana po wydaniu prawa jazdy (zdejmowana po jego odebraniu). Puste = bez rangi":
+    "Optional: role given after a driving licence is issued (removed when it is revoked). Empty = no role",
+  "Opcjonalnie: ranga nadawana po założeniu profilu mObywatela (zdejmowana po usunięciu profilu). Puste = bez rangi":
+    "Optional: role given after an mObywatel profile is created (removed when the profile is deleted). Empty = no role",
+  "Organizacje przestępcze: hierarchia, członkowie, punkty organizacji, operacje, rejony miasta, sojusze i wojny":
+    "Criminal organisations: hierarchy, members, organisation points, operations, city districts, alliances and wars",
+  "Plan Free na start, Premium lifetime za 20 zł jednorazowo: sąd, policja, nieruchomości, captcha, własny wygląd i wyższe limity. Plan Max – na zaproszenie.":
+    "Free plan to start, Premium lifetime for a one-time 20 PLN: court, police, real estate, captcha, custom look and higher limits. Max plan – by invitation.",
+  "Podstawowe funkcje z limitami. Odblokuj sąd, policję, nieruchomości, captcha i własny wygląd jedną płatnością.":
+    "Core features with limits. Unlock court, police, real estate, captcha and a custom look with one payment.",
+  "Policja i nieruchomości": "Police and real estate",
+  "Ranga za dowód osobisty": "ID card role",
+  "Ranga za licencję na broń": "Weapon licence role",
+  "Ranga za prawo jazdy": "Driving licence role",
+  "Urząd, mObywatel, sąd, policja, nieruchomości, moderacja, rekrutacja i tickety. Zacznij za darmo, Premium lifetime za {PRICE_LIFETIME_PLN} zł.":
+    "Office, mObywatel, court, police, real estate, moderation, recruitment and tickets. Start for free, Premium lifetime for {PRICE_LIFETIME_PLN} PLN.",
+  "Urząd, sąd, policja, nieruchomości, moderacja, rekrutacja, tickety i weryfikacja – wszystko dla serwerów RP.":
+    "Office, court, police, real estate, moderation, recruitment, tickets and verification – everything for RP servers.",
+  "Własny biznes graczy: zakładanie firm, zatrudnianie, zmiany w pracy, punkty firmy, rozwój i ranking":
+    "Player-run businesses: founding companies, hiring, work shifts, company points, growth and ranking",
+  "Wszystko, czego potrzebuje serwer RP — urząd, sąd, policja, nieruchomości, bany i administracja. Ustawiasz to w wygodnym panelu na stronie.":
+    "Everything an RP server needs — office, court, police, real estate, bans and administration. You set it up in a convenient dashboard on the website.",
+  "Zacznij za darmo, a gdy serwer urośnie – odblokuj sąd, policję, nieruchomości, captcha i własny wygląd za 20 zł, bez subskrypcji.":
+    "Start for free, and when your server grows – unlock court, police, real estate, captcha and a custom look for 20 PLN, no subscription.",
+  "Zacznij za darmo. Premium odblokuje sąd, policję, nieruchomości, captcha i własny wygląd – jedna płatność, bez subskrypcji.":
+    "Start for free. Premium unlocks court, police, real estate, captcha and a custom look – one payment, no subscription.",
+  "Zlecenia dla adwokatów, porady prawne i pisma procesowe dołączane do spraw.":
+    "Requests for advocates, legal advice and procedural documents attached to cases.",
   "Dzisiaj o {time}": "Today at {time}",
   "– bez karty": "– no card needed",
   "— napisz trochę więcej": "— write a bit more",

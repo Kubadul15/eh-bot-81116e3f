@@ -15,7 +15,6 @@ export const EMBED_TYPES = [
   ["staff_messages", "Administracja — wiadomości"],
   ["embed", "Własne ogłoszenie"],
   ["powitanie", "Powitanie nowych osób (znaczniki: {user} {server} {count})"],
-  ["ekonomia", "Ekonomia — panel"],
   ["sad", "Sąd — panel"],
   ["adwokaci", "Adwokaci — panel"],
   ["prawnicy", "Prawnicy — panel"],

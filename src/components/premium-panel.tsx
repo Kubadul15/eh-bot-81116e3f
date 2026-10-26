@@ -80,7 +80,7 @@ export function PremiumPanel({
             <p className="mt-1 text-sm text-muted-foreground">
               {free
                 ? t(
-                    "Podstawowe funkcje z limitami. Odblokuj sąd, kasyno, captcha i własny wygląd jedną płatnością.",
+                    "Podstawowe funkcje z limitami. Odblokuj sąd, policję, nieruchomości, captcha i własny wygląd jedną płatnością.",
                   )
                 : premium.lifetime
                   ? t("Aktywne na zawsze – dziękujemy za wsparcie! 🎉")

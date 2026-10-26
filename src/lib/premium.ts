@@ -9,7 +9,6 @@ export const PRICE_LIFETIME_PLN = 20;
 export type Limits = {
   recruitPositions: number; // stanowiska w rekrutacji
   recruitQuestions: number; // pytania w formularzu rekrutacji – osobno dla każdego stanowiska
-  shopItems: number; // przedmioty w sklepie ekonomii
   citizens: number; // profile obywateli w mObywatelu
   vehicles: number; // pojazdy na obywatela
   giveaways: number; // jednocześnie trwające konkursy
@@ -18,7 +17,6 @@ export type Limits = {
 export const LIMIT_LABELS: Record<keyof Limits, string> = {
   recruitPositions: "Stanowiska w rekrutacji",
   recruitQuestions: "Pytania na stanowisko w rekrutacji",
-  shopItems: "Przedmioty w sklepie",
   citizens: "Obywatele w mObywatelu",
   vehicles: "Pojazdy na obywatela",
   giveaways: "Jednoczesne konkursy",
@@ -27,7 +25,6 @@ export const LIMIT_LABELS: Record<keyof Limits, string> = {
 export const FREE_LIMITS: Limits = {
   recruitPositions: 3,
   recruitQuestions: 5,
-  shopItems: 5,
   citizens: 150,
   vehicles: 3,
   giveaways: 1,
@@ -36,7 +33,6 @@ export const FREE_LIMITS: Limits = {
 export const PREMIUM_LIMITS: Limits = {
   recruitPositions: 8,
   recruitQuestions: 25,
-  shopItems: 100,
   citizens: 100_000,
   vehicles: 10,
   giveaways: 20,
@@ -48,7 +44,6 @@ export const LIMIT_KEYS = Object.keys(FREE_LIMITS) as (keyof Limits)[];
 export const MODULES: [id: string, label: string][] = [
   ["mobywatel", "mObywatel"],
   ["mobyadmin", "Panel administracji mObywatela"],
-  ["economy", "Ekonomia"],
   ["moderation", "Moderacja (/mod)"],
   ["utility", "Narzędzia społeczności"],
   ["welcome", "Powitania i autorole"],
@@ -220,7 +215,12 @@ export function grantMax(
   const note = opts.note ?? "";
   if (opts.days === null) return { since, until: null, by: opts.by, note };
   const start = m.max?.until && Date.parse(m.max.until) > now ? Date.parse(m.max.until) : now;
-  return { since, until: new Date(start + opts.days * 86_400_000).toISOString(), by: opts.by, note };
+  return {
+    since,
+    until: new Date(start + opts.days * 86_400_000).toISOString(),
+    by: opts.by,
+    note,
+  };
 }
 
 /** Nowy stan Premium po nadaniu: lifetime (days = null) albo na X dni (od teraz lub od końca bieżącego okresu). */
@@ -298,24 +298,6 @@ export const COMPARISON: Row[] = [
     premium: true,
   },
   {
-    group: "Ekonomia",
-    label: "Portfel, bank, praca, nagrody, pensje, ranking",
-    free: true,
-    premium: true,
-  },
-  {
-    group: "Ekonomia",
-    label: "Przedmioty w sklepie",
-    free: String(FREE_LIMITS.shopItems),
-    premium: String(PREMIUM_LIMITS.shopItems),
-  },
-  {
-    group: "Ekonomia",
-    label: "Kasyno: sloty, ruletka, blackjack, orzeł i reszka",
-    free: false,
-    premium: true,
-  },
-  {
     group: "Tickety",
     label: "Rodzaje ticketów w menu wyboru",
     free: String(FREE_LIMITS.ticketTypes),
@@ -359,13 +341,14 @@ export const COMPARISON: Row[] = [
   },
   {
     group: "Mafia i firmy",
-    label: "Mafia: organizacje, hierarchia rang, skarbiec, operacje, rejony, sojusze i wojny",
+    label:
+      "Mafia: organizacje, hierarchia rang, punkty organizacji, operacje, rejony, sojusze i wojny",
     free: false,
     premium: true,
   },
   {
     group: "Mafia i firmy",
-    label: "Firmy graczy: zatrudnianie, zmiany w pracy, kasa, rozwój i ranking",
+    label: "Firmy graczy: zatrudnianie, zmiany w pracy, punkty firmy, rozwój i ranking",
     free: false,
     premium: true,
   },
@@ -378,13 +361,15 @@ export const COMPARISON: Row[] = [
   },
   {
     group: "Nieruchomości",
-    label: "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
+    label:
+      "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
     free: false,
     premium: true,
   },
   {
     group: "Plan Max (na zaproszenie)",
-    label: "Poczekalnia głosowa: bot gra Twój dźwięk w pętli na kanale głosowym, gdy ktoś na nim jest",
+    label:
+      "Poczekalnia głosowa: bot gra Twój dźwięk w pętli na kanale głosowym, gdy ktoś na nim jest",
     free: false,
     premium: false,
     max: true,
@@ -397,7 +382,8 @@ export const COMPARISON: Row[] = [
   },
   {
     group: "Nieruchomości",
-    label: "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
+    label:
+      "Nieruchomości: aukcje mieszkań ze zdjęciem, licytacja z auto-podbijaniem, kup teraz, własność i odsprzedaż",
     free: false,
     premium: true,
   },

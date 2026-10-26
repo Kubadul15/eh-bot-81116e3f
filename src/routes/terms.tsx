@@ -151,7 +151,7 @@ function Terms() {
           </li>
           <li>
             {t(
-              "dane postaci i dokumentów RP, saldo ekonomii, sprawy i wnioski tworzone przez graczy na serwerach, na których działa bot;",
+              "dane postaci i dokumentów RP, sprawy i wnioski tworzone przez graczy na serwerach, na których działa bot;",
             )}
           </li>
           <li>
