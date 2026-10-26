@@ -2,6 +2,7 @@ import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { ChannelField, RolePicker } from "@/components/config-ui";
+import { I18nProvider } from "@/lib/i18n-react";
 import type { RoleField } from "@/lib/bot-slots";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -26,7 +27,7 @@ function mount(node: React.ReactNode) {
   host = document.createElement("div");
   document.body.appendChild(host);
   root = createRoot(host);
-  act(() => root.render(node));
+  act(() => root.render(<I18nProvider lang="pl">{node}</I18nProvider>));
 }
 const buttons = (pressed: "true" | "false") => [
   ...host.querySelectorAll<HTMLButtonElement>(`button[aria-pressed="${pressed}"]`),
@@ -97,7 +98,11 @@ describe("ChannelField", () => {
     mount(<ChannelField slot={slot} value="" options={options} onChange={() => {}} />);
     expect(host.textContent).toContain("Nie ustawiono");
     act(() =>
-      root.render(<ChannelField slot={slot} value="10" options={options} onChange={() => {}} />),
+      root.render(
+        <I18nProvider lang="pl">
+          <ChannelField slot={slot} value="10" options={options} onChange={() => {}} />
+        </I18nProvider>,
+      ),
     );
     expect(host.textContent).toContain("Ustawiono");
     expect(host.textContent).not.toContain("Nie ustawiono Panel");

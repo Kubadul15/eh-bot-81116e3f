@@ -9,6 +9,7 @@ import {
   type PublicPremium,
 } from "@/lib/premium";
 import { fmtDate } from "@/lib/format";
+import { useI18n } from "@/lib/i18n-react";
 
 // Zakładka „Premium” w panelu serwera: status planu, wykorzystanie limitów i co daje Premium.
 export function PremiumPanel({
@@ -25,15 +26,16 @@ export function PremiumPanel({
   /** uruchamia bezpłatny trial; po sukcesie dane serwera są odświeżane */
   onStartTrial?: () => Promise<void>;
 }) {
+  const { t } = useI18n();
   const free = !premium.active;
   return (
     <div className="animate-fade-up">
-      <h2 className="font-display text-4xl">💎 Premium</h2>
+      <h2 className="font-display text-4xl">{t("💎 Premium")}</h2>
 
       {premium.blocked && (
         <div className="mt-4 rounded-xl border border-red-500/50 bg-red-50 p-4 text-sm font-semibold text-red-800">
-          ⛔ Ten serwer jest zablokowany przez właściciela bota: {premium.blocked.reason}. Zapisy w
-          panelu i działanie bota są wstrzymane.
+          {t("⛔ Ten serwer jest zablokowany przez właściciela bota:")} {premium.blocked.reason}
+          {t(". Zapisy w panelu i działanie bota są wstrzymane.")}
         </div>
       )}
 
@@ -44,15 +46,17 @@ export function PremiumPanel({
       )}
       {premium.trial.active && (
         <div className="mt-4 rounded-xl border border-emerald-500/50 bg-emerald-50 p-4 text-sm font-semibold text-emerald-900">
-          🎁 Trwa bezpłatny trial Premium – zostało {premium.trial.daysLeft}{" "}
-          {premium.trial.daysLeft === 1 ? "dzień" : "dni"} (do{" "}
-          {premium.until ? fmtDate(premium.until) : "?"}). Po tym czasie serwer wraca do planu Free,
-          a dane zostają. Kup Premium, żeby zachować wszystkie funkcje.
+          {t("🎁 Trwa bezpłatny trial Premium – zostało")} {premium.trial.daysLeft}{" "}
+          {premium.trial.daysLeft === 1 ? t("dzień") : t("dni")} {t("(do")}{" "}
+          {premium.until ? fmtDate(premium.until) : "?"}
+          {t(
+            "). Po tym czasie serwer wraca do planu Free, a dane zostają. Kup Premium, żeby zachować wszystkie funkcje.",
+          )}
         </div>
       )}
       {free && premium.trial.used && !premium.trial.active && (
         <p className="mt-4 text-sm text-muted-foreground">
-          Bezpłatny trial na tym serwerze został już wykorzystany.
+          {t("Bezpłatny trial na tym serwerze został już wykorzystany.")}
         </p>
       )}
 
@@ -62,34 +66,41 @@ export function PremiumPanel({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Plan serwera {guildName}
+              {t("Plan serwera")} {guildName}
             </p>
             <p className="mt-1 font-display text-5xl">
               {free
-                ? "Free"
+                ? t("Free")
                 : premium.lifetime
-                  ? "Premium Lifetime"
+                  ? t("Premium Lifetime")
                   : premium.trial.active
-                    ? "Premium (trial)"
-                    : "Premium"}
+                    ? t("Premium (trial)")
+                    : t("Premium")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {free
-                ? "Podstawowe funkcje z limitami. Odblokuj sąd, kasyno, captcha i własny wygląd jedną płatnością."
+                ? t(
+                    "Podstawowe funkcje z limitami. Odblokuj sąd, kasyno, captcha i własny wygląd jedną płatnością.",
+                  )
                 : premium.lifetime
-                  ? "Aktywne na zawsze – dziękujemy za wsparcie! 🎉"
+                  ? t("Aktywne na zawsze – dziękujemy za wsparcie! 🎉")
                   : premium.trial.active
-                    ? `Okres próbny do ${premium.until ? fmtDate(premium.until) : "?"}. Kup Premium, żeby zachować funkcje.`
-                    : `Aktywne do ${premium.until ? fmtDate(premium.until) : "?"}. Przed wygaśnięciem napisz do właściciela o przedłużenie.`}
+                    ? t("Okres próbny do {v1}. Kup Premium, żeby zachować funkcje.", {
+                        v1: premium.until ? fmtDate(premium.until) : "?",
+                      })
+                    : t(
+                        "Aktywne do {v1}. Przed wygaśnięciem napisz do właściciela o przedłużenie.",
+                        { v1: premium.until ? fmtDate(premium.until) : "?" },
+                      )}
             </p>
           </div>
           {free ? (
             <div className="w-full sm:w-auto">
               <BuyButton guildId={guildId} guildName={guildName} />
               <p className="mt-2 text-xs text-muted-foreground">
-                {PRICE_LIFETIME_PLN} zł jednorazowo •{" "}
+                {PRICE_LIFETIME_PLN} {t("zł jednorazowo •")}{" "}
                 <Link to="/pricing" className="underline">
-                  szczegóły i kod rabatowy
+                  {t("szczegóły i kod rabatowy")}
                 </Link>
               </p>
             </div>
@@ -99,7 +110,7 @@ export function PremiumPanel({
         </div>
       </div>
 
-      <h3 className="mt-8 font-display text-3xl">Wykorzystanie limitów</h3>
+      <h3 className="mt-8 font-display text-3xl">{t("Wykorzystanie limitów")}</h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {(Object.keys(LIMIT_LABELS) as (keyof Limits)[]).map((k) => {
           const max = premium.limits[k],
@@ -115,7 +126,7 @@ export function PremiumPanel({
                 <span className="text-sm font-semibold">{LIMIT_LABELS[k]}</span>
                 <span className="text-sm tabular-nums text-muted-foreground">
                   {used !== undefined ? `${used} / ` : ""}
-                  {unlimited ? "bez limitu" : max}
+                  {unlimited ? t("bez limitu") : max}
                 </span>
               </div>
               {used !== undefined && !unlimited && (
@@ -131,7 +142,7 @@ export function PremiumPanel({
         })}
       </div>
 
-      <h3 className="mt-8 font-display text-3xl">Co obejmuje plan</h3>
+      <h3 className="mt-8 font-display text-3xl">{t("Co obejmuje plan")}</h3>
       <div className="mt-3 overflow-hidden rounded-xl border bg-card">
         {COMPARISON.map((r) => {
           const has = free ? r.free : r.premium;
@@ -145,14 +156,14 @@ export function PremiumPanel({
               ) : (
                 <Check className="size-4 shrink-0 text-emerald-600" />
               )}
-              <span className={has === false ? "text-muted-foreground" : ""}>{r.label}</span>
+              <span className={has === false ? "text-muted-foreground" : ""}>{t(r.label)}</span>
               {typeof has === "string" && (
                 <span className="ml-auto text-xs font-semibold text-muted-foreground">{has}</span>
               )}
               {free && r.free === false && (
                 <span className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-amber-700">
                   <Gem className="size-3" />
-                  Premium
+                  {t("Premium")}
                 </span>
               )}
             </div>

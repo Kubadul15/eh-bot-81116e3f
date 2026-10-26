@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -13,22 +14,26 @@ import { useEffect, type ReactNode } from "react";
 import { CursorDot } from "../components/cursor-dot";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { getServerLang } from "../lib/lang.functions";
+import { langFromCookie, normLang } from "../lib/i18n";
+import { I18nProvider, useI18n } from "../lib/i18n-react";
 
 function NotFoundComponent() {
+  const { t } = useI18n();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t("Nie znaleziono strony")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          {t("Strona, której szukasz, nie istnieje albo została przeniesiona.")}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {t("Wróć na stronę główną")}
           </Link>
         </div>
       </div>
@@ -37,6 +42,7 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
+  const { t } = useI18n();
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -47,10 +53,12 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {t("Ta strona się nie załadowała")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {t(
+            "Coś poszło nie tak po naszej stronie. Spróbuj odświeżyć stronę albo wróć na stronę główną.",
+          )}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -60,13 +68,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            {t("Spróbuj ponownie")}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            {t("Wróć na stronę główną")}
           </a>
         </div>
       </div>
@@ -75,13 +83,17 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  // język strony: z ciasteczka (serwer czyta nagłówek, przeglądarka – document.cookie), domyślny ustawia DEFAULT_LANG w lib/i18n.ts
+  beforeLoad: async () => ({
+    lang: typeof document === "undefined" ? await getServerLang() : langFromCookie(document.cookie),
+  }),
+  head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Emergency Hamburg Bot" },
-      { property: "og:locale", content: "pl_PL" },
+      { property: "og:locale", content: normLang(match.context.lang) === "pl" ? "pl_PL" : "en_GB" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#202020" },
     ],
@@ -103,8 +115,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const lang = normLang(useRouterState({ select: (s) => s.matches[0]?.context?.lang }));
   return (
-    <html lang="pl">
+    <html lang={lang}>
       <head>
         <HeadContent />
       </head>
@@ -117,13 +130,15 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+  const { queryClient, lang } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <CursorDot />
-      <Outlet />
+      <I18nProvider lang={lang}>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <CursorDot />
+        <Outlet />
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

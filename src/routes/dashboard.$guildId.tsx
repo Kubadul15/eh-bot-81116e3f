@@ -41,6 +41,8 @@ import {
 import { LockBanner, PremiumBadge, TrialCard } from "@/components/premium-ui";
 import { PREMIUM_PANELS } from "@/lib/premium";
 import { PremiumPanel } from "@/components/premium-panel";
+import { useI18n } from "@/lib/i18n-react";
+import { headL } from "@/lib/i18n";
 
 // pola kanałów, w których wybiera się KATEGORIĘ (folder), a nie zwykły kanał tekstowy
 const FOLDER_SLOTS = ["ticketcat", "mafiakat", "firmykat"];
@@ -56,36 +58,47 @@ const guildQ = (guildId: string) =>
   queryOptions({ queryKey: ["guild", guildId], queryFn: () => getGuild({ data: { guildId } }) });
 
 export const Route = createFileRoute("/dashboard/$guildId")({
-  head: () => ({
-    meta: [
-      { title: "Konfiguracja serwera — Emergency Hamburg Bot" },
-      { name: "description", content: "Ustaw kanały, rangi i limity bota dla swojego serwera." },
-      { property: "og:title", content: "Konfiguracja serwera — Emergency Hamburg Bot" },
-      { property: "og:description", content: "Kanały, rangi i limity bota." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: ({ match }) => {
+    const L = headL(match);
+    return {
+      meta: [
+        { title: L("Konfiguracja serwera — Emergency Hamburg Bot") },
+        {
+          name: "description",
+          content: L("Ustaw kanały, rangi i limity bota dla swojego serwera."),
+        },
+        { property: "og:title", content: L("Konfiguracja serwera — Emergency Hamburg Bot") },
+        { property: "og:description", content: L("Kanały, rangi i limity bota.") },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary" },
+      ],
+    };
+  },
   loader: async ({ context, params }) => {
     const me = await context.queryClient.ensureQueryData(meQ);
     if (me.user) await context.queryClient.ensureQueryData(guildQ(params.guildId));
   },
   component: GuildPage,
-  errorComponent: ({ error }) => (
+  errorComponent: GuildError,
+});
+
+function GuildError({ error }: { error: unknown }) {
+  const { t } = useI18n();
+  return (
     <main className="min-h-screen">
       <SiteHeader user={null} />
       <div className="mx-auto max-w-xl px-5 py-16 text-center">
-        <h1 className="font-display text-4xl">Nie można otworzyć</h1>
+        <h1 className="font-display text-4xl">{t("Nie można otworzyć")}</h1>
         <p className="mt-2 text-muted-foreground">
-          {error instanceof Error ? error.message : "Błąd"}
+          {error instanceof Error ? t(error.message) : t("Błąd")}
         </p>
         <Link to="/dashboard" className="mt-6 inline-block font-semibold text-accent">
-          ← Wróć do serwerów
+          {t("← Wróć do serwerów")}
         </Link>
       </div>
     </main>
-  ),
-});
+  );
+}
 
 function GuildPage() {
   const { data: me } = useSuspenseQuery(meQ);
@@ -106,6 +119,7 @@ type View =
   "home" | "embeds" | "composer" | "studio" | "premium" | (typeof CATEGORIES)[number]["id"];
 
 function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
+  const { t: tr } = useI18n();
   const { guildId } = Route.useParams();
   const { data } = useSuspenseQuery(guildQ(guildId));
   const qc = useQueryClient();
@@ -157,7 +171,9 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
       <main className="min-h-screen">
         <SiteHeader user={me.user} isOwner={me.isOwner} />
         <div className="mx-auto max-w-xl px-5 py-16 text-center">
-          <h1 className="font-display text-4xl">Bota nie ma na {data.guild.name}</h1>
+          <h1 className="font-display text-4xl">
+            {tr("Bota nie ma na")} {data.guild.name}
+          </h1>
           {me.clientId && (
             <a
               href={inviteUrl(me.clientId, guildId)}
@@ -165,7 +181,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
               rel="noreferrer"
               className="mt-6 inline-block rounded-md bg-primary px-6 py-3 font-semibold text-primary-foreground"
             >
-              Dodaj bota
+              {tr("Dodaj bota")}
             </a>
           )}
         </div>
@@ -229,7 +245,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
       className={`flex shrink-0 items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-sm font-semibold transition lg:w-full ${view === id ? "border-primary bg-primary text-primary-foreground shadow-sm" : "bg-card hover:border-primary/40 hover:bg-muted"}`}
     >
       <span className="text-base leading-none">{emoji}</span>
-      <span className="flex-1 whitespace-nowrap">{label}</span>
+      <span className="flex-1 whitespace-nowrap">{tr(label)}</span>
       {extra}
     </button>
   );
@@ -250,7 +266,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
       <SiteHeader user={me.user} isOwner={me.isOwner} />
       <section className="mx-auto max-w-6xl animate-fade-up px-5 py-8">
         <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Serwery
+          {tr("← Serwery")}
         </Link>
         <h1 className="mt-2 flex flex-wrap items-center gap-3 font-display text-5xl">
           {data.guild.name}
@@ -258,8 +274,9 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
         </h1>
         {premium.blocked && (
           <div className="mt-4 rounded-xl border border-red-500/50 bg-red-50 p-4 text-sm font-semibold text-red-800">
-            ⛔ Ten serwer został zablokowany przez właściciela bota: {premium.blocked.reason}.
-            Zapisywanie zmian jest wyłączone.
+            {tr("⛔ Ten serwer został zablokowany przez właściciela bota:")}{" "}
+            {premium.blocked.reason}
+            {tr(". Zapisywanie zmian jest wyłączone.")}
           </div>
         )}
         {premium.trial.available && !premium.blocked && (
@@ -269,11 +286,11 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
         )}
         {premium.trial.active && (
           <div className="mt-4 rounded-xl border border-emerald-500/50 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">
-            🎁 Trial Premium: zostało {premium.trial.daysLeft}{" "}
-            {premium.trial.daysLeft === 1 ? "dzień" : "dni"}. Później serwer wraca do planu Free
-            (dane zostają).{" "}
+            {tr("🎁 Trial Premium: zostało")} {premium.trial.daysLeft}{" "}
+            {premium.trial.daysLeft === 1 ? tr("dzień") : tr("dni")}
+            {tr(". Później serwer wraca do planu Free (dane zostają).")}{" "}
             <button type="button" onClick={() => setView("premium")} className="underline">
-              Jak zostać na Premium
+              {tr("Jak zostać na Premium")}
             </button>
           </div>
         )}
@@ -281,11 +298,11 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
         <div className="mt-6 grid gap-6 lg:grid-cols-[250px_1fr]">
           <nav
             className="flex gap-2 overflow-x-auto pb-2 lg:sticky lg:top-4 lg:flex-col lg:self-start lg:overflow-visible lg:pb-0"
-            aria-label="Sekcje konfiguracji"
+            aria-label={tr("Sekcje konfiguracji")}
           >
             {navItem("home", <LayoutDashboard className="size-4" />, "Przegląd")}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">
-              Funkcje bota
+              {tr("Funkcje bota")}
             </p>
             {CATEGORIES.map((c) =>
               navItem(
@@ -302,7 +319,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
               ),
             )}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">
-              Wygląd
+              {tr("Wygląd")}
             </p>
             {navItem("composer", <Megaphone className="size-4" />, "Wysyłanie wiadomości")}
             {navItem(
@@ -313,7 +330,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             )}
             {navItem("embeds", <FileText className="size-4" />, "Wiadomości bota (embedy)")}
             <p className="hidden px-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground lg:block">
-              Plan
+              {tr("Plan")}
             </p>
             {navItem(
               "premium",
@@ -323,7 +340,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 <PremiumBadge />
               ) : (
                 <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
-                  Kup
+                  {tr("Kup")}
                 </span>
               ),
             )}
@@ -332,12 +349,14 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
           <div className="min-w-0">
             {view === "home" && (
               <div>
-                <h2 className="font-display text-4xl">Przegląd konfiguracji</h2>
+                <h2 className="font-display text-4xl">{tr("Przegląd konfiguracji")}</h2>
                 <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                  Bot jest podzielony na funkcje. Wejdź w sekcję, ustaw w niej <b>kanały</b> i{" "}
-                  <b>rangi</b>, a potem kliknij <b>Zapisz zmiany</b> na dole. Zielony ptaszek
-                  oznacza, że wszystko w sekcji jest ustawione (część pól jest opcjonalna, więc 100%
-                  nie jest konieczne).
+                  {tr("Bot jest podzielony na funkcje. Wejdź w sekcję, ustaw w niej")}{" "}
+                  <b>{tr("kanały")}</b> {tr("i")} <b>{tr("rangi")}</b>
+                  {tr(", a potem kliknij")} <b>{tr("Zapisz zmiany")}</b>{" "}
+                  {tr(
+                    "na dole. Zielony ptaszek oznacza, że wszystko w sekcji jest ustawione (część pól jest opcjonalna, więc 100% nie jest konieczne).",
+                  )}
                 </p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {CATEGORIES.map((c) => {
@@ -353,16 +372,16 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                           <span className="flex items-center gap-2 text-3xl">
                             {c.emoji}
                             {c.maxOnly && maxLocked ? (
-                              <span className="text-xs">👑 Max</span>
+                              <span className="text-xs">{tr("👑 Max")}</span>
                             ) : (
                               c.premiumOnly && locked && <PremiumBadge />
                             )}
                           </span>
                           <ChevronRight className="size-5 text-muted-foreground transition group-hover:translate-x-1" />
                         </div>
-                        <h3 className="mt-2 font-display text-2xl">{c.label}</h3>
+                        <h3 className="mt-2 font-display text-2xl">{tr(c.label)}</h3>
                         <p className="mb-3 mt-0.5 min-h-10 text-sm text-muted-foreground">
-                          {c.desc}
+                          {tr(c.desc)}
                         </p>
                         <Progress done={p.done} total={p.total} />
                       </button>
@@ -377,9 +396,9 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                       <FileText className="size-8" />
                       <ChevronRight className="size-5 text-muted-foreground transition group-hover:translate-x-1" />
                     </div>
-                    <h3 className="mt-2 font-display text-2xl">Wiadomości bota (embedy)</h3>
+                    <h3 className="mt-2 font-display text-2xl">{tr("Wiadomości bota (embedy)")}</h3>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                      Własne tytuły, kolory i obrazki wiadomości bota.
+                      {tr("Własne tytuły, kolory i obrazki wiadomości bota.")}
                     </p>
                   </button>
                 </div>
@@ -407,19 +426,21 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 />
               ) : (
                 <div>
-                  <h2 className="font-display text-4xl">🖥️ Widok Discorda</h2>
+                  <h2 className="font-display text-4xl">{tr("🖥️ Widok Discorda")}</h2>
                   <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                    Podgląd wiadomości dokładnie tak, jak zobaczą go gracze – na całym ekranie.
+                    {tr(
+                      "Podgląd wiadomości dokładnie tak, jak zobaczą go gracze – na całym ekranie.",
+                    )}
                   </p>
                   <div className="mt-4">
                     <LockBanner
-                      title="Widok Discorda to funkcja Premium"
+                      title={tr("Widok Discorda to funkcja Premium")}
                       guildId={guildId}
                       guildName={data.guild.name}
                     >
-                      Duże okno serwera z prawdziwym avatarem i nazwą bota, kanałami i kolorami ról,
-                      jasny i ciemny motyw, widok na telefonie, pełny ekran (jak film na YouTube)
-                      oraz wysyłka wiadomości i embedów z paska na dole okna.
+                      {tr(
+                        "Duże okno serwera z prawdziwym avatarem i nazwą bota, kanałami i kolorami ról, jasny i ciemny motyw, widok na telefonie, pełny ekran (jak film na YouTube) oraz wysyłka wiadomości i embedów z paska na dole okna.",
+                      )}
                     </LockBanner>
                   </div>
                 </div>
@@ -441,12 +462,13 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             {view === "embeds" && locked && (
               <div className="mb-4">
                 <LockBanner
-                  title="Własny wygląd wiadomości bota to funkcja Premium"
+                  title={tr("Własny wygląd wiadomości bota to funkcja Premium")}
                   guildId={guildId}
                   guildName={data.guild.name}
                 >
-                  Możesz tu projektować szablony, ale na planie Free nie zostaną zapisane ani
-                  zastosowane przez bota.
+                  {tr(
+                    "Możesz tu projektować szablony, ale na planie Free nie zostaną zapisane ani zastosowane przez bota.",
+                  )}
                 </LockBanner>
               </div>
             )}
@@ -470,9 +492,9 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h2 className="font-display text-4xl">
-                        {cat.emoji} {cat.label}
+                        {cat.emoji} {tr(cat.label)}
                       </h2>
-                      <p className="text-sm text-muted-foreground">{cat.desc}</p>
+                      <p className="text-sm text-muted-foreground">{tr(cat.desc)}</p>
                     </div>
                     <div className="w-44">
                       <Progress {...progressOf(cat)} />
@@ -482,26 +504,28 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
 
                 {cat.maxOnly && maxLocked && (
                   <p className="mt-4 rounded-lg border border-violet-500/40 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-                    👑 <b>{cat.label}</b> to funkcja planu <b>Max</b>. Plan Max jest dostępny wyłącznie
-                    na zaproszenie i nadaje go właściciel bota. Możesz już ustawić kanał i dźwięk –
-                    bot zacznie grać, gdy plan zostanie włączony.
+                    👑 <b>{tr(cat.label)}</b> {tr("to funkcja planu")} <b>{tr("Max")}</b>
+                    {tr(
+                      ". Plan Max jest dostępny wyłącznie na zaproszenie i nadaje go właściciel bota. Możesz już ustawić kanał i dźwięk – bot zacznie grać, gdy plan zostanie włączony.",
+                    )}
                   </p>
                 )}
                 {cat.premiumOnly && !cat.maxOnly && locked && (
                   <div className="mt-4">
                     <LockBanner
-                      title={`${cat.label}: funkcja planu Premium`}
+                      title={tr("{label}: funkcja planu Premium", { label: tr(cat.label) })}
                       guildId={guildId}
                       guildName={data.guild.name}
                     >
-                      Możesz już ustawić kanały i rangi, ale panele się nie wyślą, a funkcje na
-                      serwerze pozostaną zablokowane do czasu włączenia Premium.
+                      {tr(
+                        "Możesz już ustawić kanały i rangi, ale panele się nie wyślą, a funkcje na serwerze pozostaną zablokowane do czasu włączenia Premium.",
+                      )}
                     </LockBanner>
                   </div>
                 )}
                 {cat.premiumNote && locked && !cat.premiumOnly && (
                   <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-                    💎 {cat.premiumNote}
+                    💎 {tr(cat.premiumNote)}
                   </p>
                 )}
 
@@ -512,8 +536,8 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                     <Block
                       key={sid}
                       icon="📍"
-                      title="Kanały"
-                      hint="Wybierz, gdzie bot ma wysyłać wiadomości tej funkcji."
+                      title={tr("Kanały")}
+                      hint={tr("Wybierz, gdzie bot ma wysyłać wiadomości tej funkcji.")}
                     >
                       <div className="grid gap-3 sm:grid-cols-2">
                         {sec.slots.map((slot) => (
@@ -543,8 +567,10 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 {cat.roles.length > 0 && (
                   <Block
                     icon="🎭"
-                    title="Rangi"
-                    hint="Zielone rangi u góry są wybrane. Kliknij rangę, aby ją dodać lub odznaczyć."
+                    title={tr("Rangi")}
+                    hint={tr(
+                      "Zielone rangi u góry są wybrane. Kliknij rangę, aby ją dodać lub odznaczyć.",
+                    )}
                   >
                     <div className="space-y-4">
                       {ROLE_FIELDS.filter((f) => cat.roles.includes(f.key)).map((f) => (
@@ -561,7 +587,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 )}
 
                 {cat.nums.length > 0 && (
-                  <Block icon="⚙️" title="Limity">
+                  <Block icon="⚙️" title={tr("Limity")}>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {NUM_FIELDS.filter((f) => cat.nums.includes(f.key)).map((f) => (
                         <NumField
@@ -581,7 +607,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 )}
 
                 {(cat.texts?.length ?? 0) > 0 && (
-                  <Block icon="🔗" title="Dźwięk">
+                  <Block icon="🔗" title={tr("Dźwięk")}>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {TEXT_FIELDS.filter((f) => cat.texts?.includes(f.key)).map((f) => (
                         <TextField
@@ -604,8 +630,10 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 {cat.panels.length > 0 && (
                   <Block
                     icon="📤"
-                    title="Wysyłanie paneli"
-                    hint="Po ustawieniu kanału kliknij „Wyślij panel”. Zapisuje ustawienia i zleca botowi wysyłkę – panel pojawi się po kilku sekundach."
+                    title={tr("Wysyłanie paneli")}
+                    hint={tr(
+                      "Po ustawieniu kanału kliknij „Wyślij panel”. Zapisuje ustawienia i zleca botowi wysyłkę – panel pojawi się po kilku sekundach.",
+                    )}
                   >
                     <div className="grid gap-3 sm:grid-cols-2">
                       {PANEL_SLOTS.filter((p) => cat.panels.includes(p.key)).map((p) => (
@@ -616,7 +644,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                           channelName={
                             channels[p.slot]
                               ? (textChannels.find((c) => c.id === channels[p.slot])?.name ??
-                                "ustawiony kanał")
+                                tr("ustawiony kanał"))
                               : null
                           }
                           status={panelStatus[p.key]}
@@ -632,8 +660,21 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 {cat.recruitment && (
                   <Block
                     icon="🧾"
-                    title="Formularz i stanowiska"
-                    hint={`Stanowiska: ${content.recruitment.positions.length}/${premium.limits.recruitPositions} • Pytania na stanowisko (najwięcej): ${maxQuestionsPerPosition(content)}/${premium.limits.recruitQuestions}${content.recruitment.positions.length > premium.limits.recruitPositions || maxQuestionsPerPosition(content) > premium.limits.recruitQuestions ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)" : ""}`}
+                    title={tr("Formularz i stanowiska")}
+                    hint={tr(
+                      "Stanowiska: {length}/{recruitPositions} • Pytania na stanowisko (najwięcej): {v3}/{recruitQuestions}{v5}",
+                      {
+                        length: content.recruitment.positions.length,
+                        recruitPositions: premium.limits.recruitPositions,
+                        v3: maxQuestionsPerPosition(content),
+                        recruitQuestions: premium.limits.recruitQuestions,
+                        v5:
+                          content.recruitment.positions.length > premium.limits.recruitPositions ||
+                          maxQuestionsPerPosition(content) > premium.limits.recruitQuestions
+                            ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)"
+                            : "",
+                      },
+                    )}
                   >
                     <ContentEditor
                       guildId={guildId}
@@ -653,8 +694,8 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 {cat.recruitment && (
                   <Block
                     icon="🌐"
-                    title="Strona rekrutacyjna i panel ekipy"
-                    hint={`${premium.recruitSite ? "Premium" : "Wymaga Premium"} • ${content.recruitSite.enabled ? "włączona" : "wyłączona"}`}
+                    title={tr("Strona rekrutacyjna i panel ekipy")}
+                    hint={`${premium.recruitSite ? tr("Premium") : tr("Wymaga Premium")} • ${content.recruitSite.enabled ? tr("włączona") : tr("wyłączona")}`}
                   >
                     <RecruitSiteEditor
                       guildId={guildId}
@@ -672,8 +713,20 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
                 {cat.tickets && (
                   <Block
                     icon="🎫"
-                    title="Rodzaje i formularz ticketów"
-                    hint={`Rodzaje w menu: ${content.tickets.positions.length}/${premium.limits.ticketTypes}${content.tickets.positions.length > premium.limits.ticketTypes ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)" : ""} • Pola formularza: ${content.tickets.questions.length}${content.tickets.images ? " + obrazki" : ""}`}
+                    title={tr("Rodzaje i formularz ticketów")}
+                    hint={tr(
+                      "Rodzaje w menu: {length}/{ticketTypes}{v3} • Pola formularza: {length2}{v5}",
+                      {
+                        length: content.tickets.positions.length,
+                        ticketTypes: premium.limits.ticketTypes,
+                        v3:
+                          content.tickets.positions.length > premium.limits.ticketTypes
+                            ? " – przekroczono limit planu, zapis zostanie odrzucony (usuń nadmiar albo kup Premium)"
+                            : "",
+                        length2: content.tickets.questions.length,
+                        v5: content.tickets.images ? " + obrazki" : "",
+                      },
+                    )}
                   >
                     <ContentEditor
                       guildId={guildId}
@@ -701,12 +754,12 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
           <span className="text-sm text-muted-foreground">
             {status === "saved" ? (
               <span className="animate-fade-up inline-block font-semibold text-emerald-700">
-                ✅ Zapisano
+                {tr("✅ Zapisano")}
               </span>
             ) : status === "error" ? (
               saveError
             ) : (
-              "Niezapisane zmiany"
+              tr("Niezapisane zmiany")
             )}
           </span>
           <Button
@@ -715,7 +768,7 @@ function Editor({ me }: { me: Awaited<ReturnType<typeof getMe>> }) {
             className="rounded-md bg-primary px-6 py-2.5 font-semibold text-primary-foreground shadow-[0_0_24px_-6px_var(--primary)] transition hover:-translate-y-0.5 hover:brightness-110 active:scale-95 disabled:opacity-60"
           >
             <Save />
-            {status === "saving" ? "Zapisywanie…" : "Zapisz zmiany"}
+            {status === "saving" ? tr("Zapisywanie…") : tr("Zapisz zmiany")}
           </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { DiscordWindow } from "@/components/discord-window";
+import { I18nProvider } from "@/lib/i18n-react";
 import { emptyComposer, emptyComposerEmbed } from "@/lib/message-config";
 
 const roles = [{ id: "111111111111111111", name: "Administracja", color: 0xe74c3c }];
@@ -16,26 +17,28 @@ const view = {
 // React SSR wstawia komentarze <!-- --> między fragmentami tekstu – do porównań je usuwamy
 const render = (over: Partial<Parameters<typeof DiscordWindow>[0]> = {}) =>
   renderToString(
-    <DiscordWindow
-      m={{
-        ...emptyComposer(),
-        channelId: "222222222222222222",
-        content: "Cześć **wszystkim**",
-        pingRoleIds: ["111111111111111111"],
-        embeds: [
-          { ...emptyComposerEmbed(), title: "Nabór", description: "Opis", color: "#ff0000" },
-        ],
-      }}
-      roles={roles}
-      channels={channels}
-      view={view}
-      loading={false}
-      error=""
-      sending={false}
-      onContent={() => undefined}
-      onSend={() => undefined}
-      {...over}
-    />,
+    <I18nProvider lang="pl">
+      <DiscordWindow
+        m={{
+          ...emptyComposer(),
+          channelId: "222222222222222222",
+          content: "Cześć **wszystkim**",
+          pingRoleIds: ["111111111111111111"],
+          embeds: [
+            { ...emptyComposerEmbed(), title: "Nabór", description: "Opis", color: "#ff0000" },
+          ],
+        }}
+        roles={roles}
+        channels={channels}
+        view={view}
+        loading={false}
+        error=""
+        sending={false}
+        onContent={() => undefined}
+        onSend={() => undefined}
+        {...over}
+      />
+    </I18nProvider>,
   ).replace(/<!-- -->/g, "");
 
 describe("okno podglądu Discorda", () => {

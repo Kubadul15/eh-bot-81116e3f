@@ -4,6 +4,8 @@ import { discordMd, type MdCtx } from "@/lib/discord-format";
 import type { BotView } from "@/lib/message.functions";
 import type { ComposerEmbed, ComposerMessage } from "@/lib/message-config";
 import type { DChannel, DRole } from "@/components/config-ui";
+import { useI18n } from "@/lib/i18n-react";
+import { LOCALES, type Lang } from "@/lib/i18n";
 
 // „Okno Discorda” z podglądem wiadomości dokładnie tak, jak zobaczy ją gracz: prawdziwy avatar i nazwa bota z tego serwera, ikona i kanały serwera,
 // kolory ról we wzmiankach, jasny/ciemny motyw i wersja na telefon. Pasek wiadomości na dole działa jak prawdziwy – wpisujesz tekst i wysyłasz.
@@ -36,8 +38,13 @@ const PALETTE = {
 type Theme = keyof typeof PALETTE;
 type P = (typeof PALETTE)[Theme];
 
-const nowLabel = () =>
-  `Dzisiaj o ${new Date().toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}`;
+const nowLabel = (
+  lang: Lang,
+  tr: (key: string, params?: Record<string, string | number>) => string,
+) =>
+  tr("Dzisiaj o {time}", {
+    time: new Date().toLocaleTimeString(LOCALES[lang], { hour: "2-digit", minute: "2-digit" }),
+  });
 
 function Embed({ e, p, ctx, when }: { e: ComposerEmbed; p: P; ctx: MdCtx; when: string }) {
   const empty =
@@ -144,10 +151,11 @@ export function DiscordWindow({
   onContent: (v: string) => void;
   onSend: () => void;
 }) {
+  const { t: tr, lang } = useI18n();
   const [theme, setTheme] = useState<Theme>("dark");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [when, setWhen] = useState("");
-  useEffect(() => setWhen(nowLabel()), [m.content, m.embeds]);
+  useEffect(() => setWhen(nowLabel(lang, tr)), [m.content, m.embeds, lang, tr]);
   const p = PALETTE[theme];
 
   const ctx = useMemo<MdCtx>(
@@ -191,10 +199,12 @@ export function DiscordWindow({
             <Hash className="size-9" style={{ color: p.head }} />
           </div>
           <p className="mt-2 text-2xl font-bold" style={{ color: p.head }}>
-            Witaj na #{chName}!
+            {tr("Witaj na #")}
+            {chName}!
           </p>
           <p className="text-sm" style={{ color: p.muted }}>
-            To jest początek kanału #{chName}.
+            {tr("To jest początek kanału #")}
+            {chName}.
           </p>
         </div>
 
@@ -212,15 +222,15 @@ export function DiscordWindow({
                 {name}
               </span>
               <span className="inline-flex items-center rounded-[3px] bg-[#5865f2] px-1 text-[10px] font-bold leading-4 text-white">
-                {webhook ? "APLIKACJA" : "✓ BOT"}
+                {webhook ? tr("APLIKACJA") : tr("✓ BOT")}
               </span>
               <span className="text-xs" style={{ color: p.muted }}>
-                {when || "Dzisiaj"}
+                {when || tr("Dzisiaj")}
               </span>
             </div>
             {(m.pingEveryone || pings.length > 0 || m.content) && (
               <div className="dc-body break-words text-[15px] leading-[1.4]">
-                {m.pingEveryone && <span className="dc-mention mr-1">@everyone</span>}
+                {m.pingEveryone && <span className="dc-mention mr-1">{tr("@everyone")}</span>}
                 {pings.map((r) => {
                   const c = r.color ? `#${r.color.toString(16).padStart(6, "0")}` : "#c9cdfb";
                   return (
@@ -246,10 +256,10 @@ export function DiscordWindow({
       <div className="px-4 pb-4">
         <div className="flex items-center gap-2 rounded-lg px-3" style={{ background: p.input }}>
           <input
-            aria-label={`Napisz wiadomość na #${chName}`}
+            aria-label={tr("Napisz wiadomość na #{chName}", { chName })}
             className="h-11 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:opacity-60"
             style={{ color: p.text }}
-            placeholder={`Napisz wiadomość na #${chName}`}
+            placeholder={tr("Napisz wiadomość na #{chName}", { chName })}
             maxLength={2000}
             value={m.content.includes("\n") ? m.content.split("\n")[0] : m.content}
             readOnly={m.content.includes("\n")}
@@ -263,8 +273,8 @@ export function DiscordWindow({
           />
           <button
             type="button"
-            aria-label="Wyślij wiadomość"
-            title="Wyślij (Enter)"
+            aria-label={tr("Wyślij wiadomość")}
+            title={tr("Wyślij (Enter)")}
             disabled={sending}
             onClick={onSend}
             className="grid size-8 place-items-center rounded-md bg-[#5865f2] text-white transition hover:brightness-110 disabled:opacity-50"
@@ -280,7 +290,8 @@ export function DiscordWindow({
     <div>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">
-          Tak zobaczą to gracze{view ? ` na serwerze ${view.guild.name}` : ""}
+          {tr("Tak zobaczą to gracze")}
+          {view ? tr(" na serwerze {name}", { name: view.guild.name }) : ""}
         </span>
         <div className="flex gap-1">
           {(
@@ -302,8 +313,8 @@ export function DiscordWindow({
           ))}
           <button
             type="button"
-            title={theme === "dark" ? "Jasny motyw Discorda" : "Ciemny motyw Discorda"}
-            aria-label="Przełącz motyw podglądu"
+            title={theme === "dark" ? tr("Jasny motyw Discorda") : tr("Ciemny motyw Discorda")}
+            aria-label={tr("Przełącz motyw podglądu")}
             onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
             className="grid size-8 place-items-center rounded-md border bg-card hover:bg-muted"
           >
@@ -339,7 +350,7 @@ export function DiscordWindow({
                   className="truncate border-b px-3 py-3 text-sm font-semibold"
                   style={{ borderColor: p.line, color: p.head }}
                 >
-                  {view?.guild.name ?? (loading ? "Wczytywanie…" : "Serwer")}
+                  {view?.guild.name ?? (loading ? tr("Wczytywanie…") : tr("Serwer"))}
                 </div>
                 <div className="space-y-0.5 p-2 text-sm">
                   {text.slice(0, 12).map((c) => (
@@ -354,7 +365,9 @@ export function DiscordWindow({
                       <span className="truncate">{c.name}</span>
                     </div>
                   ))}
-                  {text.length === 0 && <div className="px-2 py-1 text-xs">Brak kanałów</div>}
+                  {text.length === 0 && (
+                    <div className="px-2 py-1 text-xs">{tr("Brak kanałów")}</div>
+                  )}
                 </div>
               </div>
             </>
@@ -362,7 +375,7 @@ export function DiscordWindow({
           {chat}
         </div>
       </div>
-      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+      {error && <p className="mt-2 text-xs text-destructive">{tr(error)}</p>}
     </div>
   );
 }

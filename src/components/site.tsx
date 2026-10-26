@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Gem, ShieldCheck } from "lucide-react";
 import { getPublicNotice } from "@/lib/admin.functions";
+import { LanguageSwitch, useI18n } from "@/lib/i18n-react";
 
 // Uprawnienia bota: rangi, kanały, wiadomości, wyrzucanie/banowanie, wyciszanie (Moderate Members), webhooki, reakcje, zewnętrzne emoji.
 export const BOT_PERMISSIONS = "1100317322327"; // + Tworzenie zaproszeń (do wejścia właściciela z panelu admina)
@@ -10,6 +11,7 @@ export const inviteUrl = (clientId: string, guildId?: string) =>
 
 // Opens in a new tab: Discord's login page refuses to load inside the editor preview frame.
 export function LoginButton() {
+  const { t } = useI18n();
   return (
     <a
       href="/api/public/auth/login"
@@ -17,7 +19,7 @@ export function LoginButton() {
       rel="noreferrer"
       className="inline-block rounded-md bg-accent px-6 py-3 font-semibold text-accent-foreground transition hover:brightness-110"
     >
-      Zaloguj przez Discord
+      {t("Zaloguj przez Discord")}
     </a>
   );
 }
@@ -26,6 +28,7 @@ type User = { id: string; username: string; avatar: string | null } | null;
 
 // Pasek ogłoszeń: tryb serwisowy i komunikat ustawiony przez właściciela w panelu administratora.
 function NoticeBar() {
+  const { t } = useI18n();
   const { data } = useQuery({
     queryKey: ["public-notice"],
     queryFn: () => getPublicNotice(),
@@ -41,7 +44,7 @@ function NoticeBar() {
     <>
       {data.maintenance && (
         <div className="bg-amber-500 px-5 py-2 text-center text-sm font-semibold text-black">
-          🛠️ Trwają prace serwisowe – zapis zmian jest chwilowo wyłączony.
+          {t("🛠️ Trwają prace serwisowe – zapis zmian jest chwilowo wyłączony.")}
         </div>
       )}
       {data.notice && (
@@ -56,6 +59,7 @@ function NoticeBar() {
 }
 
 export function SiteHeader({ user, isOwner = false }: { user: User; isOwner?: boolean }) {
+  const { t } = useI18n();
   const link = "hover:text-accent-foreground/70 transition";
   return (
     <>
@@ -63,21 +67,21 @@ export function SiteHeader({ user, isOwner = false }: { user: User; isOwner?: bo
       <NoticeBar />
       <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
         <Link to="/" className="font-display text-2xl">
-          EH <span className="text-primary">Bot</span>
+          {t("EH")} <span className="text-primary">{t("Bot")}</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
           <Link to="/features" className={link}>
-            Funkcje
+            {t("Funkcje")}
           </Link>
           <Link to="/pricing" className={`${link} inline-flex items-center gap-1`}>
             <Gem className="size-3.5" />
-            Cennik
+            {t("Cennik")}
           </Link>
           <Link to="/dashboard" className={link}>
-            Panel
+            {t("Panel")}
           </Link>
           <Link to="/terms" className={`${link} text-muted-foreground`}>
-            Regulamin
+            {t("Regulamin")}
           </Link>
           {isOwner && (
             <Link
@@ -85,9 +89,10 @@ export function SiteHeader({ user, isOwner = false }: { user: User; isOwner?: bo
               className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-primary-foreground"
             >
               <ShieldCheck className="size-3.5" />
-              Admin
+              {t("Admin")}
             </Link>
           )}
+          <LanguageSwitch />
           {user ? (
             <span className="flex items-center gap-2">
               {user.avatar && (
@@ -101,7 +106,7 @@ export function SiteHeader({ user, isOwner = false }: { user: User; isOwner?: bo
                 href="/api/public/auth/logout"
                 className="text-muted-foreground hover:text-foreground"
               >
-                Wyloguj
+                {t("Wyloguj")}
               </a>
             </span>
           ) : null}
@@ -112,23 +117,24 @@ export function SiteHeader({ user, isOwner = false }: { user: User; isOwner?: bo
 }
 
 export function SiteFooter() {
+  const { t } = useI18n();
   return (
     <footer className="border-t px-5 py-8 text-center text-sm text-muted-foreground">
       <div className="mb-2 flex flex-wrap justify-center gap-x-5 gap-y-1 font-semibold">
         <Link to="/features" className="hover:text-foreground">
-          Funkcje
+          {t("Funkcje")}
         </Link>
         <Link to="/pricing" className="hover:text-foreground">
-          Cennik
+          {t("Cennik")}
         </Link>
         <Link to="/terms" className="hover:text-foreground">
-          Regulamin i prywatność
+          {t("Regulamin i prywatność")}
         </Link>
         <Link to="/dashboard" className="hover:text-foreground">
-          Panel
+          {t("Panel")}
         </Link>
       </div>
-      Emergency Hamburg Bot · nie jest powiązany z Roblox ani twórcami gry.
+      {t("Emergency Hamburg Bot · nie jest powiązany z Roblox ani twórcami gry.")}
     </footer>
   );
 }

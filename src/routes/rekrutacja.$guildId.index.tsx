@@ -4,6 +4,7 @@ import { getPublicRecruit, submitApplication } from "@/lib/recruit-site.function
 import { MAX_ANSWER, NICK } from "@/lib/recruit-logic";
 import type { PublicQuestion, PublicRecruit } from "@/lib/recruit-types";
 import { RkTools } from "@/components/rk-tools";
+import { LanguageSwitch, useI18n } from "@/lib/i18n-react";
 
 export const Route = createFileRoute("/rekrutacja/$guildId/")({
   loader: ({ params }) => getPublicRecruit({ data: { guildId: params.guildId } }),
@@ -56,15 +57,16 @@ const ringBad = "ring-2 ring-red-500/60";
 const lenOf = (s: string | undefined) => (s ?? "").trim().length;
 
 function RecruitPage() {
+  const { t: tr } = useI18n();
   const data = Route.useLoaderData();
   if (data.state !== "ok") {
     return (
       <main className="rk grid min-h-screen place-items-center bg-[var(--rk-bg)] px-5 text-center text-[var(--rk-fg)]">
         <div>
           <p className="text-6xl">📭</p>
-          <h1 className="mt-4 text-2xl font-bold">Rekrutacja jest niedostępna</h1>
+          <h1 className="mt-4 text-2xl font-bold">{tr("Rekrutacja jest niedostępna")}</h1>
           <p className="mt-2 text-[var(--rk-mut)]">
-            Ten link nie prowadzi do aktywnej strony rekrutacyjnej.
+            {tr("Ten link nie prowadzi do aktywnej strony rekrutacyjnej.")}
           </p>
         </div>
         <RkTools />
@@ -76,6 +78,7 @@ function RecruitPage() {
 
 // ---------- sekcje statyczne: memo, żeby pisanie w formularzu nie przerysowywało całej strony ----------
 const Header = memo(function Header({ d }: { d: Ok }) {
+  const { t: tr } = useI18n();
   const icon = d.guild.icon
     ? `https://cdn.discordapp.com/icons/${d.guild.id}/${d.guild.icon}.png?size=64`
     : "";
@@ -96,10 +99,10 @@ const Header = memo(function Header({ d }: { d: Ok }) {
       </a>
       <nav className="flex items-center gap-5 text-sm font-semibold text-[var(--rk-fg2)]">
         <a href="#jak" className="hidden hover:text-[var(--rk-fg)] sm:inline">
-          Jak aplikować
+          {tr("Jak aplikować")}
         </a>
         <a href="#formularz" className="hover:text-[var(--rk-fg)]">
-          Rekrutacja
+          {tr("Rekrutacja")}
         </a>
         {d.site.discord && (
           <a
@@ -108,15 +111,17 @@ const Header = memo(function Header({ d }: { d: Ok }) {
             rel="noreferrer"
             className="rounded-lg border border-[var(--rk-line)] px-3 py-1.5 hover:bg-[var(--rk-hover)]"
           >
-            Discord ↗
+            {tr("Discord ↗")}
           </a>
         )}
+        <LanguageSwitch className="border-[var(--rk-line)]" />
       </nav>
     </header>
   );
 });
 
 const HeroTop = memo(function HeroTop({ d }: { d: Ok }) {
+  const { t: tr } = useI18n();
   const { site } = d;
   return (
     <>
@@ -133,7 +138,7 @@ const HeroTop = memo(function HeroTop({ d }: { d: Ok }) {
         className="animate-fade-up text-xs font-bold uppercase tracking-[0.3em] text-[var(--rk-mut)]"
         style={{ animationDelay: "80ms" }}
       >
-        Rekrutacja do ekipy
+        {tr("Rekrutacja do ekipy")}
       </p>
       <h1
         className="animate-fade-up mt-3 text-4xl font-extrabold leading-[1.05] sm:text-6xl"
@@ -152,7 +157,7 @@ const HeroTop = memo(function HeroTop({ d }: { d: Ok }) {
         style={{ animationDelay: "320ms" }}
       >
         <a href="#formularz" className="rk-btn rounded-xl px-6 py-3 font-bold text-white shadow-lg">
-          Wypełnij podanie ↗
+          {tr("Wypełnij podanie ↗")}
         </a>
         {site.discord && (
           <a
@@ -161,7 +166,7 @@ const HeroTop = memo(function HeroTop({ d }: { d: Ok }) {
             rel="noreferrer"
             className="rk-lift rounded-xl border border-[var(--rk-line)] px-6 py-3 font-bold hover:bg-[var(--rk-hover)]"
           >
-            Dołącz na Discord ↗
+            {tr("Dołącz na Discord ↗")}
           </a>
         )}
       </div>
@@ -179,6 +184,7 @@ const Stats = memo(function Stats({
   count: number | null;
   done: number;
 }) {
+  const { t: tr } = useI18n();
   const open = d.positions.filter((p) => p.open).length;
   const items = [
     [count === null ? "—" : String(count), "pytań na to stanowisko"],
@@ -197,7 +203,7 @@ const Stats = memo(function Stats({
           <dt className="text-2xl font-extrabold" style={{ color: "var(--ac)" }}>
             {v}
           </dt>
-          <dd className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{l}</dd>
+          <dd className="text-xs uppercase tracking-wider text-[var(--rk-mut)]">{tr(l)}</dd>
         </div>
       ))}
     </dl>
@@ -218,9 +224,10 @@ const STEPS = [
   ["3", "Poczekaj na decyzję", "Ekipa rozpatrzy podanie, a odpowiedź dostaniesz na Discordzie."],
 ] as const;
 const Steps = memo(function Steps() {
+  const { t: tr } = useI18n();
   return (
     <section id="jak" className="rk-cv mx-auto max-w-5xl px-5 py-10">
-      <h2 className="rk-reveal text-2xl font-extrabold">Jak aplikować</h2>
+      <h2 className="rk-reveal text-2xl font-extrabold">{tr("Jak aplikować")}</h2>
       <ol className="mt-5 grid gap-3 sm:grid-cols-3">
         {STEPS.map(([n, t, x], k) => (
           <li
@@ -234,8 +241,8 @@ const Steps = memo(function Steps() {
             >
               {n}
             </span>
-            <h3 className="mt-3 font-bold">{t}</h3>
-            <p className="mt-1 text-sm text-[var(--rk-mut)]">{x}</p>
+            <h3 className="mt-3 font-bold">{tr(t)}</h3>
+            <p className="mt-1 text-sm text-[var(--rk-mut)]">{tr(x)}</p>
           </li>
         ))}
       </ol>
@@ -244,10 +251,11 @@ const Steps = memo(function Steps() {
 });
 
 const Faq = memo(function Faq({ faq }: { faq: Ok["site"]["faq"] }) {
+  const { t: tr } = useI18n();
   if (!faq.length) return null;
   return (
     <section className="rk-cv mx-auto max-w-3xl px-5 py-10">
-      <h2 className="rk-reveal text-2xl font-extrabold">Masz pytania?</h2>
+      <h2 className="rk-reveal text-2xl font-extrabold">{tr("Masz pytania?")}</h2>
       <div className="mt-4 space-y-2">
         {faq.map((f) => (
           <details key={f.q} className={`${card} rk-reveal group p-4`}>
@@ -269,10 +277,11 @@ const Faq = memo(function Faq({ faq }: { faq: Ok["site"]["faq"] }) {
 });
 
 const Footer = memo(function Footer({ d, guildId }: { d: Ok; guildId: string }) {
+  const { t: tr } = useI18n();
   return (
     <footer className="rk-cv mx-auto mt-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-t border-[var(--rk-line)] px-5 py-8 text-sm text-[var(--rk-mut)]">
       <span>
-        © {new Date().getFullYear()} {d.guild.name} · rekrutacja przez Emergency Hamburg Bot
+        © {new Date().getFullYear()} {d.guild.name} {tr("· rekrutacja przez Emergency Hamburg Bot")}
       </span>
       <span className="flex gap-4">
         {d.site.discord && (
@@ -282,7 +291,7 @@ const Footer = memo(function Footer({ d, guildId }: { d: Ok; guildId: string }) 
             rel="noreferrer"
             className="hover:text-[var(--rk-fg2)]"
           >
-            Discord
+            {tr("Discord")}
           </a>
         )}
         <Link
@@ -290,7 +299,7 @@ const Footer = memo(function Footer({ d, guildId }: { d: Ok; guildId: string }) 
           params={{ guildId }}
           className="hover:text-[var(--rk-fg2)]"
         >
-          Panel ekipy
+          {tr("Panel ekipy")}
         </Link>
       </span>
     </footer>
@@ -313,6 +322,7 @@ const QuestionField = memo(function QuestionField({
   flagged: boolean;
   onChange: (id: string, v: string) => void;
 }) {
+  const { t: tr } = useI18n();
   const n = lenOf(value);
   const short = n > 0 && n < minChars;
   const valid = n === 0 ? !q.required : n >= minChars && n <= MAX_ANSWER[q.style];
@@ -320,7 +330,9 @@ const QuestionField = memo(function QuestionField({
     <div id={`field-q-${q.id}`} className={`rounded-xl ${flagged ? ringBad : ""}`}>
       <label className={labelCls}>
         <span style={{ color: "var(--ac)" }}>{index + 1}.</span> {q.label}
-        {!q.required && <span className="font-normal text-[var(--rk-mut)]"> (opcjonalnie)</span>}
+        {!q.required && (
+          <span className="font-normal text-[var(--rk-mut)]"> {tr("(opcjonalnie)")}</span>
+        )}
       </label>
       {q.style === "long" ? (
         <textarea
@@ -343,14 +355,15 @@ const QuestionField = memo(function QuestionField({
         className={`mt-1 text-xs ${short ? "text-amber-300" : valid && n ? "text-emerald-400" : "text-[var(--rk-mut)]"}`}
       >
         {n}
-        {minChars ? ` / min. ${minChars}` : ""} znaków{" "}
-        {short ? "— napisz trochę więcej" : n ? "✓" : ""}
+        {minChars ? tr(" / min. {minChars}", { minChars }) : ""} {tr("znaków")}{" "}
+        {short ? tr("— napisz trochę więcej") : n ? "✓" : ""}
       </p>
     </div>
   );
 });
 
 function Page({ d }: { d: Ok }) {
+  const { t: tr } = useI18n();
   const { guildId } = Route.useParams();
   const { site } = d;
   const accent = useMemo(
@@ -513,7 +526,7 @@ function Page({ d }: { d: Ok }) {
           {state === "done" ? (
             <div className={`${card} animate-fade-up p-8 text-center`}>
               <p className="text-5xl">🎉</p>
-              <h2 className="mt-3 text-3xl font-extrabold">Rekrutacja wysłana!</h2>
+              <h2 className="mt-3 text-3xl font-extrabold">{tr("Rekrutacja wysłana!")}</h2>
               <p className="mx-auto mt-3 max-w-md text-[var(--rk-fg2)]">{site.successText}</p>
               {site.discord && (
                 <a
@@ -522,7 +535,7 @@ function Page({ d }: { d: Ok }) {
                   rel="noreferrer"
                   className="rk-btn mt-6 inline-block rounded-xl px-6 py-3 font-bold text-white"
                 >
-                  Dołącz na Discord ↗
+                  {tr("Dołącz na Discord ↗")}
                 </a>
               )}
             </div>
@@ -530,9 +543,9 @@ function Page({ d }: { d: Ok }) {
             <form onSubmit={submit} noValidate className={`${card} p-5 sm:p-8`}>
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-extrabold">Twoje podanie</h2>
+                  <h2 className="text-2xl font-extrabold">{tr("Twoje podanie")}</h2>
                   <p className="text-sm text-[var(--rk-mut)]">
-                    Szkic zapisuje się automatycznie w tej przeglądarce.
+                    {tr("Szkic zapisuje się automatycznie w tej przeglądarce.")}
                   </p>
                 </div>
                 <button
@@ -544,7 +557,7 @@ function Page({ d }: { d: Ok }) {
                     setErrors([]);
                   }}
                 >
-                  🗑 Wyczyść szkic
+                  {tr("🗑 Wyczyść szkic")}
                 </button>
               </div>
 
@@ -562,7 +575,7 @@ function Page({ d }: { d: Ok }) {
 
               {!d.open && (
                 <p className="mt-5 rounded-xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm font-semibold text-amber-200">
-                  🔒 Rekrutacja jest teraz zamknięta. Wróć tu później.
+                  {tr("🔒 Rekrutacja jest teraz zamknięta. Wróć tu później.")}
                 </p>
               )}
 
@@ -571,19 +584,19 @@ function Page({ d }: { d: Ok }) {
                 className="mt-6 space-y-5 disabled:opacity-60"
               >
                 <div id="field-position" className={`rounded-xl ${bad("field-position")}`}>
-                  <label className={labelCls}>👤 Stanowisko</label>
+                  <label className={labelCls}>{tr("👤 Stanowisko")}</label>
                   <select
                     className={inputCls}
                     value={draft.positionId}
                     onChange={(e) => set("positionId", e.target.value)}
                   >
-                    <option value="">— wybierz stanowisko —</option>
+                    <option value="">{tr("— wybierz stanowisko —")}</option>
                     {d.positions.map((p) => (
                       <option key={p.id} value={p.id} disabled={!p.open}>
                         {p.emoji ? `${p.emoji} ` : ""}
                         {p.label}
                         {p.desc ? ` — ${p.desc}` : ""}
-                        {p.open ? "" : " (zamknięte)"}
+                        {p.open ? "" : tr(" (zamknięte)")}
                       </option>
                     ))}
                   </select>
@@ -591,42 +604,44 @@ function Page({ d }: { d: Ok }) {
 
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div id="field-discord" className={`rounded-xl ${bad("field-discord")}`}>
-                    <label className={labelCls}>Nick Discord</label>
+                    <label className={labelCls}>{tr("Nick Discord")}</label>
                     <input
                       className={inputCls}
                       maxLength={NICK.discord[1]}
                       value={draft.discordNick}
                       onChange={(e) => set("discordNick", e.target.value)}
-                      placeholder="np. jan_kowalski"
+                      placeholder={tr("np. jan_kowalski")}
                       autoComplete="off"
                     />
                   </div>
                   <div id="field-roblox" className={`rounded-xl ${bad("field-roblox")}`}>
-                    <label className={labelCls}>Nick Roblox</label>
+                    <label className={labelCls}>{tr("Nick Roblox")}</label>
                     <input
                       className={inputCls}
                       maxLength={NICK.roblox[1]}
                       value={draft.robloxNick}
                       onChange={(e) => set("robloxNick", e.target.value)}
-                      placeholder="np. JanK_2008"
+                      placeholder={tr("np. JanK_2008")}
                       autoComplete="off"
                     />
                   </div>
                   <div id="field-age" className={`rounded-xl ${bad("field-age")}`}>
-                    <label className={labelCls}>Wiek</label>
+                    <label className={labelCls}>{tr("Wiek")}</label>
                     <input
                       className={inputCls}
                       inputMode="numeric"
                       maxLength={2}
                       value={draft.age}
                       onChange={(e) => set("age", e.target.value.replace(/\D/g, ""))}
-                      placeholder="np. 16"
+                      placeholder={tr("np. 16")}
                     />
                   </div>
                   <div>
                     <label className={labelCls}>
-                      ID Discord{" "}
-                      <span className="font-normal text-[var(--rk-mut)]">(opcjonalnie)</span>
+                      {tr("ID Discord")}{" "}
+                      <span className="font-normal text-[var(--rk-mut)]">
+                        {tr("(opcjonalnie)")}
+                      </span>
                     </label>
                     <input
                       className={inputCls}
@@ -634,14 +649,16 @@ function Page({ d }: { d: Ok }) {
                       maxLength={20}
                       value={draft.discordId}
                       onChange={(e) => set("discordId", e.target.value.replace(/\D/g, ""))}
-                      placeholder="do wiadomości o decyzji i rangi"
+                      placeholder={tr("do wiadomości o decyzji i rangi")}
                     />
                   </div>
                 </div>
 
                 {!draft.positionId && (
                   <p className="rounded-xl border border-dashed border-[var(--rk-line)] p-4 text-sm text-[var(--rk-mut)]">
-                    👆 Wybierz stanowisko – każde ma własne pytania, które pojawią się tutaj.
+                    {tr(
+                      "👆 Wybierz stanowisko – każde ma własne pytania, które pojawią się tutaj.",
+                    )}
                   </p>
                 )}
                 {qs.map((q, i) => (
@@ -677,7 +694,7 @@ function Page({ d }: { d: Ok }) {
                     checked={agree}
                     onChange={(e) => setAgree(e.target.checked)}
                   />
-                  🔒 Potwierdzam, że odpowiedzi napisałem(-am) samodzielnie i nie są spamem.
+                  {tr("🔒 Potwierdzam, że odpowiedzi napisałem(-am) samodzielnie i nie są spamem.")}
                 </label>
               </fieldset>
 
@@ -687,7 +704,7 @@ function Page({ d }: { d: Ok }) {
                   role="alert"
                 >
                   {errors.map((m) => (
-                    <li key={m}>⚠️ {m}</li>
+                    <li key={m}>⚠️ {tr(m)}</li>
                   ))}
                 </ul>
               )}
@@ -698,7 +715,7 @@ function Page({ d }: { d: Ok }) {
                   disabled={!d.open || state === "sending"}
                   className="rk-btn rounded-xl px-7 py-3.5 font-extrabold uppercase tracking-wide text-white shadow-lg disabled:opacity-50"
                 >
-                  {state === "sending" ? "Wysyłanie…" : "📤 Wyślij rekrutację"}
+                  {state === "sending" ? tr("Wysyłanie…") : tr("📤 Wyślij rekrutację")}
                 </button>
                 {missing.length > 0 && (
                   <button
@@ -706,12 +723,13 @@ function Page({ d }: { d: Ok }) {
                     onClick={jump}
                     className="text-sm font-semibold text-[var(--rk-fg2)] underline-offset-4 hover:underline"
                   >
-                    Przejdź do brakującego ({missing.length})
+                    {tr("Przejdź do brakującego (")}
+                    {missing.length})
                   </button>
                 )}
                 {tabs > 0 && (
                   <span className="ml-auto text-xs text-[var(--rk-mut)]">
-                    Przełączenia kart: {tabs}
+                    {tr("Przełączenia kart:")} {tabs}
                   </span>
                 )}
               </div>

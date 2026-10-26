@@ -3,6 +3,7 @@ import { Check, Gem, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackBuyClick } from "@/lib/admin.functions";
 import { OWNER_ID, OWNER_PROFILE_URL, PRICE_LIFETIME_PLN } from "@/lib/premium";
+import { useI18n } from "@/lib/i18n-react";
 
 /** Gotowa wiadomość, którą kupujący wklei właścicielowi na Discordzie (zawiera serwer, cenę i ewentualny kod). */
 export function buyMessage(o: {
@@ -51,6 +52,7 @@ export function BuyButton({
   children?: React.ReactNode;
   size?: "default" | "sm" | "lg";
 }) {
+  const { t } = useI18n();
   const [state, setState] = useState<"idle" | "copied" | "manual">("idle");
   return (
     <div className="space-y-2">
@@ -60,19 +62,22 @@ export function BuyButton({
         onClick={async () => setState((await startPurchase(o)) ? "copied" : "manual")}
       >
         <Gem />
-        {children ?? `Kup Premium – ${o.price ?? PRICE_LIFETIME_PLN} zł`}
+        {children ?? t("Kup Premium – {v1} zł", { v1: o.price ?? PRICE_LIFETIME_PLN })}
       </Button>
       {state === "copied" && (
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <Check className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-          Otworzyłem profil właściciela na Discordzie, a gotową wiadomość masz w schowku – wklej ją
-          (Ctrl+V) w rozmowie i opisz płatność.
+          {t(
+            "Otworzyłem profil właściciela na Discordzie, a gotową wiadomość masz w schowku – wklej ją (Ctrl+V) w rozmowie i opisz płatność.",
+          )}
         </p>
       )}
       {state === "manual" && (
         <p className="text-xs text-muted-foreground">
-          Otworzyłem profil właściciela na Discordzie. Napisz tam, że chcesz Premium, i podaj ID
-          swojego serwera. (Właściciel: <code>{OWNER_ID}</code>)
+          {t(
+            "Otworzyłem profil właściciela na Discordzie. Napisz tam, że chcesz Premium, i podaj ID swojego serwera. (Właściciel:",
+          )}{" "}
+          <code>{OWNER_ID}</code>)
         </p>
       )}
     </div>
@@ -89,6 +94,7 @@ export function TrialCard({
   onStart: () => Promise<void>;
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const [state, setState] = useState<{ busy: boolean; error: string }>({ busy: false, error: "" });
   async function go() {
     setState({ busy: true, error: "" });
@@ -108,20 +114,24 @@ export function TrialCard({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-display text-3xl leading-none">🎁 {days} dni Premium za darmo</p>
+          <p className="font-display text-3xl leading-none">
+            🎁 {days} {t("dni Premium za darmo")}
+          </p>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            Wypróbuj wszystkie funkcje: sąd, mafię, firmy, stronę rekrutacyjną, widok Discorda i
-            wyższe limity. Bez karty i bez zobowiązań – po {days} dniach serwer wraca do planu Free.
+            {t(
+              "Wypróbuj wszystkie funkcje: sąd, mafię, firmy, stronę rekrutacyjną, widok Discorda i wyższe limity. Bez karty i bez zobowiązań – po",
+            )}{" "}
+            {days} {t("dniach serwer wraca do planu Free.")}
           </p>
         </div>
         <Button size="lg" onClick={() => void go()} disabled={state.busy}>
           <Gem />
-          {state.busy ? "Aktywuję…" : `Aktywuj ${days} dni za darmo`}
+          {state.busy ? t("Aktywuję…") : t("Aktywuj {days} dni za darmo", { days })}
         </Button>
       </div>
       {state.error && (
         <p className="mt-3 text-sm font-semibold text-destructive" role="alert">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
     </div>
@@ -129,12 +139,13 @@ export function TrialCard({
 }
 
 export function PremiumBadge({ className = "" }: { className?: string }) {
+  const { t } = useI18n();
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-[11px] font-bold text-black ${className}`}
     >
       <Gem className="size-3" />
-      Premium
+      {t("Premium")}
     </span>
   );
 }

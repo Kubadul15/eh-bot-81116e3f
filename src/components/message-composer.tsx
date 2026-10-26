@@ -18,6 +18,7 @@ import {
 } from "@/lib/message-config";
 import { getBotView, sendMessage } from "@/lib/message.functions";
 import { uploadImage } from "@/lib/content.functions";
+import { useI18n } from "@/lib/i18n-react";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 // Minimalny markdown Discorda do podglądu (tekst jest najpierw escapowany, więc jest bezpieczny).
@@ -45,6 +46,7 @@ function ImageField({
   onChange: (v: string) => void;
   placeholder: string;
 }) {
+  const { t } = useI18n();
   const upload = useServerFn(uploadImage);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -69,7 +71,7 @@ function ImageField({
         <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
         <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border bg-card px-3 text-sm font-semibold hover:bg-muted">
           <ImagePlus className="size-4" />
-          {busy ? "…" : "Wgraj"}
+          {busy ? "…" : t("Wgraj")}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
@@ -78,7 +80,7 @@ function ImageField({
           />
         </label>
       </div>
-      {err && <p className="mt-1 text-xs text-destructive">{err}</p>}
+      {err && <p className="mt-1 text-xs text-destructive">{t(err)}</p>}
     </div>
   );
 }
@@ -156,6 +158,7 @@ function Preview({
   roles: DRole[];
   channelName: string;
 }) {
+  const { t } = useI18n();
   const name =
     m.mode === "webhook" ? m.webhookName || "Emergency Hamburg" : "Emergency Hamburg Bot";
   const picked = m.pingRoleIds.map((id) => roles.find((r) => r.id === id)?.name ?? "ranga");
@@ -180,14 +183,16 @@ function Preview({
           <div className="flex items-center gap-2">
             <span className="font-semibold text-white">{name}</span>
             <span className="rounded bg-[#5865f2] px-1 text-[10px] font-bold text-white">
-              {m.mode === "webhook" ? "WEBHOOK" : "BOT"}
+              {m.mode === "webhook" ? t("WEBHOOK") : t("BOT")}
             </span>
-            <span className="text-xs text-[#949ba4]">dzisiaj</span>
+            <span className="text-xs text-[#949ba4]">{t("dzisiaj")}</span>
           </div>
           {(m.pingEveryone || picked.length > 0 || m.content) && (
             <div className="break-words text-sm">
               {m.pingEveryone && (
-                <span className="mr-1 rounded bg-[#5865f2]/30 px-1 text-[#c9cdfb]">@everyone</span>
+                <span className="mr-1 rounded bg-[#5865f2]/30 px-1 text-[#c9cdfb]">
+                  {t("@everyone")}
+                </span>
               )}
               {picked.map((n, i) => (
                 <span key={i} className="mr-1 rounded bg-[#5865f2]/30 px-1 text-[#c9cdfb]">
@@ -223,6 +228,7 @@ export function MessageComposer({
   studio?: boolean;
   onOpenStudio?: () => void;
 }) {
+  const { t } = useI18n();
   const send = useServerFn(sendMessage);
   // dane do widoku Discorda (Premium): prawdziwy bot i serwer
   const botView = useQuery({
@@ -319,13 +325,13 @@ export function MessageComposer({
   const formCol = (
     <div className="space-y-5">
       <div className="rounded-xl border bg-card p-5">
-        <span className={label}>Kanał</span>
+        <span className={label}>{t("Kanał")}</span>
         <select
           className="editor-select"
           value={m.channelId}
           onChange={(e) => set({ channelId: e.target.value })}
         >
-          <option value="">— wybierz kanał —</option>
+          <option value="">{t("— wybierz kanał —")}</option>
           {textChannels.map((c) => (
             <option key={c.id} value={c.id}>
               # {c.name}
@@ -333,7 +339,7 @@ export function MessageComposer({
           ))}
         </select>
 
-        <span className={`${label} mt-4`}>Wyślij jako</span>
+        <span className={`${label} mt-4`}>{t("Wyślij jako")}</span>
         <div className="grid grid-cols-2 gap-2">
           {(
             [
@@ -346,7 +352,7 @@ export function MessageComposer({
               type="button"
               aria-pressed={m.mode === id}
               disabled={id === "webhook" && !premium}
-              title={id === "webhook" && !premium ? "Webhook to funkcja Premium" : undefined}
+              title={id === "webhook" && !premium ? t("Webhook to funkcja Premium") : undefined}
               onClick={() => set({ mode: id })}
               className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${m.mode === id ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
             >
@@ -354,7 +360,7 @@ export function MessageComposer({
               <span>
                 <span className="block text-sm font-bold">{name}</span>
                 <span className="block text-xs opacity-80">
-                  {id === "webhook" && !premium ? "💎 Funkcja Premium" : hint}
+                  {id === "webhook" && !premium ? t("💎 Funkcja Premium") : t(hint)}
                 </span>
               </span>
             </button>
@@ -363,44 +369,45 @@ export function MessageComposer({
         {m.mode === "webhook" && (
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label>
-              <span className={label}>Nazwa nadawcy</span>
+              <span className={label}>{t("Nazwa nadawcy")}</span>
               <Input
                 maxLength={80}
                 value={m.webhookName}
-                placeholder="Emergency Hamburg"
+                placeholder={t("Emergency Hamburg")}
                 onChange={(e) => set({ webhookName: e.target.value })}
               />
             </label>
             <div>
-              <span className={label}>Avatar (https)</span>
+              <span className={label}>{t("Avatar (https)")}</span>
               <ImageField
                 guildId={guildId}
                 value={m.webhookAvatar}
                 onChange={(v) => set({ webhookAvatar: v })}
-                placeholder="https://…"
+                placeholder={t("https://…")}
               />
             </div>
             <p className="text-xs text-muted-foreground sm:col-span-2">
-              Bot sam utworzy webhook „EH Bot” na tym kanale (wymaga uprawnienia „Zarządzanie
-              webhookami”).
+              {t(
+                "Bot sam utworzy webhook „EH Bot” na tym kanale (wymaga uprawnienia „Zarządzanie webhookami”).",
+              )}
             </p>
           </div>
         )}
       </div>
 
       <div className="rounded-xl border bg-card p-5">
-        <span className={label}>Treść wiadomości (nad embedem)</span>
+        <span className={label}>{t("Treść wiadomości (nad embedem)")}</span>
         <Textarea
           maxLength={2000}
           rows={3}
           value={m.content}
-          placeholder="Zwykły tekst. Obsługuje **pogrubienie**, *kursywę*, `kod`…"
+          placeholder={t("Zwykły tekst. Obsługuje **pogrubienie**, *kursywę*, `kod`…")}
           onChange={(e) => set({ content: e.target.value })}
         />
         <label className="mt-3 flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold">
-          <span>Pinguj @everyone</span>
+          <span>{t("Pinguj @everyone")}</span>
           <Switch
-            aria-label="Pinguj everyone"
+            aria-label={t("Pinguj everyone")}
             checked={m.pingEveryone}
             onCheckedChange={(v) => set({ pingEveryone: v })}
           />
@@ -428,7 +435,9 @@ export function MessageComposer({
       {m.embeds.map((e, i) => (
         <div key={i} className="rounded-xl border bg-card p-5">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold">Embed {i + 1}</h3>
+            <h3 className="font-bold">
+              {t("Embed")} {i + 1}
+            </h3>
             <Button
               type="button"
               variant="ghost"
@@ -436,12 +445,12 @@ export function MessageComposer({
               onClick={() => set({ embeds: m.embeds.filter((_, k) => k !== i) })}
             >
               <Trash2 className="size-4" />
-              Usuń
+              {t("Usuń")}
             </Button>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="sm:col-span-2">
-              <span className={label}>Tytuł</span>
+              <span className={label}>{t("Tytuł")}</span>
               <Input
                 maxLength={256}
                 value={e.title}
@@ -449,7 +458,7 @@ export function MessageComposer({
               />
             </label>
             <label className="sm:col-span-2">
-              <span className={label}>Opis</span>
+              <span className={label}>{t("Opis")}</span>
               <Textarea
                 maxLength={4000}
                 rows={5}
@@ -458,7 +467,7 @@ export function MessageComposer({
               />
             </label>
             <label>
-              <span className={label}>Kolor</span>
+              <span className={label}>{t("Kolor")}</span>
               <span className="flex items-center gap-2">
                 <input
                   type="color"
@@ -474,33 +483,33 @@ export function MessageComposer({
               </span>
             </label>
             <label>
-              <span className={label}>Link tytułu (https)</span>
+              <span className={label}>{t("Link tytułu (https)")}</span>
               <Input
                 value={e.url}
-                placeholder="https://…"
+                placeholder={t("https://…")}
                 onChange={(ev) => setEmbed(i, { url: ev.target.value })}
               />
             </label>
             <div>
-              <span className={label}>Miniatura</span>
+              <span className={label}>{t("Miniatura")}</span>
               <ImageField
                 guildId={guildId}
                 value={e.thumbnail}
                 onChange={(v) => setEmbed(i, { thumbnail: v })}
-                placeholder="https://…"
+                placeholder={t("https://…")}
               />
             </div>
             <div>
-              <span className={label}>Duży obrazek</span>
+              <span className={label}>{t("Duży obrazek")}</span>
               <ImageField
                 guildId={guildId}
                 value={e.image}
                 onChange={(v) => setEmbed(i, { image: v })}
-                placeholder="https://…"
+                placeholder={t("https://…")}
               />
             </div>
             <label>
-              <span className={label}>Autor</span>
+              <span className={label}>{t("Autor")}</span>
               <Input
                 maxLength={256}
                 value={e.author}
@@ -508,16 +517,16 @@ export function MessageComposer({
               />
             </label>
             <div>
-              <span className={label}>Ikona autora</span>
+              <span className={label}>{t("Ikona autora")}</span>
               <ImageField
                 guildId={guildId}
                 value={e.authorIcon}
                 onChange={(v) => setEmbed(i, { authorIcon: v })}
-                placeholder="https://…"
+                placeholder={t("https://…")}
               />
             </div>
             <label>
-              <span className={label}>Stopka</span>
+              <span className={label}>{t("Stopka")}</span>
               <Input
                 maxLength={2048}
                 value={e.footer}
@@ -525,18 +534,18 @@ export function MessageComposer({
               />
             </label>
             <div>
-              <span className={label}>Ikona stopki</span>
+              <span className={label}>{t("Ikona stopki")}</span>
               <ImageField
                 guildId={guildId}
                 value={e.footerIcon}
                 onChange={(v) => setEmbed(i, { footerIcon: v })}
-                placeholder="https://…"
+                placeholder={t("https://…")}
               />
             </div>
             <label className="flex items-center justify-between rounded-md border px-3 py-2 text-sm font-semibold sm:col-span-2">
-              <span>Pokaż znacznik czasu</span>
+              <span>{t("Pokaż znacznik czasu")}</span>
               <Switch
-                aria-label="Znacznik czasu"
+                aria-label={t("Znacznik czasu")}
                 checked={e.timestamp}
                 onCheckedChange={(v) => setEmbed(i, { timestamp: v })}
               />
@@ -545,7 +554,10 @@ export function MessageComposer({
 
           <div className="mt-4">
             <div className="flex items-center justify-between">
-              <span className={label}>Pola ({e.fields.length}/10)</span>
+              <span className={label}>
+                {t("Pola (")}
+                {e.fields.length}/10)
+              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -556,7 +568,7 @@ export function MessageComposer({
                 }
               >
                 <Plus className="size-4" />
-                Dodaj pole
+                {t("Dodaj pole")}
               </Button>
             </div>
             <div className="mt-2 space-y-2">
@@ -567,7 +579,7 @@ export function MessageComposer({
                 >
                   <Input
                     maxLength={256}
-                    placeholder="Nazwa pola"
+                    placeholder={t("Nazwa pola")}
                     value={f.name}
                     onChange={(ev) =>
                       setEmbed(i, {
@@ -579,7 +591,7 @@ export function MessageComposer({
                   />
                   <Input
                     maxLength={1024}
-                    placeholder="Wartość"
+                    placeholder={t("Wartość")}
                     value={f.value}
                     onChange={(ev) =>
                       setEmbed(i, {
@@ -591,7 +603,7 @@ export function MessageComposer({
                   />
                   <label className="flex items-center gap-2 text-xs font-semibold">
                     <Switch
-                      aria-label="W jednej linii"
+                      aria-label={t("W jednej linii")}
                       checked={f.inline}
                       onCheckedChange={(v) =>
                         setEmbed(i, {
@@ -599,13 +611,13 @@ export function MessageComposer({
                         })
                       }
                     />
-                    W linii
+                    {t("W linii")}
                   </label>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label="Usuń pole"
+                    aria-label={t("Usuń pole")}
                     onClick={() => setEmbed(i, { fields: e.fields.filter((_, y) => y !== k) })}
                   >
                     <Trash2 className="size-4" />
@@ -622,16 +634,18 @@ export function MessageComposer({
           type="button"
           variant="outline"
           disabled={m.embeds.length >= (premium ? 3 : 1)}
-          title={premium ? undefined : "Więcej niż jeden embed to funkcja Premium"}
+          title={premium ? undefined : t("Więcej niż jeden embed to funkcja Premium")}
           onClick={() => set({ embeds: [...m.embeds, emptyComposerEmbed()] })}
         >
           <Plus className="size-4" />
-          Dodaj embed ({m.embeds.length}/3)
+          {t("Dodaj embed (")}
+          {m.embeds.length}/3)
         </Button>
         <span
           className={`text-xs ${chars > 6000 ? "font-bold text-destructive" : "text-muted-foreground"}`}
         >
-          {chars}/6000 znaków w embedach
+          {chars}
+          {t("/6000 znaków w embedach")}
         </span>
       </div>
     </div>
@@ -647,19 +661,19 @@ export function MessageComposer({
         size="lg"
       >
         <Send className="size-4" />
-        {state.kind === "sending" ? "Wysyłanie…" : "Wyślij wiadomość"}
+        {state.kind === "sending" ? t("Wysyłanie…") : t("Wyślij wiadomość")}
       </Button>
       {state.kind === "ok" && (
         <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-          ✅ Wysłano!{" "}
+          {t("✅ Wysłano!")}{" "}
           <a href={state.text} target="_blank" rel="noreferrer" className="underline">
-            Otwórz na Discordzie
+            {t("Otwórz na Discordzie")}
           </a>
         </p>
       )}
       {state.kind === "error" && (
         <p className="mt-3 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
-          ❌ {state.text}
+          ❌ {t(state.text ?? "")}
         </p>
       )}
       <Button
@@ -672,7 +686,7 @@ export function MessageComposer({
           setState({ kind: "idle" });
         }}
       >
-        Wyczyść formularz
+        {t("Wyczyść formularz")}
       </Button>
     </>
   );
@@ -688,16 +702,16 @@ export function MessageComposer({
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-display text-4xl">🖥️ Widok Discorda</h2>
+            <h2 className="font-display text-4xl">{t("🖥️ Widok Discorda")}</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Tak zobaczą to gracze: prawdziwy bot, serwer i kanały. Układaj wiadomość po prawej, a
-              na dole okna wpisz tekst i wyślij jak na czacie. Kliknij „Pełny ekran”, żeby mieć
-              wszystko na całym monitorze (Esc wychodzi).
+              {t(
+                "Tak zobaczą to gracze: prawdziwy bot, serwer i kanały. Układaj wiadomość po prawej, a na dole okna wpisz tekst i wyślij jak na czacie. Kliknij „Pełny ekran”, żeby mieć wszystko na całym monitorze (Esc wychodzi).",
+              )}
             </p>
           </div>
           <Button type="button" variant="outline" onClick={() => void toggleFull()}>
             {expanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-            {expanded ? "Zamknij pełny ekran" : "Pełny ekran"}
+            {expanded ? t("Zamknij pełny ekran") : t("Pełny ekran")}
           </Button>
         </div>
         {/* poza pełnym ekranem okno ma całą szerokość (formularz pod nim); na pełnym ekranie – okno z lewej, edytor z prawej */}
@@ -731,17 +745,18 @@ export function MessageComposer({
 
   return (
     <div className="animate-fade-up">
-      <h2 className="font-display text-4xl">📣 Wysyłanie wiadomości</h2>
+      <h2 className="font-display text-4xl">{t("📣 Wysyłanie wiadomości")}</h2>
       <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Złóż wiadomość z embedem, sprawdź podgląd i wyślij od razu na wybrany kanał – jako bot albo
-        przez webhook z własną nazwą i avatarem. Szkic zapisuje się w tej przeglądarce.
+        {t(
+          "Złóż wiadomość z embedem, sprawdź podgląd i wyślij od razu na wybrany kanał – jako bot albo przez webhook z własną nazwą i avatarem. Szkic zapisuje się w tej przeglądarce.",
+        )}
       </p>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_minmax(0,540px)]">
         {formCol}
 
         <div className="xl:sticky xl:top-4 xl:self-start">
-          <p className={label}>Podgląd</p>
+          <p className={label}>{t("Podgląd")}</p>
           <Preview
             m={m}
             roles={roles}
@@ -753,8 +768,8 @@ export function MessageComposer({
               onClick={onOpenStudio}
               className="mt-3 w-full rounded-lg border border-dashed p-3 text-left text-sm font-semibold hover:bg-muted"
             >
-              🖥️ Zobacz to jak na prawdziwym Discordzie, na całym ekranie{" "}
-              {premium ? "" : "💎 (Premium)"}
+              {t("🖥️ Zobacz to jak na prawdziwym Discordzie, na całym ekranie")}{" "}
+              {premium ? "" : t("💎 (Premium)")}
             </button>
           )}
           <Button
@@ -765,19 +780,19 @@ export function MessageComposer({
             size="lg"
           >
             <Send className="size-4" />
-            {state.kind === "sending" ? "Wysyłanie…" : "Wyślij wiadomość"}
+            {state.kind === "sending" ? t("Wysyłanie…") : t("Wyślij wiadomość")}
           </Button>
           {state.kind === "ok" && (
             <p className="mt-3 rounded-lg border border-emerald-500/50 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
-              ✅ Wysłano!{" "}
+              {t("✅ Wysłano!")}{" "}
               <a href={state.text} target="_blank" rel="noreferrer" className="underline">
-                Otwórz na Discordzie
+                {t("Otwórz na Discordzie")}
               </a>
             </p>
           )}
           {state.kind === "error" && (
             <p className="mt-3 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm font-semibold text-destructive">
-              ❌ {state.text}
+              ❌ {t(state.text ?? "")}
             </p>
           )}
           <Button
@@ -790,7 +805,7 @@ export function MessageComposer({
               setState({ kind: "idle" });
             }}
           >
-            Wyczyść formularz
+            {t("Wyczyść formularz")}
           </Button>
         </div>
       </div>

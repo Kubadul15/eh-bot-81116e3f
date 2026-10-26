@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { musicEmbed } from "@/lib/rk-embed";
+import { useI18n } from "@/lib/i18n-react";
 
 const KEY = "rk-theme";
 export type RkTheme = "dark" | "light";
@@ -80,6 +81,7 @@ export function useRkTheme() {
 
 /** Pływający pasek: przełącznik motywu i (opcjonalnie) odtwarzacz muzyki z playlisty ustawionej przez właściciela serwera. */
 export function RkTools({ music }: { music?: string }) {
+  const { t: tr } = useI18n();
   const { theme, toggle } = useRkTheme();
   const embed = music ? musicEmbed(music) : null;
   const [open, setOpen] = useState(false);
@@ -93,7 +95,7 @@ export function RkTools({ music }: { music?: string }) {
           className={`${open ? "" : "hidden"} w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-[var(--rk-line)] bg-[var(--rk-field)] shadow-2xl`}
         >
           <iframe
-            title="Muzyka"
+            title={tr("Muzyka")}
             src={embed.src}
             width="100%"
             height={embed.height}
@@ -108,9 +110,9 @@ export function RkTools({ music }: { music?: string }) {
           <button
             type="button"
             className={btn}
-            aria-label={open ? "Ukryj odtwarzacz muzyki" : "Pokaż odtwarzacz muzyki"}
+            aria-label={open ? tr("Ukryj odtwarzacz muzyki") : tr("Pokaż odtwarzacz muzyki")}
             aria-pressed={open}
-            title="Muzyka"
+            title={tr("Muzyka")}
             onClick={() => {
               setStarted(true);
               setOpen((o) => !o);
@@ -122,8 +124,8 @@ export function RkTools({ music }: { music?: string }) {
         <button
           type="button"
           className={btn}
-          aria-label={theme === "dark" ? "Włącz jasny motyw" : "Włącz ciemny motyw"}
-          title={theme === "dark" ? "Jasny motyw" : "Ciemny motyw"}
+          aria-label={theme === "dark" ? tr("Włącz jasny motyw") : tr("Włącz ciemny motyw")}
+          title={theme === "dark" ? tr("Jasny motyw") : tr("Ciemny motyw")}
           onClick={toggle}
         >
           {theme === "dark" ? "☀️" : "🌙"}

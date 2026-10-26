@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Check, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ChannelSlot, RoleField } from "@/lib/bot-slots";
+import { useI18n } from "@/lib/i18n-react";
 
 export type DRole = { id: string; name: string; color: number };
 export type DChannel = { id: string; name: string; type: number };
@@ -10,9 +11,13 @@ const hex = (c: number) => (c ? `#${c.toString(16).padStart(6, "0")}` : "#99aab5
 
 // Pasek postępu "X z Y ustawione"
 export function Progress({ done, total }: { done: number; total: number }) {
+  const { t } = useI18n();
   const pct = total ? Math.round((done / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-2" title={`${done} z ${total} ustawione`}>
+    <div
+      className="flex items-center gap-2"
+      title={t("{done} z {total} ustawione", { done, total })}
+    >
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div
           className={`h-full rounded-full transition-all ${pct === 100 ? "bg-emerald-600" : "bg-primary/70"}`}
@@ -51,6 +56,7 @@ export function RolePicker({
   selected: string[];
   onToggle: (id: string) => void;
 }) {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const byId = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles]);
   const chosen = selected.map((id) => byId.get(id) ?? { id, name: "(usunięta ranga)", color: 0 });
@@ -65,23 +71,23 @@ export function RolePicker({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h4 className="font-bold">{field.label}</h4>
-          <p className="text-xs text-muted-foreground">{field.desc}</p>
+          <h4 className="font-bold">{t(field.label)}</h4>
+          <p className="text-xs text-muted-foreground">{t(field.desc)}</p>
         </div>
         <StateBadge
           on={chosen.length > 0}
-          onText={field.multi ? `Wybrano: ${chosen.length}` : "Wybrano"}
-          offText="Nie wybrano"
+          onText={field.multi ? t("Wybrano: {length}", { length: chosen.length }) : t("Wybrano")}
+          offText={t("Nie wybrano")}
         />
       </div>
 
       <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-        ✓ Wybrane
+        {t("✓ Wybrane")}
       </p>
       <div className="mt-1.5 flex min-h-11 flex-wrap gap-2 rounded-lg border border-emerald-500/30 bg-emerald-50 p-2">
         {chosen.length === 0 && (
           <span className="px-1 py-1.5 text-sm text-muted-foreground">
-            Nic nie wybrano – kliknij rangę z listy poniżej.
+            {t("Nic nie wybrano – kliknij rangę z listy poniżej.")}
           </span>
         )}
         {chosen.map((r, i) => (
@@ -89,7 +95,7 @@ export function RolePicker({
             key={r.id}
             type="button"
             aria-pressed="true"
-            title="Kliknij, aby odznaczyć"
+            title={t("Kliknij, aby odznaczyć")}
             onClick={() => onToggle(r.id)}
             className="group inline-flex items-center gap-1.5 rounded-full bg-emerald-600 py-1 pl-2.5 pr-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-95"
           >
@@ -107,7 +113,8 @@ export function RolePicker({
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          Dostępne rangi ({available.length})
+          {t("Dostępne rangi (")}
+          {available.length})
         </p>
         {roles.length > 8 && (
           <label className="relative block w-48">
@@ -115,8 +122,8 @@ export function RolePicker({
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Szukaj rangi…"
-              aria-label={`Szukaj rangi: ${field.label}`}
+              placeholder={t("Szukaj rangi…")}
+              aria-label={t("Szukaj rangi: {label}", { label: t(field.label) })}
               className="w-full rounded-md border bg-background py-1.5 pl-8 pr-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
             />
           </label>
@@ -125,7 +132,7 @@ export function RolePicker({
       <div className="mt-1.5 flex max-h-44 flex-wrap gap-2 overflow-y-auto pr-1">
         {available.length === 0 && (
           <span className="text-sm text-muted-foreground">
-            {needle ? "Brak pasujących rang." : "Wszystkie rangi są już wybrane."}
+            {needle ? t("Brak pasujących rang.") : t("Wszystkie rangi są już wybrane.")}
           </span>
         )}
         {available.map((r) => (
@@ -159,6 +166,7 @@ export function ChannelField({
   category?: boolean;
   onChange: (id: string) => void;
 }) {
+  const { t } = useI18n();
   const [, emoji, label, desc] = slot;
   const on = !!value && options.some((c) => c.id === value);
   return (
@@ -167,17 +175,17 @@ export function ChannelField({
     >
       <span className="flex items-start justify-between gap-2">
         <span className="text-sm font-semibold">
-          {emoji} {label}
+          {emoji} {t(label)}
         </span>
-        <StateBadge on={on} onText="Ustawiono" offText="Nie ustawiono" />
+        <StateBadge on={on} onText={t("Ustawiono")} offText={t("Nie ustawiono")} />
       </span>
-      <span className="mt-0.5 block text-xs text-muted-foreground">{desc}</span>
+      <span className="mt-0.5 block text-xs text-muted-foreground">{t(desc)}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30"
       >
-        <option value="">— nie ustawiono —</option>
+        <option value="">{t("— nie ustawiono —")}</option>
         {options.map((c) => (
           <option key={c.id} value={c.id}>
             {category ? "📁 " : "# "}
@@ -204,10 +212,11 @@ export function TextField({
   max?: number;
   onChange: (v: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <label className="block rounded-lg border bg-card p-4 sm:col-span-2">
-      <span className="text-sm font-semibold">{label}</span>
-      {hint && <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>}
+      <span className="text-sm font-semibold">{t(label)}</span>
+      {hint && <span className="mt-0.5 block text-xs text-muted-foreground">{t(hint)}</span>}
       <input
         type="url"
         maxLength={max}
@@ -233,9 +242,10 @@ export function NumField({
   max?: number;
   onChange: (n: number) => void;
 }) {
+  const { t } = useI18n();
   return (
     <label className="block rounded-lg border bg-card p-4">
-      <span className="text-sm font-semibold">{label}</span>
+      <span className="text-sm font-semibold">{t(label)}</span>
       <input
         type="number"
         min={min}
@@ -265,15 +275,16 @@ export function PanelSender({
   locked?: boolean;
   error?: string | undefined;
 }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-lg border bg-card p-4">
       <h4 className="font-bold">
-        {emoji} {label}
+        {emoji} {t(label)}
       </h4>
       <p className="mt-0.5 text-xs text-muted-foreground">
         {channelName
-          ? `Zostanie wysłany na #${channelName}`
-          : "Najpierw ustaw kanał panelu powyżej i zapisz"}
+          ? t("Zostanie wysłany na #{channelName}", { channelName })
+          : t("Najpierw ustaw kanał panelu powyżej i zapisz")}
       </p>
       <Button
         type="button"
@@ -281,15 +292,19 @@ export function PanelSender({
         onClick={onSend}
         className="mt-3 w-full"
       >
-        {locked ? "💎 Wymaga Premium" : status === "sending"
-          ? "Wysyłanie…"
-          : status === "sent"
-            ? "✅ Zlecono – panel pojawi się za chwilę"
-            : status === "error"
-              ? "❌ Błąd – spróbuj ponownie"
-              : "Wyślij panel"}
+        {locked
+          ? t("💎 Wymaga Premium")
+          : status === "sending"
+            ? t("Wysyłanie…")
+            : status === "sent"
+              ? t("✅ Zlecono – panel pojawi się za chwilę")
+              : status === "error"
+                ? t("❌ Błąd – spróbuj ponownie")
+                : t("Wyślij panel")}
       </Button>
-      {status === "error" && error && <p className="mt-2 text-xs font-semibold text-destructive">{error}</p>}
+      {status === "error" && error && (
+        <p className="mt-2 text-xs font-semibold text-destructive">{t(error)}</p>
+      )}
     </div>
   );
 }

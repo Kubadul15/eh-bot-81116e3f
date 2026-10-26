@@ -25,6 +25,7 @@ import {
 } from "@/lib/content-config";
 import { uploadImage, sendAnnouncement } from "@/lib/content.functions";
 import type { Limits } from "@/lib/premium";
+import { useI18n } from "@/lib/i18n-react";
 
 type View = "recruitment" | "tickets" | "embeds";
 type Props = {
@@ -100,6 +101,7 @@ export function ContentEditor({
   limits,
   ticketImages = false,
 }: Props) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState("rekrutacja");
   const [uploading, setUploading] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -110,7 +112,27 @@ export function ContentEditor({
 
   const isTickets = view === "tickets";
   const hasSection = view !== "embeds";
-  const c = COPY[isTickets ? "tickets" : "recruitment"];
+  const raw = COPY[isTickets ? "tickets" : "recruitment"];
+  // napisy interfejsu tłumaczymy, a domyślne treści wiadomości bota (defaultTitle/defaultText) zostają po polsku – tak trafią na Discorda
+  const c = {
+    ...raw,
+    kicker: t(raw.kicker),
+    title: t(raw.title),
+    open: t(raw.open),
+    closed: t(raw.closed),
+    openAria: t(raw.openAria),
+    items: t(raw.items),
+    item: t(raw.item),
+    add: t(raw.add),
+    empty: t(raw.empty),
+    nameLabel: t(raw.nameLabel),
+    roleLabel: t(raw.roleLabel),
+    noRole: t(raw.noRole),
+    switchLabel: t(raw.switchLabel),
+    questions: t(raw.questions),
+    formTitle: t(raw.formTitle),
+    previewItems: t(raw.previewItems),
+  };
   const r = isTickets ? value.tickets : value.recruitment; // wspólne pola: open, positions, questions
   const changeSection = (patch: Partial<ContentConfig["recruitment"]>) =>
     onChange(
@@ -194,9 +216,11 @@ export function ContentEditor({
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b pb-6">
         <div>
           <p className="text-xs font-semibold uppercase text-muted-foreground">
-            Emergency Hamburg / {hasSection ? c.kicker : "Wiadomości"}
+            {t("Emergency Hamburg /")} {hasSection ? c.kicker : t("Wiadomości")}
           </p>
-          <h2 className="mt-1 font-display text-4xl">{hasSection ? c.title : "Edytor embedów"}</h2>
+          <h2 className="mt-1 font-display text-4xl">
+            {hasSection ? c.title : t("Edytor embedów")}
+          </h2>
         </div>
         {hasSection && (
           <label className="flex items-center gap-3 rounded-md border px-4 py-3 text-sm font-semibold">
@@ -214,14 +238,14 @@ export function ContentEditor({
         <div className="min-w-0 space-y-8">
           {isTickets && (
             <section className="rounded-lg border bg-card p-4">
-              <h3 className="text-lg font-semibold">Ustawienia ticketów</h3>
+              <h3 className="text-lg font-semibold">{t("Ustawienia ticketów")}</h3>
               <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                <Field label="Maks. otwartych ticketów na osobę">
+                <Field label={t("Maks. otwartych ticketów na osobę")}>
                   <Input
                     type="number"
                     min={1}
                     max={10}
-                    aria-label="Maks. otwartych ticketów na osobę"
+                    aria-label={t("Maks. otwartych ticketów na osobę")}
                     value={value.tickets.maxOpen}
                     onChange={(e) =>
                       changeTickets({
@@ -234,10 +258,10 @@ export function ContentEditor({
                   <label className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm font-semibold">
                     <span className="flex items-center gap-2">
                       <Paperclip className="size-4" />
-                      Obrazki w formularzu
+                      {t("Obrazki w formularzu")}
                     </span>
                     <Switch
-                      aria-label="Obrazki w formularzu ticketu"
+                      aria-label={t("Obrazki w formularzu ticketu")}
                       checked={value.tickets.images}
                       disabled={
                         !ticketImages ||
@@ -249,11 +273,18 @@ export function ContentEditor({
                   </label>
                   <p className="text-xs text-muted-foreground">
                     {!ticketImages
-                      ? "💎 Funkcja Premium (albo nadana Twojemu serwerowi przez właściciela bota)."
+                      ? t(
+                          "💎 Funkcja Premium (albo nadana Twojemu serwerowi przez właściciela bota).",
+                        )
                       : value.tickets.questions.length >= TICKET_FORM_FIELDS &&
                           !value.tickets.images
-                        ? `Usuń jedno pytanie – formularz Discorda ma maks. ${TICKET_FORM_FIELDS} pól, a jedno zajmie wgrywanie plików.`
-                        : "Gracz dołączy do zgłoszenia do 3 zdjęć lub zrzutów ekranu; trafią do kanału ticketu."}
+                        ? t(
+                            "Usuń jedno pytanie – formularz Discorda ma maks. {TICKET_FORM_FIELDS} pól, a jedno zajmie wgrywanie plików.",
+                            { TICKET_FORM_FIELDS },
+                          )
+                        : t(
+                            "Gracz dołączy do zgłoszenia do 3 zdjęć lub zrzutów ekranu; trafią do kanału ticketu.",
+                          )}
                   </p>
                 </div>
               </div>
@@ -296,7 +327,8 @@ export function ContentEditor({
                 </div>
                 {r.positions.length >= maxItems && limits && maxItems < (isTickets ? 25 : 8) && (
                   <p className="mb-3 rounded-md border border-amber-500/40 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                    💎 Limit Twojego planu: {maxItems}. Premium podnosi go do {isTickets ? 25 : 8}.
+                    {t("💎 Limit Twojego planu:")} {maxItems}
+                    {t(". Premium podnosi go do")} {isTickets ? 25 : 8}.
                   </p>
                 )}
                 {!r.positions.length && (
@@ -319,7 +351,9 @@ export function ContentEditor({
                             {c.item} {index + 1}
                           </span>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs">{p.open ? "Otwarte" : "Zamknięte"}</span>
+                            <span className="text-xs">
+                              {p.open ? t("Otwarte") : t("Zamknięte")}
+                            </span>
                             <Switch
                               aria-label={`${c.switchLabel} ${p.label}`}
                               checked={p.open}
@@ -328,8 +362,8 @@ export function ContentEditor({
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="Usuń"
-                              aria-label={`Usuń pozycję ${index + 1}`}
+                              title={t("Usuń")}
+                              aria-label={t("Usuń pozycję {v1}", { v1: index + 1 })}
                               onClick={() =>
                                 changeSection({
                                   positions: r.positions.filter((x) => x.id !== p.id),
@@ -341,7 +375,7 @@ export function ContentEditor({
                           </div>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-[70px_1fr]">
-                          <Field label="Emoji">
+                          <Field label={t("Emoji")}>
                             <Input
                               maxLength={8}
                               value={p.emoji}
@@ -356,7 +390,7 @@ export function ContentEditor({
                             />
                           </Field>
                         </div>
-                        <Field label="Opis">
+                        <Field label={t("Opis")}>
                           <Input
                             className="mt-1"
                             maxLength={80}
@@ -409,19 +443,21 @@ export function ContentEditor({
                     }
                   >
                     <Plus />
-                    {isTickets ? "Pole" : "Pytanie"}
+                    {isTickets ? t("Pole") : t("Pytanie")}
                   </Button>
                 </div>
                 {!isTickets && (
                   <div className="mb-4 rounded-lg border bg-muted/30 p-3">
                     {recruitPositions.length === 0 ? (
                       <p className="text-sm text-muted-foreground">
-                        Najpierw dodaj stanowisko powyżej – każde stanowisko ma własne pytania (do{" "}
+                        {t(
+                          "Najpierw dodaj stanowisko powyżej – każde stanowisko ma własne pytania (do",
+                        )}{" "}
                         {maxQuestions}).
                       </p>
                     ) : (
                       <div className="grid gap-3 sm:grid-cols-2">
-                        <Field label="Pytania dla stanowiska">
+                        <Field label={t("Pytania dla stanowiska")}>
                           <select
                             className="editor-select"
                             value={activePos?.id ?? ""}
@@ -436,13 +472,13 @@ export function ContentEditor({
                           </select>
                         </Field>
                         {recruitPositions.length > 1 && (
-                          <Field label="Skopiuj pytania z innego stanowiska">
+                          <Field label={t("Skopiuj pytania z innego stanowiska")}>
                             <select
                               className="editor-select"
                               value=""
                               onChange={(e) => e.target.value && copyQuestionsFrom(e.target.value)}
                             >
-                              <option value="">— wybierz, aby zastąpić listę kopią —</option>
+                              <option value="">{t("— wybierz, aby zastąpić listę kopią —")}</option>
                               {recruitPositions
                                 .filter((x) => x.id !== activePos?.id)
                                 .map((x) => (
@@ -460,7 +496,7 @@ export function ContentEditor({
                 )}
                 {!questions.length && (
                   <div className="border-y py-8 text-center text-sm text-muted-foreground">
-                    {isTickets ? "Brak pól – ticket powstanie bez formularza" : "Brak pytań"}
+                    {isTickets ? t("Brak pól – ticket powstanie bez formularza") : t("Brak pytań")}
                   </div>
                 )}
                 <div className="space-y-3">
@@ -473,15 +509,15 @@ export function ContentEditor({
                       <div key={q.id} className="rounded-lg border bg-card p-4">
                         <div className="mb-3 flex items-center justify-between">
                           <span className="text-xs font-semibold text-muted-foreground">
-                            {isTickets ? "POLE" : "PYTANIE"} {index + 1}
+                            {isTickets ? t("POLE") : t("PYTANIE")} {index + 1}
                           </span>
                           <div className="flex">
                             <Button
                               size="icon"
                               variant="ghost"
                               disabled={index === 0}
-                              aria-label={`Pozycja ${index + 1} w górę`}
-                              title="W górę"
+                              aria-label={t("Pozycja {v1} w górę", { v1: index + 1 })}
+                              title={t("W górę")}
                               onClick={() => moveQuestion(index, -1)}
                             >
                               <ArrowUp />
@@ -490,8 +526,8 @@ export function ContentEditor({
                               size="icon"
                               variant="ghost"
                               disabled={index === questions.length - 1}
-                              aria-label={`Pozycja ${index + 1} w dół`}
-                              title="W dół"
+                              aria-label={t("Pozycja {v1} w dół", { v1: index + 1 })}
+                              title={t("W dół")}
                               onClick={() => moveQuestion(index, 1)}
                             >
                               <ArrowDown />
@@ -499,15 +535,15 @@ export function ContentEditor({
                             <Button
                               size="icon"
                               variant="ghost"
-                              title="Usuń"
-                              aria-label={`Usuń pole ${index + 1}`}
+                              title={t("Usuń")}
+                              aria-label={t("Usuń pole {v1}", { v1: index + 1 })}
                               onClick={() => setQuestions(questions.filter((x) => x.id !== q.id))}
                             >
                               <Trash2 />
                             </Button>
                           </div>
                         </div>
-                        <Field label={isTickets ? "Nazwa pola" : "Treść pytania"}>
+                        <Field label={isTickets ? t("Nazwa pola") : t("Treść pytania")}>
                           <Textarea
                             rows={2}
                             maxLength={200}
@@ -515,12 +551,14 @@ export function ContentEditor({
                             onChange={(e) => change({ label: e.target.value })}
                           />
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {q.label.length}/200 znaków. Na stronie rekrutacji widać całość, w oknie
-                            Discorda pierwsze ok. 145 znaków (reszta jest w aplikacji).
+                            {q.label.length}
+                            {t(
+                              "/200 znaków. Na stronie rekrutacji widać całość, w oknie Discorda pierwsze ok. 145 znaków (reszta jest w aplikacji).",
+                            )}
                           </p>
                         </Field>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          <Field label="Odpowiedź">
+                          <Field label={t("Odpowiedź")}>
                             <select
                               className="editor-select"
                               value={q.style}
@@ -528,20 +566,20 @@ export function ContentEditor({
                                 change({ style: e.target.value === "long" ? "long" : "short" })
                               }
                             >
-                              <option value="short">Krótka</option>
-                              <option value="long">Długa</option>
+                              <option value="short">{t("Krótka")}</option>
+                              <option value="long">{t("Długa")}</option>
                             </select>
                           </Field>
                           <label className="flex items-center justify-between gap-3 text-sm">
-                            Wymagane
+                            {t("Wymagane")}
                             <Switch
                               checked={q.required}
-                              aria-label={`Pozycja ${index + 1} wymagana`}
+                              aria-label={t("Pozycja {v1} wymagana", { v1: index + 1 })}
                               onCheckedChange={(required) => change({ required })}
                             />
                           </label>
                         </div>
-                        <Field label="Podpowiedź w polu">
+                        <Field label={t("Podpowiedź w polu")}>
                           <Input
                             maxLength={100}
                             value={q.placeholder}
@@ -559,10 +597,11 @@ export function ContentEditor({
           <section className="space-y-4">
             <h3 className="flex items-center gap-2 text-lg font-semibold">
               <FileText className="size-4" />
-              Treść embeda{isTickets ? " panelu ticketów" : ""}
+              {t("Treść embeda")}
+              {isTickets ? t(" panelu ticketów") : ""}
             </h3>
             {view === "embeds" && (
-              <Field label="Wiadomość">
+              <Field label={t("Wiadomość")}>
                 <select
                   className="editor-select"
                   value={selected}
@@ -576,35 +615,35 @@ export function ContentEditor({
                 </select>
               </Field>
             )}
-            <Field label="Tytuł">
+            <Field label={t("Tytuł")}>
               <Input
                 maxLength={256}
                 value={embed.title}
-                placeholder={hasSection ? c.defaultTitle : "Domyślny tytuł bota"}
+                placeholder={hasSection ? c.defaultTitle : t("Domyślny tytuł bota")}
                 onChange={(e) => changeEmbed({ title: e.target.value })}
               />
             </Field>
-            <Field label="Opis">
+            <Field label={t("Opis")}>
               <Textarea
                 rows={5}
                 maxLength={2000}
                 value={embed.description}
-                placeholder="Domyślna treść bota"
+                placeholder={t("Domyślna treść bota")}
                 onChange={(e) => changeEmbed({ description: e.target.value })}
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-[1fr_90px]">
-              <Field label="Stopka">
+              <Field label={t("Stopka")}>
                 <Input
                   maxLength={200}
                   value={embed.footer}
-                  placeholder="Emergency Hamburg"
+                  placeholder={t("Emergency Hamburg")}
                   onChange={(e) => changeEmbed({ footer: e.target.value })}
                 />
               </Field>
-              <Field label="Kolor">
+              <Field label={t("Kolor")}>
                 <Input
-                  aria-label="Kolor embeda"
+                  aria-label={t("Kolor embeda")}
                   type="color"
                   value={embed.color}
                   onChange={(e) => changeEmbed({ color: e.target.value })}
@@ -613,11 +652,11 @@ export function ContentEditor({
             </div>
             {(["image", "thumbnail"] as const).map((field) => (
               <div key={field} className="space-y-2">
-                <Field label={field === "image" ? "Zdjęcie embeda" : "Miniatura"}>
+                <Field label={field === "image" ? t("Zdjęcie embeda") : t("Miniatura")}>
                   <Input
                     type="url"
                     value={embed[field]}
-                    placeholder="https://…"
+                    placeholder={t("https://…")}
                     onChange={(e) => changeEmbed({ [field]: e.target.value })}
                   />
                 </Field>
@@ -625,10 +664,12 @@ export function ContentEditor({
                   <Button asChild variant="outline" disabled={!!uploading}>
                     <label>
                       <ImagePlus />
-                      {uploading === field ? "Dodawanie…" : "Dodaj zdjęcie"}
+                      {uploading === field ? t("Dodawanie…") : t("Dodaj zdjęcie")}
                       <input
                         className="sr-only"
-                        aria-label={field === "image" ? "Wgraj zdjęcie embeda" : "Wgraj miniaturę"}
+                        aria-label={
+                          field === "image" ? t("Wgraj zdjęcie embeda") : t("Wgraj miniaturę")
+                        }
                         type="file"
                         accept="image/png,image/jpeg,image/webp,image/gif"
                         disabled={!!uploading}
@@ -643,8 +684,8 @@ export function ContentEditor({
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={`Usuń ${field}`}
-                      title="Usuń zdjęcie"
+                      aria-label={t("Usuń {field}", { field })}
+                      title={t("Usuń zdjęcie")}
                       onClick={() => changeEmbed({ [field]: "" })}
                     >
                       <X />
@@ -655,18 +696,18 @@ export function ContentEditor({
             ))}
             {error && (
               <p role="alert" className="text-sm text-destructive">
-                {error}
+                {t(error)}
               </p>
             )}
             {view === "embeds" && selected === "embed" && (
               <div className="space-y-3 border-t pt-4">
-                <Field label="Kanał ogłoszenia">
+                <Field label={t("Kanał ogłoszenia")}>
                   <select
                     className="editor-select"
                     value={channelId}
                     onChange={(e) => setChannelId(e.target.value)}
                   >
-                    <option value="">Wybierz kanał</option>
+                    <option value="">{t("Wybierz kanał")}</option>
                     {channels
                       .filter((ch) => ch.type !== 4)
                       .map((ch) => (
@@ -691,10 +732,10 @@ export function ContentEditor({
                   }}
                 >
                   {sendState === "sending"
-                    ? "Wysyłanie…"
+                    ? t("Wysyłanie…")
                     : sendState === "sent"
-                      ? "Wysłano"
-                      : "Wyślij ogłoszenie"}
+                      ? t("Wysłano")
+                      : t("Wyślij ogłoszenie")}
                 </Button>
               </div>
             )}
@@ -704,17 +745,17 @@ export function ContentEditor({
         <aside className="min-w-0 xl:sticky xl:top-6">
           <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase text-muted-foreground">
             <Eye className="size-4" />
-            Podgląd
+            {t("Podgląd")}
           </div>
           <div className="rounded-lg border bg-card p-5">
             <div className="mb-4 flex items-center gap-3">
               <span className="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                EH
+                {t("EH")}
               </span>
               <div className="text-sm font-semibold">
-                Emergency Hamburg{" "}
+                {t("Emergency Hamburg")}{" "}
                 <span className="ml-1 rounded bg-secondary px-1 text-xs text-muted-foreground">
-                  BOT
+                  {t("BOT")}
                 </span>
               </div>
             </div>
@@ -727,7 +768,7 @@ export function ContentEditor({
               {embed.thumbnail && (
                 <img
                   src={embed.thumbnail}
-                  alt="Miniatura"
+                  alt={t("Miniatura")}
                   className="float-right ml-3 size-14 rounded object-cover"
                 />
               )}
@@ -736,7 +777,8 @@ export function ContentEditor({
                   (hasSection ? c.defaultTitle : EMBED_TYPES.find(([id]) => id === selected)?.[1])}
               </h4>
               <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">
-                {embed.description || (hasSection ? c.defaultText(r.open) : "Domyślna treść bota")}
+                {embed.description ||
+                  (hasSection ? c.defaultText(r.open) : t("Domyślna treść bota"))}
               </p>
               {hasSection && (
                 <div className="mt-4 space-y-2">
@@ -747,7 +789,7 @@ export function ContentEditor({
                         {p.emoji} {p.label}
                       </span>
                       <span className="ml-2 text-xs text-muted-foreground">
-                        {r.open && p.open ? "Otwarte" : "Zamknięte"}
+                        {r.open && p.open ? t("Otwarte") : t("Zamknięte")}
                       </span>
                       {p.desc && <p className="text-xs text-muted-foreground">{p.desc}</p>}
                     </div>
@@ -757,12 +799,12 @@ export function ContentEditor({
               {embed.image && (
                 <img
                   src={embed.image}
-                  alt="Zdjęcie embeda"
+                  alt={t("Zdjęcie embeda")}
                   className="mt-4 aspect-video w-full rounded object-cover"
                 />
               )}
               <p className="mt-4 clear-both text-xs text-muted-foreground">
-                {embed.footer || "Emergency Hamburg"}
+                {embed.footer || t("Emergency Hamburg")}
               </p>
             </div>
             {hasSection && (questions.length > 0 || (isTickets && value.tickets.images)) && (
@@ -784,10 +826,10 @@ export function ContentEditor({
                   ))}
                   {isTickets && value.tickets.images && (
                     <div>
-                      <p className="mb-1 text-xs font-semibold">Obrazki (opcjonalnie)</p>
+                      <p className="mb-1 text-xs font-semibold">{t("Obrazki (opcjonalnie)")}</p>
                       <div className="flex items-center gap-2 rounded-md border border-dashed px-3 py-3 text-xs text-muted-foreground">
                         <Paperclip className="size-4" />
-                        Przeciągnij lub wybierz do 3 zdjęć
+                        {t("Przeciągnij lub wybierz do 3 zdjęć")}
                       </div>
                     </div>
                   )}

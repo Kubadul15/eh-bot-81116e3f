@@ -8,6 +8,7 @@ import { Switch } from "./ui/switch";
 import { LockBanner } from "./premium-ui";
 import { SITE_FAQ_MAX, type ContentConfig, type RecruitSiteConfig } from "@/lib/content-config";
 import { uploadImage } from "@/lib/content.functions";
+import { useI18n } from "@/lib/i18n-react";
 
 type Props = {
   guildId: string;
@@ -21,6 +22,7 @@ type Props = {
 const lab = "mb-1 block text-xs font-bold uppercase tracking-wide text-muted-foreground";
 
 export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed }: Props) {
+  const { t } = useI18n();
   const s = value.recruitSite;
   const set = (patch: Partial<RecruitSiteConfig>) =>
     onChange({ ...value, recruitSite: { ...s, ...patch } });
@@ -62,25 +64,27 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
     <div className="space-y-6">
       {!allowed && (
         <LockBanner
-          title="Strona rekrutacyjna to funkcja Premium"
+          title={t("Strona rekrutacyjna to funkcja Premium")}
           guildId={guildId}
           guildName={guildName}
         >
-          Własna strona z formularzem, panel ekipy z uprawnieniami i decyzjami. Możesz ją
-          skonfigurować już teraz, ale zapisanie z włączoną stroną wymaga Premium.
+          {t(
+            "Własna strona z formularzem, panel ekipy z uprawnieniami i decyzjami. Możesz ją skonfigurować już teraz, ale zapisanie z włączoną stroną wymaga Premium.",
+          )}
         </LockBanner>
       )}
 
       <label className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4">
         <span>
-          <span className="block font-bold">Strona rekrutacyjna włączona</span>
+          <span className="block font-bold">{t("Strona rekrutacyjna włączona")}</span>
           <span className="text-xs text-muted-foreground">
-            Gdy wyłączona, link pokazuje „niedostępne”. Pytania i stanowiska ustawiasz w bloku
-            „Formularz i stanowiska” powyżej.
+            {t(
+              "Gdy wyłączona, link pokazuje „niedostępne”. Pytania i stanowiska ustawiasz w bloku „Formularz i stanowiska” powyżej.",
+            )}
           </span>
         </span>
         <Switch
-          aria-label="Strona rekrutacyjna włączona"
+          aria-label={t("Strona rekrutacyjna włączona")}
           checked={s.enabled}
           disabled={!allowed && !s.enabled}
           onCheckedChange={(enabled) => set({ enabled })}
@@ -105,12 +109,17 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
                 size="sm"
                 variant="outline"
                 onClick={() => copy(k)}
-                aria-label={`Kopiuj: ${title}`}
+                aria-label={t("Kopiuj: {title}", { title })}
               >
                 {copied === k ? <Check className="size-4" /> : <Copy className="size-4" />}
               </Button>
               <Button type="button" size="sm" variant="outline" asChild>
-                <a href={url} target="_blank" rel="noreferrer" aria-label={`Otwórz: ${title}`}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={t("Otwórz: {title}", { title })}
+                >
                   <ExternalLink className="size-4" />
                 </a>
               </Button>
@@ -119,17 +128,18 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        Nowe podania trafiają też na kanał „Aplikacje rekrutacyjne” (ustaw go w kategorii
-        Rekrutacja). W panelu ekipy nadajesz uprawnienia rekruterom po ich ID Discord.
+        {t(
+          "Nowe podania trafiają też na kanał „Aplikacje rekrutacyjne” (ustaw go w kategorii Rekrutacja). W panelu ekipy nadajesz uprawnienia rekruterom po ich ID Discord.",
+        )}
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className={lab}>Nagłówek</label>
+          <label className={lab}>{t("Nagłówek")}</label>
           <Input value={s.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
         </div>
         <div className="sm:col-span-2">
-          <label className={lab}>Opis pod nagłówkiem</label>
+          <label className={lab}>{t("Opis pod nagłówkiem")}</label>
           <Textarea
             value={s.intro}
             maxLength={500}
@@ -138,11 +148,11 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           />
         </div>
         <div>
-          <label className={lab}>Kolor główny</label>
+          <label className={lab}>{t("Kolor główny")}</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
-              aria-label="Kolor główny"
+              aria-label={t("Kolor główny")}
               value={s.accent}
               onChange={(e) => set({ accent: e.target.value })}
               className="h-9 w-12 cursor-pointer rounded border bg-transparent"
@@ -157,11 +167,11 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           </div>
         </div>
         <div>
-          <label className={lab}>Kolor dodatkowy</label>
+          <label className={lab}>{t("Kolor dodatkowy")}</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
-              aria-label="Kolor dodatkowy"
+              aria-label={t("Kolor dodatkowy")}
               value={s.accent2}
               onChange={(e) => set({ accent2: e.target.value })}
               className="h-9 w-12 cursor-pointer rounded border bg-transparent"
@@ -176,18 +186,18 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           </div>
         </div>
         <div className="sm:col-span-2">
-          <label className={lab}>Baner w nagłówku strony (opcjonalnie)</label>
+          <label className={lab}>{t("Baner w nagłówku strony (opcjonalnie)")}</label>
           <div className="flex flex-wrap items-center gap-2">
             <Input
               className="min-w-60 flex-1"
-              placeholder="https://…"
+              placeholder={t("https://…")}
               value={s.banner}
               onChange={(e) => set({ banner: e.target.value })}
             />
             <Button type="button" variant="outline" disabled={busy} asChild>
               <label className="cursor-pointer">
                 <Upload className="size-4" />
-                {busy ? "Wysyłanie…" : "Wgraj"}
+                {busy ? t("Wysyłanie…") : t("Wgraj")}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp,image/gif"
@@ -198,30 +208,32 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
             </Button>
             {s.banner && (
               <Button type="button" variant="ghost" onClick={() => set({ banner: "" })}>
-                Usuń
+                {t("Usuń")}
               </Button>
             )}
           </div>
-          {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+          {error && <p className="mt-1 text-xs text-destructive">{t(error)}</p>}
         </div>
         <div className="sm:col-span-2">
           <label className={lab}>
-            Muzyka na stronie: link do playlisty Spotify lub YouTube (opcjonalnie)
+            {t("Muzyka na stronie: link do playlisty Spotify lub YouTube (opcjonalnie)")}
           </label>
           <Input
-            placeholder="https://open.spotify.com/playlist/… albo https://www.youtube.com/playlist?list=…"
+            placeholder={t(
+              "https://open.spotify.com/playlist/… albo https://www.youtube.com/playlist?list=…",
+            )}
             value={s.music}
             maxLength={300}
             onChange={(e) => set({ music: e.target.value.trim() })}
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            Odwiedzający dostają przycisk 🎵 z oficjalnym odtwarzaczem (np. playlista Taco
-            Hemingwaya, którą znajdziesz na Spotify lub YouTube). Muzyka nie włącza się sama –
-            przeglądarki tego blokują, trzeba kliknąć „play”.
+            {t(
+              "Odwiedzający dostają przycisk 🎵 z oficjalnym odtwarzaczem (np. playlista Taco Hemingwaya, którą znajdziesz na Spotify lub YouTube). Muzyka nie włącza się sama – przeglądarki tego blokują, trzeba kliknąć „play”.",
+            )}
           </p>
         </div>
         <div className="sm:col-span-2">
-          <label className={lab}>Zaproszenie na Discord (przycisk „Dołącz”)</label>
+          <label className={lab}>{t("Zaproszenie na Discord (przycisk „Dołącz”)")}</label>
           <Input
             placeholder="https://discord.gg/twoje-zaproszenie"
             value={s.discord}
@@ -230,7 +242,7 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           />
         </div>
         <div>
-          <label className={lab}>Minimalna długość odpowiedzi (znaki)</label>
+          <label className={lab}>{t("Minimalna długość odpowiedzi (znaki)")}</label>
           <Input
             type="number"
             min={0}
@@ -240,7 +252,7 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           />
         </div>
         <div>
-          <label className={lab}>Blokada ponownego podania (godziny, 0 = brak)</label>
+          <label className={lab}>{t("Blokada ponownego podania (godziny, 0 = brak)")}</label>
           <Input
             type="number"
             min={0}
@@ -250,7 +262,7 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
           />
         </div>
         <div className="sm:col-span-2">
-          <label className={lab}>Komunikat po wysłaniu podania</label>
+          <label className={lab}>{t("Komunikat po wysłaniu podania")}</label>
           <Textarea
             value={s.successText}
             maxLength={300}
@@ -263,7 +275,8 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
       <div>
         <div className="mb-2 flex items-center justify-between">
           <p className="font-bold">
-            Najczęstsze pytania ({s.faq.length}/{SITE_FAQ_MAX})
+            {t("Najczęstsze pytania (")}
+            {s.faq.length}/{SITE_FAQ_MAX})
           </p>
           <Button
             type="button"
@@ -272,7 +285,7 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
             disabled={s.faq.length >= SITE_FAQ_MAX}
             onClick={() => set({ faq: [...s.faq, { q: "Nowe pytanie", a: "Odpowiedź" }] })}
           >
-            <Plus className="size-4" /> Dodaj
+            <Plus className="size-4" /> {t("Dodaj")}
           </Button>
         </div>
         <div className="space-y-3">
@@ -280,7 +293,7 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
             <div key={i} className="space-y-2 rounded-xl border bg-card p-3">
               <div className="flex gap-2">
                 <Input
-                  aria-label={`Pytanie ${i + 1}`}
+                  aria-label={t("Pytanie {v1}", { v1: i + 1 })}
                   value={f.q}
                   maxLength={120}
                   onChange={(e) =>
@@ -291,14 +304,14 @@ export function RecruitSiteEditor({ guildId, guildName, value, onChange, allowed
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={`Usuń pytanie ${i + 1}`}
+                  aria-label={t("Usuń pytanie {v1}", { v1: i + 1 })}
                   onClick={() => set({ faq: s.faq.filter((_, j) => j !== i) })}
                 >
                   <Trash2 className="size-4" />
                 </Button>
               </div>
               <Textarea
-                aria-label={`Odpowiedź ${i + 1}`}
+                aria-label={t("Odpowiedź {v1}", { v1: i + 1 })}
                 rows={2}
                 value={f.a}
                 maxLength={500}
